@@ -1,5 +1,9 @@
 # 🔍 Internal RFP Analyst — GenAI Agent Chatbot
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://app-rfp-analyst-ne9xjgfqqdmtrrmgns8jfa.streamlit.app/)
+
+> **🚀 [Live Demo →](https://app-rfp-analyst-ne9xjgfqqdmtrrmgns8jfa.streamlit.app/)**
+
 An AI-powered **Retrieval-Augmented Generation (RAG)** chatbot that helps internal consulting teams instantly search past proposals, project outlines, RFP responses, and case studies. Built with **LangChain**, **LangGraph**, **ChromaDB**, and **Google Gemini**.
 
 ## 🏗️ Architecture
