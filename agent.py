@@ -1,13 +1,22 @@
 """
 LangGraph ReAct Agent — AI-powered RFP Analyst with multiple tools.
 Uses Google Gemini as LLM, ChromaDB retriever, and conversation memory.
+Includes rate-limit retry logic for Gemini free-tier quotas.
 """
 
+import time
+import logging
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
+
+logger = logging.getLogger(__name__)
+
+# ─── Rate-Limit Constants ─────────────────────────────────────────────────────
+LLM_MAX_RETRIES = 5
+LLM_INITIAL_BACKOFF = 15     # seconds
 
 from config import (
     GOOGLE_API_KEY,
@@ -180,13 +189,43 @@ def create_agent():
 
 
 def query_agent(agent, user_query: str, thread_id: str = "default"):
-    """Send a query to the agent and get a response with reasoning trace."""
+    """Send a query to the agent and get a response with reasoning trace.
+    
+    Includes automatic retry with exponential backoff for Gemini rate limits.
+    """
     config = {"configurable": {"thread_id": thread_id}}
 
-    response = agent.invoke(
-        {"messages": [HumanMessage(content=user_query)]},
-        config=config,
-    )
+    # Retry loop for rate-limit errors
+    backoff = LLM_INITIAL_BACKOFF
+    last_error = None
+    for attempt in range(1, LLM_MAX_RETRIES + 1):
+        try:
+            response = agent.invoke(
+                {"messages": [HumanMessage(content=user_query)]},
+                config=config,
+            )
+            break  # success
+        except Exception as e:
+            last_error = e
+            error_str = str(e).lower()
+            is_rate_limit = (
+                "429" in error_str
+                or "resource_exhausted" in error_str
+                or "quota" in error_str
+            )
+            if is_rate_limit and attempt < LLM_MAX_RETRIES:
+                wait = backoff + (attempt * 3)
+                logger.warning(
+                    f"LLM rate limit hit (attempt {attempt}/{LLM_MAX_RETRIES}). "
+                    f"Retrying in {wait}s..."
+                )
+                print(f"⏳ LLM rate limit — waiting {wait}s before retry ({attempt}/{LLM_MAX_RETRIES})...")
+                time.sleep(wait)
+                backoff *= 2
+            else:
+                raise
+    else:
+        raise last_error  # all retries exhausted
 
     # Extract the final AI message
     messages = response["messages"]

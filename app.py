@@ -203,7 +203,14 @@ with st.sidebar:
                 time.sleep(1)
                 st.rerun()
             except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
+                error_str = str(e)
+                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
+                    st.warning(
+                        "⏳ **Rate limit reached.** The Gemini free tier has a limit of "
+                        "~100 embedding requests/minute. Please wait 1–2 minutes and try again."
+                    )
+                else:
+                    st.error(f"❌ Error: {error_str}")
 
     # Upload custom PDFs
     st.markdown("---")
@@ -344,8 +351,19 @@ if user_input := st.chat_input("Ask about past projects, tech stacks, proposals.
                 )
 
             except Exception as e:
-                error_msg = f"❌ Error: {str(e)}"
-                st.error(error_msg)
-                st.session_state.messages.append(
-                    {"role": "assistant", "content": error_msg, "reasoning": []}
-                )
+                error_str = str(e)
+                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
+                    friendly_msg = (
+                        "⏳ **Rate limit reached.** The Gemini free tier limits API calls per minute. "
+                        "Your request will be retried automatically. If this persists, wait 1–2 minutes and try again."
+                    )
+                    st.warning(friendly_msg)
+                    st.session_state.messages.append(
+                        {"role": "assistant", "content": friendly_msg, "reasoning": []}
+                    )
+                else:
+                    error_msg = f"❌ Error: {error_str}"
+                    st.error(error_msg)
+                    st.session_state.messages.append(
+                        {"role": "assistant", "content": error_msg, "reasoning": []}
+                    )
