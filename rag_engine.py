@@ -26,15 +26,24 @@ from config import (
 logger = logging.getLogger(__name__)
 
 # ─── Rate-Limit Constants ─────────────────────────────────────────────────────
-MAX_RETRIES = 5              # max retry attempts on rate-limit errors
-INITIAL_BACKOFF = 10         # initial backoff in seconds
-BACKOFF_MULTIPLIER = 2       # exponential multiplier
+MAX_RETRIES = 2              # keep retries low to avoid long hangs
+INITIAL_BACKOFF = 3          # start with just 3 seconds
+MAX_BACKOFF = 15             # never wait more than 15 seconds per retry
 INGEST_BATCH_SIZE = 20       # chunks per batch during ingestion
-INTER_BATCH_DELAY = 5        # seconds to wait between batches
+INTER_BATCH_DELAY = 2        # seconds to wait between batches
+
+
+def _is_quota_exhausted(error_str: str) -> bool:
+    """Check if the quota is fully exhausted (limit: 0) — retrying won't help."""
+    return "limit: 0" in error_str or "limit:0" in error_str
 
 
 def _retry_on_rate_limit(func, *args, **kwargs):
-    """Execute a function with exponential backoff on 429 / RESOURCE_EXHAUSTED errors."""
+    """Execute a function with retry on 429 / RESOURCE_EXHAUSTED errors.
+    
+    Uses short backoff (3s → 6s) with a 15s cap. Fails fast if daily quota
+    is fully exhausted (limit: 0) since retrying is pointless in that case.
+    """
     backoff = INITIAL_BACKOFF
     for attempt in range(1, MAX_RETRIES + 1):
         try:
@@ -46,15 +55,18 @@ def _retry_on_rate_limit(func, *args, **kwargs):
                 or "resource_exhausted" in error_str
                 or "quota" in error_str
             )
+            # If quota is fully exhausted (limit: 0), don't retry at all
+            if _is_quota_exhausted(error_str):
+                raise
             if is_rate_limit and attempt < MAX_RETRIES:
-                wait = backoff + (attempt * 2)  # add jitter
+                wait = min(backoff, MAX_BACKOFF)
                 logger.warning(
                     f"Rate limit hit (attempt {attempt}/{MAX_RETRIES}). "
                     f"Retrying in {wait}s..."
                 )
-                print(f"⏳ Rate limit reached — waiting {wait}s before retry ({attempt}/{MAX_RETRIES})...")
+                print(f"⏳ Rate limit — retrying in {wait}s ({attempt}/{MAX_RETRIES})...")
                 time.sleep(wait)
-                backoff *= BACKOFF_MULTIPLIER
+                backoff *= 2
             else:
                 raise
 

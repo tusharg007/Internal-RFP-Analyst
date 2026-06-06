@@ -207,10 +207,15 @@ with st.sidebar:
             except Exception as e:
                 error_str = str(e)
                 if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
-                    st.warning(
-                        "⏳ **Rate limit reached.** The Gemini free tier has a limit of "
-                        "~100 embedding requests/minute. Please wait 1–2 minutes and try again."
-                    )
+                    if "limit: 0" in error_str or "limit:0" in error_str:
+                        st.error(
+                            "🚫 **Daily API quota exhausted.** The Gemini free tier daily limit has been reached. "
+                            "Please wait a few minutes for the quota to reset, then try again."
+                        )
+                    else:
+                        st.warning(
+                            "⏳ **Rate limit reached.** Please wait a moment and try again."
+                        )
                 else:
                     st.error(f"❌ Error: {error_str}")
 
@@ -350,11 +355,17 @@ if pending:
             except Exception as e:
                 error_str = str(e)
                 if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
-                    friendly_msg = (
-                        "⏳ **Rate limit reached.** The Gemini free tier limits API calls per minute. "
-                        "Your request will be retried automatically. If this persists, wait 1–2 minutes and try again."
-                    )
-                    st.warning(friendly_msg)
+                    if "limit: 0" in error_str or "limit:0" in error_str:
+                        friendly_msg = (
+                            "🚫 **Daily API quota exhausted.** The Gemini free tier daily limit has been reached. "
+                            "Please wait a few minutes for the quota to reset, then try again."
+                        )
+                        st.error(friendly_msg)
+                    else:
+                        friendly_msg = (
+                            "⏳ **Rate limit reached.** Please wait a moment and try again."
+                        )
+                        st.warning(friendly_msg)
                     st.session_state.messages.append(
                         {"role": "assistant", "content": friendly_msg, "reasoning": []}
                     )
@@ -424,11 +435,17 @@ if user_input := st.chat_input("Ask about past projects, tech stacks, proposals.
             except Exception as e:
                 error_str = str(e)
                 if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
-                    friendly_msg = (
-                        "⏳ **Rate limit reached.** The Gemini free tier limits API calls per minute. "
-                        "Your request will be retried automatically. If this persists, wait 1–2 minutes and try again."
-                    )
-                    st.warning(friendly_msg)
+                    if "limit: 0" in error_str or "limit:0" in error_str:
+                        friendly_msg = (
+                            "🚫 **Daily API quota exhausted.** The Gemini free tier daily limit has been reached. "
+                            "Please wait a few minutes for the quota to reset, then try again."
+                        )
+                        st.error(friendly_msg)
+                    else:
+                        friendly_msg = (
+                            "⏳ **Rate limit reached.** Please wait a moment and try again."
+                        )
+                        st.warning(friendly_msg)
                     st.session_state.messages.append(
                         {"role": "assistant", "content": friendly_msg, "reasoning": []}
                     )

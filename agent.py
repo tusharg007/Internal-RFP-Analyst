@@ -15,8 +15,9 @@ from langgraph.checkpoint.memory import MemorySaver
 logger = logging.getLogger(__name__)
 
 # ─── Rate-Limit Constants ─────────────────────────────────────────────────────
-LLM_MAX_RETRIES = 5
-LLM_INITIAL_BACKOFF = 15     # seconds
+LLM_MAX_RETRIES = 2          # keep low to avoid long hangs
+LLM_INITIAL_BACKOFF = 5      # seconds
+LLM_MAX_BACKOFF = 20         # never wait more than 20s per retry
 
 from config import (
     GOOGLE_API_KEY,
@@ -213,13 +214,16 @@ def query_agent(agent, user_query: str, thread_id: str = "default"):
                 or "resource_exhausted" in error_str
                 or "quota" in error_str
             )
+            # If quota is fully exhausted (limit: 0), fail immediately
+            if "limit: 0" in error_str or "limit:0" in error_str:
+                raise
             if is_rate_limit and attempt < LLM_MAX_RETRIES:
-                wait = backoff + (attempt * 3)
+                wait = min(backoff, LLM_MAX_BACKOFF)
                 logger.warning(
                     f"LLM rate limit hit (attempt {attempt}/{LLM_MAX_RETRIES}). "
                     f"Retrying in {wait}s..."
                 )
-                print(f"⏳ LLM rate limit — waiting {wait}s before retry ({attempt}/{LLM_MAX_RETRIES})...")
+                print(f"⏳ LLM rate limit — retrying in {wait}s ({attempt}/{LLM_MAX_RETRIES})...")
                 time.sleep(wait)
                 backoff *= 2
             else:
