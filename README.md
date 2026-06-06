@@ -278,4 +278,4 @@ GROQ_API_KEY = "gsk_your_key_here"
 
 ## 📜 License
 
-This project is for educational and portfolio demonstration purposes. Built by [Tushar Gupta](https://github.com/tusharg007).
+This project is for educational and portfolio demonstration purposes. Built by [Tushar Ghosh](https://github.com/tusharg007).
