@@ -133,8 +133,6 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "agent" not in st.session_state:
     st.session_state.agent = None
-if "thread_id" not in st.session_state:
-    st.session_state.thread_id = f"session_{int(time.time())}"
 if "pending_query" not in st.session_state:
     st.session_state.pending_query = None
 
@@ -247,7 +245,6 @@ with st.sidebar:
     st.markdown("---")
     if st.button("🗑️ Clear Chat History", use_container_width=True):
         st.session_state.messages = []
-        st.session_state.thread_id = f"session_{int(time.time())}"
         st.session_state.agent = None
         st.rerun()
 
@@ -316,7 +313,7 @@ if pending:
                 result = query_agent(
                     st.session_state.agent,
                     pending,
-                    thread_id=st.session_state.thread_id,
+                    chat_history=st.session_state.messages,
                 )
 
                 answer = result["answer"]
@@ -394,7 +391,7 @@ if user_input := st.chat_input("Ask about past projects, tech stacks, proposals.
                 result = query_agent(
                     st.session_state.agent,
                     user_input,
-                    thread_id=st.session_state.thread_id,
+                    chat_history=st.session_state.messages,
                 )
 
                 answer = result["answer"]

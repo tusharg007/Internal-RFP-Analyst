@@ -28,14 +28,14 @@ LLM_MODEL = "gemini-2.0-flash"          # Free: 15 RPM, 1M tokens/min
 LLM_TEMPERATURE = 0.3                          # Low temp for factual retrieval
 LLM_MAX_TOKENS = 2048
 
-# Embeddings
-EMBEDDING_MODEL = "models/gemini-embedding-001"  # Free, latest embedding model
+# Embeddings — Local (ONNX via FastEmbed, no API calls, no rate limits)
+EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 
 # ─── RAG Pipeline ─────────────────────────────────────────────────────────────
 CHUNK_SIZE = 512         # tokens per chunk
 CHUNK_OVERLAP = 50       # overlap for context continuity
-COLLECTION_NAME = "rfp_knowledge_base"
-RETRIEVAL_K = 4          # number of chunks to retrieve per query
+COLLECTION_NAME = "rfp_kb_v2"  # new collection for local embeddings
+RETRIEVAL_K = 6          # retrieve more chunks for better context
 
 # ─── Agent ────────────────────────────────────────────────────────────────────
 AGENT_SYSTEM_PROMPT = """You are the **Internal RFP Analyst**, an AI-powered knowledge agent 
