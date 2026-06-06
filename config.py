@@ -15,27 +15,35 @@ DATA_DIR = BASE_DIR / "data" / "documents"
 VECTORSTORE_DIR = BASE_DIR / "vectorstore"
 ASSETS_DIR = BASE_DIR / "assets"
 
-# ─── Google Gemini (Free Tier) ────────────────────────────────────────────────
+# ─── API Keys ─────────────────────────────────────────────────────────────────
 # Supports both local .env and Streamlit Cloud secrets
 try:
     import streamlit as st
+    GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY", ""))
     GOOGLE_API_KEY = st.secrets.get("GOOGLE_API_KEY", os.getenv("GOOGLE_API_KEY", ""))
 except Exception:
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 
-# LLM
-LLM_MODEL = "gemini-2.0-flash"          # Free: 15 RPM, 1M tokens/min
-LLM_TEMPERATURE = 0.3                          # Low temp for factual retrieval
+# ─── LLM Provider Selection ──────────────────────────────────────────────────
+# Priority: Groq (fastest free inference) → Gemini (fallback)
+# Groq: 30 RPM, 6000 RPD free tier — https://console.groq.com
+# Gemini: 15 RPM free tier — https://aistudio.google.com/apikey
+
+GROQ_MODEL = "llama-3.3-70b-versatile"    # Best quality on Groq free tier
+GEMINI_MODEL = "gemini-2.0-flash"          # Fallback
+
+LLM_TEMPERATURE = 0.3                      # Low temp for factual retrieval
 LLM_MAX_TOKENS = 2048
 
-# Embeddings — Local (ONNX via FastEmbed, no API calls, no rate limits)
+# ─── Embeddings — Local (no API calls, no rate limits) ────────────────────────
 EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 
 # ─── RAG Pipeline ─────────────────────────────────────────────────────────────
 CHUNK_SIZE = 512         # tokens per chunk
 CHUNK_OVERLAP = 50       # overlap for context continuity
-COLLECTION_NAME = "rfp_kb_v2"  # new collection for local embeddings
-RETRIEVAL_K = 6          # retrieve more chunks for better context
+COLLECTION_NAME = "rfp_kb_v2"
+RETRIEVAL_K = 6          # number of chunks to retrieve per query
 
 # ─── Agent ────────────────────────────────────────────────────────────────────
 AGENT_SYSTEM_PROMPT = """You are the **Internal RFP Analyst**, an AI-powered knowledge agent 

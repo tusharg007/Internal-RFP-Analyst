@@ -1,6 +1,6 @@
 """
 Streamlit Dashboard — Internal RFP Analyst Chatbot.
-Professional chatbot UI with streaming, citations, and agent reasoning traces.
+Professional chatbot UI with streaming responses, citations, and source traces.
 """
 
 import streamlit as st
@@ -17,7 +17,7 @@ st.set_page_config(
 
 from config import APP_TITLE, APP_SUBTITLE, SAMPLE_QUESTIONS, DATA_DIR
 from rag_engine import ingest_documents, get_vectorstore_stats
-from agent import create_agent, query_agent
+from agent import create_agent, prepare_query, query_agent_stream, _get_provider_name
 
 # ─── Custom CSS ───────────────────────────────────────────────────────────────
 
@@ -85,23 +85,6 @@ st.markdown("""
         margin: 2px;
     }
 
-    .sample-btn {
-        background: rgba(108, 99, 255, 0.1);
-        border: 1px solid rgba(108, 99, 255, 0.3);
-        border-radius: 8px;
-        padding: 0.6rem 0.8rem;
-        color: #c0c0c0;
-        font-size: 0.85rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        width: 100%;
-        text-align: left;
-    }
-    .sample-btn:hover {
-        background: rgba(108, 99, 255, 0.2);
-        border-color: #6C63FF;
-    }
-
     .stChatMessage { border-radius: 12px; }
 
     div[data-testid="stSidebar"] {
@@ -122,6 +105,17 @@ st.markdown("""
     .status-pending {
         background: rgba(255, 180, 0, 0.15);
         color: #ffb400;
+    }
+
+    .provider-badge {
+        background: rgba(108, 99, 255, 0.12);
+        border: 1px solid rgba(108, 99, 255, 0.3);
+        border-radius: 8px;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+        color: #9D97FF;
+        text-align: center;
+        margin-top: 0.5rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -183,39 +177,26 @@ with st.sidebar:
 
     st.markdown("---")
 
+    # LLM Provider info
+    st.markdown("### 🤖 LLM Provider")
+    provider_name = _get_provider_name()
+    st.markdown(f'<div class="provider-badge">⚡ {provider_name}</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+
     # Ingestion
     st.markdown("### 📥 Document Ingestion")
 
     if st.button("🚀 Ingest Documents", use_container_width=True, type="primary"):
         with st.spinner("Processing documents..."):
             try:
-                progress_bar = st.progress(0, text="Loading PDFs...")
-                progress_bar.progress(20, text="Loading PDFs...")
                 ingest_documents()
-                progress_bar.progress(60, text="Embedding chunks...")
-                time.sleep(0.5)
-                progress_bar.progress(90, text="Storing vectors...")
-                time.sleep(0.3)
-                progress_bar.progress(100, text="Complete!")
                 st.success("✅ Documents ingested successfully!")
-                # Reset agent to pick up new data
                 st.session_state.agent = None
                 time.sleep(1)
                 st.rerun()
             except Exception as e:
-                error_str = str(e)
-                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
-                    if "limit: 0" in error_str or "limit:0" in error_str:
-                        st.error(
-                            "🚫 **Daily API quota exhausted.** The Gemini free tier daily limit has been reached. "
-                            "Please wait a few minutes for the quota to reset, then try again."
-                        )
-                    else:
-                        st.warning(
-                            "⏳ **Rate limit reached.** Please wait a moment and try again."
-                        )
-                else:
-                    st.error(f"❌ Error: {error_str}")
+                st.error(f"❌ Error: {str(e)}")
 
     # Upload custom PDFs
     st.markdown("---")
@@ -237,9 +218,7 @@ with st.sidebar:
     # Settings
     st.markdown("---")
     st.markdown("### 🎛️ Settings")
-    temperature = st.slider("LLM Temperature", 0.0, 1.0, 0.3, 0.1)
-    num_sources = st.slider("Sources to Retrieve", 1, 8, 4)
-    show_reasoning = st.toggle("Show Agent Reasoning", value=True)
+    show_reasoning = st.toggle("Show Source Traces", value=True)
 
     # Reset
     st.markdown("---")
@@ -279,176 +258,99 @@ for msg in st.session_state.messages:
         st.markdown(msg["content"])
 
         # Show reasoning trace if available
-        if msg["role"] == "assistant" and "reasoning" in msg and show_reasoning:
-            with st.expander("🧠 Agent Reasoning Trace", expanded=False):
+        if msg["role"] == "assistant" and "reasoning" in msg and msg["reasoning"] and show_reasoning:
+            with st.expander("📚 Sources Used", expanded=False):
                 for step in msg["reasoning"]:
                     if "tool" in step:
                         st.markdown(
                             f'<div class="reasoning-box">'
-                            f'🔧 <strong>Tool:</strong> {step["tool"]}<br>'
-                            f'📥 <strong>Input:</strong> {step["input"]}'
+                            f'🔧 <strong>Retrieval Query:</strong> {step["input"].get("query", "")}'
                             f'</div>',
                             unsafe_allow_html=True,
                         )
                     elif "tool_response" in step:
                         st.markdown(
                             f'<div class="reasoning-box">'
-                            f'📤 <strong>Response from:</strong> {step["tool_response"]}<br>'
+                            f'📄 <strong>{step["tool_response"]}</strong><br>'
                             f'<em>{step["snippet"][:150]}...</em>'
                             f'</div>',
                             unsafe_allow_html=True,
                         )
 
+
+# ─── Helper: Process a query with streaming ──────────────────────────────────
+
+def _process_query(user_query: str):
+    """Process a query: retrieve context, stream LLM response, store result."""
+    try:
+        # Initialize agent if needed
+        if st.session_state.agent is None:
+            st.session_state.agent = create_agent()
+
+        # Prepare context (local, instant)
+        prompt, reasoning_trace = prepare_query(
+            user_query, chat_history=st.session_state.messages
+        )
+
+        # Stream the LLM response
+        with st.chat_message("assistant", avatar="🤖"):
+            full_response = st.write_stream(
+                query_agent_stream(st.session_state.agent, prompt)
+            )
+
+            # Show sources after streaming completes
+            if reasoning_trace and show_reasoning:
+                with st.expander("📚 Sources Used", expanded=False):
+                    for step in reasoning_trace:
+                        if "tool" in step:
+                            st.markdown(
+                                f'<div class="reasoning-box">'
+                                f'🔧 <strong>Retrieval Query:</strong> {step["input"].get("query", "")}'
+                                f'</div>',
+                                unsafe_allow_html=True,
+                            )
+                        elif "tool_response" in step:
+                            st.markdown(
+                                f'<div class="reasoning-box">'
+                                f'📄 <strong>{step["tool_response"]}</strong><br>'
+                                f'<em>{step["snippet"][:150]}...</em>'
+                                f'</div>',
+                                unsafe_allow_html=True,
+                            )
+
+        # Store message
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": full_response,
+            "reasoning": reasoning_trace,
+        })
+
+    except Exception as e:
+        error_str = str(e)
+        if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
+            friendly_msg = (
+                "⏳ **Rate limit reached.** Please wait a moment and try again. "
+                "Consider adding a GROQ_API_KEY for faster, more reliable responses."
+            )
+            st.warning(friendly_msg)
+        else:
+            friendly_msg = f"❌ Error: {error_str}"
+            st.error(friendly_msg)
+        st.session_state.messages.append(
+            {"role": "assistant", "content": friendly_msg, "reasoning": []}
+        )
+
+
 # ─── Process pending query from sample buttons ───────────────────────────────
 
 pending = st.session_state.pending_query
 if pending:
-    st.session_state.pending_query = None  # clear immediately to avoid re-processing
-    with st.chat_message("assistant", avatar="🤖"):
-        with st.spinner("🔍 Analyzing knowledge base..."):
-            try:
-                if st.session_state.agent is None:
-                    st.session_state.agent = create_agent()
-
-                result = query_agent(
-                    st.session_state.agent,
-                    pending,
-                    chat_history=st.session_state.messages,
-                )
-
-                answer = result["answer"]
-                reasoning = result["reasoning_trace"]
-
-                st.markdown(answer)
-
-                if reasoning and show_reasoning:
-                    with st.expander("🧠 Agent Reasoning Trace", expanded=False):
-                        for step in reasoning:
-                            if "tool" in step:
-                                st.markdown(
-                                    f'<div class="reasoning-box">'
-                                    f'🔧 <strong>Tool:</strong> {step["tool"]}<br>'
-                                    f'📥 <strong>Input:</strong> {step["input"]}'
-                                    f'</div>',
-                                    unsafe_allow_html=True,
-                                )
-                            elif "tool_response" in step:
-                                st.markdown(
-                                    f'<div class="reasoning-box">'
-                                    f'📤 <strong>Response from:</strong> {step["tool_response"]}<br>'
-                                    f'<em>{step["snippet"][:150]}...</em>'
-                                    f'</div>',
-                                    unsafe_allow_html=True,
-                                )
-
-                st.session_state.messages.append(
-                    {
-                        "role": "assistant",
-                        "content": answer,
-                        "reasoning": reasoning,
-                    }
-                )
-
-            except Exception as e:
-                error_str = str(e)
-                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
-                    if "limit: 0" in error_str or "limit:0" in error_str:
-                        friendly_msg = (
-                            "🚫 **Daily API quota exhausted.** The Gemini free tier daily limit has been reached. "
-                            "Please wait a few minutes for the quota to reset, then try again."
-                        )
-                        st.error(friendly_msg)
-                    else:
-                        friendly_msg = (
-                            "⏳ **Rate limit reached.** Please wait a moment and try again."
-                        )
-                        st.warning(friendly_msg)
-                    st.session_state.messages.append(
-                        {"role": "assistant", "content": friendly_msg, "reasoning": []}
-                    )
-                else:
-                    error_msg = f"❌ Error: {error_str}"
-                    st.error(error_msg)
-                    st.session_state.messages.append(
-                        {"role": "assistant", "content": error_msg, "reasoning": []}
-                    )
+    st.session_state.pending_query = None
+    _process_query(pending)
 
 # ─── Chat input ───────────────────────────────────────────────────────────────
 if user_input := st.chat_input("Ask about past projects, tech stacks, proposals..."):
-    # Display user message
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user", avatar="👤"):
         st.markdown(user_input)
-
-    # Generate response
-    with st.chat_message("assistant", avatar="🤖"):
-        with st.spinner("🔍 Analyzing knowledge base..."):
-            try:
-                # Initialize agent if needed
-                if st.session_state.agent is None:
-                    st.session_state.agent = create_agent()
-
-                result = query_agent(
-                    st.session_state.agent,
-                    user_input,
-                    chat_history=st.session_state.messages,
-                )
-
-                answer = result["answer"]
-                reasoning = result["reasoning_trace"]
-
-                st.markdown(answer)
-
-                # Show reasoning
-                if reasoning and show_reasoning:
-                    with st.expander("🧠 Agent Reasoning Trace", expanded=False):
-                        for step in reasoning:
-                            if "tool" in step:
-                                st.markdown(
-                                    f'<div class="reasoning-box">'
-                                    f'🔧 <strong>Tool:</strong> {step["tool"]}<br>'
-                                    f'📥 <strong>Input:</strong> {step["input"]}'
-                                    f'</div>',
-                                    unsafe_allow_html=True,
-                                )
-                            elif "tool_response" in step:
-                                st.markdown(
-                                    f'<div class="reasoning-box">'
-                                    f'📤 <strong>Response from:</strong> {step["tool_response"]}<br>'
-                                    f'<em>{step["snippet"][:150]}...</em>'
-                                    f'</div>',
-                                    unsafe_allow_html=True,
-                                )
-
-                # Store message
-                st.session_state.messages.append(
-                    {
-                        "role": "assistant",
-                        "content": answer,
-                        "reasoning": reasoning,
-                    }
-                )
-
-            except Exception as e:
-                error_str = str(e)
-                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
-                    if "limit: 0" in error_str or "limit:0" in error_str:
-                        friendly_msg = (
-                            "🚫 **Daily API quota exhausted.** The Gemini free tier daily limit has been reached. "
-                            "Please wait a few minutes for the quota to reset, then try again."
-                        )
-                        st.error(friendly_msg)
-                    else:
-                        friendly_msg = (
-                            "⏳ **Rate limit reached.** Please wait a moment and try again."
-                        )
-                        st.warning(friendly_msg)
-                    st.session_state.messages.append(
-                        {"role": "assistant", "content": friendly_msg, "reasoning": []}
-                    )
-                else:
-                    error_msg = f"❌ Error: {error_str}"
-                    st.error(error_msg)
-                    st.session_state.messages.append(
-                        {"role": "assistant", "content": error_msg, "reasoning": []}
-                    )
+    _process_query(user_input)
