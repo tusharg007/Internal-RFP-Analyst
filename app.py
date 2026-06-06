@@ -135,6 +135,8 @@ if "agent" not in st.session_state:
     st.session_state.agent = None
 if "thread_id" not in st.session_state:
     st.session_state.thread_id = f"session_{int(time.time())}"
+if "pending_query" not in st.session_state:
+    st.session_state.pending_query = None
 
 # ─── Auto-Setup (for Streamlit Cloud: generate PDFs & ingest if needed) ───────
 
@@ -265,6 +267,7 @@ if not st.session_state.messages:
     for i, q in enumerate(SAMPLE_QUESTIONS[:6]):
         with cols[i % 2]:
             if st.button(q, key=f"sample_{i}", use_container_width=True):
+                st.session_state.pending_query = q
                 st.session_state.messages.append({"role": "user", "content": q})
                 st.rerun()
 
@@ -294,7 +297,75 @@ for msg in st.session_state.messages:
                             unsafe_allow_html=True,
                         )
 
-# Chat input
+# ─── Process pending query from sample buttons ───────────────────────────────
+
+pending = st.session_state.pending_query
+if pending:
+    st.session_state.pending_query = None  # clear immediately to avoid re-processing
+    with st.chat_message("assistant", avatar="🤖"):
+        with st.spinner("🔍 Analyzing knowledge base..."):
+            try:
+                if st.session_state.agent is None:
+                    st.session_state.agent = create_agent()
+
+                result = query_agent(
+                    st.session_state.agent,
+                    pending,
+                    thread_id=st.session_state.thread_id,
+                )
+
+                answer = result["answer"]
+                reasoning = result["reasoning_trace"]
+
+                st.markdown(answer)
+
+                if reasoning and show_reasoning:
+                    with st.expander("🧠 Agent Reasoning Trace", expanded=False):
+                        for step in reasoning:
+                            if "tool" in step:
+                                st.markdown(
+                                    f'<div class="reasoning-box">'
+                                    f'🔧 <strong>Tool:</strong> {step["tool"]}<br>'
+                                    f'📥 <strong>Input:</strong> {step["input"]}'
+                                    f'</div>',
+                                    unsafe_allow_html=True,
+                                )
+                            elif "tool_response" in step:
+                                st.markdown(
+                                    f'<div class="reasoning-box">'
+                                    f'📤 <strong>Response from:</strong> {step["tool_response"]}<br>'
+                                    f'<em>{step["snippet"][:150]}...</em>'
+                                    f'</div>',
+                                    unsafe_allow_html=True,
+                                )
+
+                st.session_state.messages.append(
+                    {
+                        "role": "assistant",
+                        "content": answer,
+                        "reasoning": reasoning,
+                    }
+                )
+
+            except Exception as e:
+                error_str = str(e)
+                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
+                    friendly_msg = (
+                        "⏳ **Rate limit reached.** The Gemini free tier limits API calls per minute. "
+                        "Your request will be retried automatically. If this persists, wait 1–2 minutes and try again."
+                    )
+                    st.warning(friendly_msg)
+                    st.session_state.messages.append(
+                        {"role": "assistant", "content": friendly_msg, "reasoning": []}
+                    )
+                else:
+                    error_msg = f"❌ Error: {error_str}"
+                    st.error(error_msg)
+                    st.session_state.messages.append(
+                        {"role": "assistant", "content": error_msg, "reasoning": []}
+                    )
+
+# ─── Chat input ───────────────────────────────────────────────────────────────
 if user_input := st.chat_input("Ask about past projects, tech stacks, proposals..."):
     # Display user message
     st.session_state.messages.append({"role": "user", "content": user_input})
