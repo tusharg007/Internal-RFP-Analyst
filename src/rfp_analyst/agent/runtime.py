@@ -1,0 +1,138 @@
+﻿"""Runtime helpers for simple and agentic RAG modes."""
+
+from __future__ import annotations
+
+from langchain_core.messages import HumanMessage
+
+from config import AGENT_MODE
+from rag_engine import get_vectorstore_stats
+from rfp_analyst.agent.graph import run_agent_graph
+from rfp_analyst.agent.prompts import build_simple_prompt
+from rfp_analyst.agent.state import AgentState
+from rfp_analyst.exceptions import KnowledgeBaseNotReadyError, RetrievalError
+from rfp_analyst.tools.search_kb import search_knowledge_base
+from rfp_analyst.tools.source_verifier import verify_answer_grounding
+
+
+KNOWLEDGE_BASE_NOT_READY_MESSAGE = (
+    "Knowledge base is not ready. Generate or upload PDFs and click Ingest Documents."
+)
+
+
+def get_agent_mode() -> str:
+    return AGENT_MODE if AGENT_MODE in {"simple", "agentic"} else "agentic"
+
+
+def _stream_text(text: str, chunk_size: int = 120):
+    for index in range(0, len(text), chunk_size):
+        yield text[index:index + chunk_size]
+
+
+def prepare_simple_query(user_query: str, chat_history: list | None = None) -> dict:
+    stats = get_vectorstore_stats()
+    if stats.get("status") != "ready":
+        return {
+            "mode": "simple",
+            "prompt": "",
+            "documents": [],
+            "reasoning_trace": [{"tool": "knowledge_base_status", "input": {"status": "not_initialized"}}],
+            "prebuilt_answer": KNOWLEDGE_BASE_NOT_READY_MESSAGE,
+        }
+
+    result = search_knowledge_base(user_query)
+    if not result["documents"]:
+        return {
+            "mode": "simple",
+            "prompt": "",
+            "documents": [],
+            "reasoning_trace": [{"tool": "search_knowledge_base", "input": {"query": user_query, "mode": "simple"}}],
+            "prebuilt_answer": "I couldn't find relevant documents for this request. Please ingest more documents or refine the question.",
+        }
+
+    prompt = build_simple_prompt(user_query, result["context"], stats, chat_history)
+    reasoning_trace = [{"tool": "search_knowledge_base", "input": {"query": user_query, "mode": "simple"}}]
+    for source in result["sources"][:3]:
+        reasoning_trace.append(
+            {
+                "tool_response": f"{source['source']} (Page {source['page'] + 1})",
+                "snippet": source["snippet"],
+            }
+        )
+    return {
+        "mode": "simple",
+        "prompt": prompt,
+        "documents": result["documents"],
+        "reasoning_trace": reasoning_trace,
+        "prebuilt_answer": None,
+    }
+
+
+def prepare_agentic_query(user_query: str, chat_history: list | None = None) -> dict:
+    state = run_agent_graph(AgentState(query=user_query, chat_history=chat_history or []))
+    return {
+        "mode": "agentic",
+        "prompt": state.prompt,
+        "documents": state.retrieved_documents,
+        "reasoning_trace": state.tool_trace,
+        "prebuilt_answer": state.final_answer or None,
+    }
+
+
+def prepare_query_payload(user_query: str, chat_history: list | None = None) -> dict:
+    if get_agent_mode() == "simple":
+        return prepare_simple_query(user_query, chat_history)
+    return prepare_agentic_query(user_query, chat_history)
+
+
+def stream_query_response(llm, payload):
+    if isinstance(payload, str):
+        for chunk in llm.stream([HumanMessage(content=payload)]):
+            if chunk.content:
+                yield chunk.content
+        return
+
+    prebuilt_answer = payload.get("prebuilt_answer")
+    if prebuilt_answer:
+        yield from _stream_text(prebuilt_answer)
+        return
+
+    prompt = payload.get("prompt", "")
+    if not prompt:
+        raise KnowledgeBaseNotReadyError(KNOWLEDGE_BASE_NOT_READY_MESSAGE)
+
+    full_response = ""
+    for chunk in llm.stream([HumanMessage(content=prompt)]):
+        if chunk.content:
+            full_response += chunk.content
+            yield chunk.content
+
+    verification = verify_answer_grounding(full_response, payload.get("documents", []))
+    if not verification["is_grounded"]:
+        warning_lines = ["\n\nGrounding check: some claims may not be fully supported:"]
+        warning_lines.extend(f"- {claim}" for claim in verification["unsupported_claims"][:3])
+        yield "\n".join(warning_lines)
+
+
+def run_query(llm, user_query: str, chat_history: list | None = None) -> dict:
+    payload = prepare_query_payload(user_query, chat_history)
+    if payload.get("prebuilt_answer"):
+        return {
+            "answer": payload["prebuilt_answer"],
+            "reasoning_trace": payload["reasoning_trace"],
+            "all_messages": [],
+        }
+
+    prompt = payload.get("prompt", "")
+    if not prompt:
+        raise RetrievalError(KNOWLEDGE_BASE_NOT_READY_MESSAGE)
+
+    response = llm.invoke([HumanMessage(content=prompt)])
+    answer = response.content
+    verification = verify_answer_grounding(answer, payload.get("documents", []))
+    if not verification["is_grounded"]:
+        answer += "\n\nGrounding check: some claims may not be fully supported."
+    return {
+        "answer": answer,
+        "reasoning_trace": payload["reasoning_trace"],
+        "all_messages": [],
+    }

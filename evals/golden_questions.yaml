@@ -1,0 +1,96 @@
+﻿id: q1
+category: direct_fact_lookup
+question: What tech stack did we use for the last banking audit?
+expected_sources:
+  - Banking_Audit.pdf
+expected_keywords:
+  - Azure SQL
+  - Power BI
+expect_citations: true
+---
+id: q2
+category: project_comparison
+question: Compare the banking and insurance projects.
+expected_sources:
+  - Banking_Audit.pdf
+  - Insurance_Automation.pdf
+expected_keywords:
+  - budget
+  - timeline
+expect_citations: true
+---
+id: q3
+category: budget_extraction
+question: What was the budget for the healthcare migration project?
+expected_sources:
+  - Healthcare_Migration.pdf
+expected_keywords:
+  - $1,200,000
+expect_citations: true
+---
+id: q4
+category: timeline_extraction
+question: What was the timeline for the retail supply chain analytics platform?
+expected_sources:
+  - Retail_Supply_Chain.pdf
+expected_keywords:
+  - 24 weeks
+expect_citations: true
+---
+id: q5
+category: tech_stack_search
+question: Which projects used Azure services?
+expected_sources:
+  - Banking_Audit.pdf
+  - Healthcare_Migration.pdf
+  - Insurance_Automation.pdf
+expected_keywords:
+  - Azure
+expect_citations: true
+---
+id: q6
+category: compliance_framework_search
+question: What compliance frameworks did we follow in pharma projects?
+expected_sources:
+  - Pharma_Clinical_Trials.pdf
+expected_keywords:
+  - FDA 21 CFR Part 11
+  - GDPR
+expect_citations: true
+---
+id: q7
+category: ambiguous_question_handling
+question: Can you compare it with the other one?
+expected_keywords:
+  - ambiguous
+  - clarify
+expect_citations: false
+---
+id: q8
+category: no_answer_behavior
+question: What was the blockchain architecture used in the aerospace project?
+expected_keywords:
+  - couldn't find
+  - refine the question
+expect_citations: false
+---
+id: q9
+category: proposal_outline_generation
+question: Write a proposal outline for an Azure migration RFP that requires dashboards and HIPAA compliance.
+expected_sources:
+  - Healthcare_Migration.pdf
+expected_keywords:
+  - Executive Summary
+  - Client Requirements
+expect_citations: true
+---
+id: q10
+category: multi_document_synthesis
+question: Which projects combined Azure with compliance-heavy delivery, and what outcomes did they achieve?
+expected_sources:
+  - Healthcare_Migration.pdf
+  - Pharma_Clinical_Trials.pdf
+expected_keywords:
+  - HIPAA
+  - FDA 21 CFR Part 11
+expect_citations: true

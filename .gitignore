@@ -1,20 +1,28 @@
-# ─── Environment ───
+# Environment
 .env
+.venv/
 venv/
 __pycache__/
+.pytest_cache/
+.pytest_tmp/
+.ruff_cache/
 *.pyc
+.streamlit/secrets.toml
 
-# ─── Vector Store (regenerated on deploy) ───
+# Vector Store (regenerated on deploy)
 vectorstore/
 
-# ─── Generated PDFs (regenerated on deploy) ───
+# Generated PDFs (regenerated on deploy)
 data/documents/*.pdf
 
-# ─── IDE ───
+# Generated evaluation outputs
+evals/results.json
+
+# IDE
 .vscode/
 .idea/
 *.swp
 
-# ─── OS ───
+# OS
 Thumbs.db
 .DS_Store

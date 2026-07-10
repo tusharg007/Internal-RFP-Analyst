@@ -1,93 +1,87 @@
-"""
-RAG Engine — Document Ingestion, Embedding & Retrieval Pipeline.
-Uses PyMuPDF for PDF loading, ChromaDB for vector storage.
-Embeddings run locally via FastEmbed (ONNX) — no API calls, no rate limits.
+﻿"""RAG Engine - Document Ingestion, Embedding & Retrieval Pipeline.
+Backward-compatible wrappers for the production ingestion package.
 """
 
-import os
 from pathlib import Path
-from langchain_community.document_loaders import PyMuPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
-from langchain_chroma import Chroma
+
 from config import (
-    EMBEDDING_MODEL,
-    CHUNK_SIZE,
     CHUNK_OVERLAP,
+    CHUNK_SIZE,
     COLLECTION_NAME,
     DATA_DIR,
-    VECTORSTORE_DIR,
     RETRIEVAL_K,
+    VECTORSTORE_DIR,
 )
+from rfp_analyst.exceptions import IngestionError, KnowledgeBaseNotReadyError, RetrievalError
+from rfp_analyst.ingestion.chunking import chunk_loaded_sources
+from rfp_analyst.ingestion.loaders import load_pdf_sources
+from rfp_analyst.ingestion.pipeline import IngestionPipeline
+from rfp_analyst.retrieval.vector_store import VectorStoreManager
+from rfp_analyst.retrieval.vector_store import get_embeddings as _get_embeddings
+from rfp_analyst.schemas import LoadedSource
 
 
 def get_embeddings():
-    """Initialize local embedding model. No API key needed, no rate limits."""
-    return FastEmbedEmbeddings(model_name=EMBEDDING_MODEL)
+    """Backward-compatible embeddings wrapper."""
+    return _get_embeddings()
 
 
 def load_pdfs(doc_dir: Path = DATA_DIR):
-    """Load all PDFs from the given directory using PyMuPDF."""
-    pdf_files = sorted(doc_dir.glob("*.pdf"))
-    if not pdf_files:
-        raise FileNotFoundError(f"No PDF files found in {doc_dir}")
-
+    """Backward-compatible PDF loading wrapper."""
+    loaded_sources = load_pdf_sources(doc_dir)
     all_docs = []
-    for pdf_path in pdf_files:
-        loader = PyMuPDFLoader(str(pdf_path))
-        docs = loader.load()
-        # Enrich metadata
-        for doc in docs:
-            doc.metadata["source_file"] = pdf_path.name
-            doc.metadata["source_path"] = str(pdf_path)
-        all_docs.extend(docs)
-        print(f"  Loaded: {pdf_path.name} ({len(docs)} pages)")
-
-    print(f"Total pages loaded: {len(all_docs)}")
+    for source in loaded_sources:
+        all_docs.extend(source.documents)
     return all_docs
 
 
 def chunk_documents(documents):
-    """Split documents into chunks with overlap for context continuity."""
-    splitter = RecursiveCharacterTextSplitter(
+    """Backward-compatible chunking wrapper."""
+    if not documents:
+        return []
+
+    grouped_sources = {}
+    for document in documents:
+        file_hash = document.metadata.get("file_hash", "legacy")
+        grouped_sources.setdefault(file_hash, []).append(document)
+
+    loaded_sources = []
+    for file_hash, source_documents in grouped_sources.items():
+        first = source_documents[0]
+        loaded_sources.append(
+            LoadedSource(
+                source_file=first.metadata.get("source_file", "unknown.pdf"),
+                source_path=first.metadata.get("source_path", ""),
+                file_hash=file_hash,
+                page_count=len(source_documents),
+                document_type=first.metadata.get("document_type"),
+                documents=source_documents,
+            )
+        )
+
+    return chunk_loaded_sources(
+        loaded_sources,
         chunk_size=CHUNK_SIZE,
         chunk_overlap=CHUNK_OVERLAP,
-        length_function=len,
-        separators=["\n\n", "\n", ". ", " ", ""],
     )
-    chunks = splitter.split_documents(documents)
-    print(f"Created {len(chunks)} chunks (size={CHUNK_SIZE}, overlap={CHUNK_OVERLAP})")
-    return chunks
 
 
 def create_vectorstore(chunks, persist_dir: Path = VECTORSTORE_DIR):
-    """Embed chunks and store in ChromaDB. Uses local embeddings — fast, no API calls."""
-    persist_dir.mkdir(parents=True, exist_ok=True)
-    embeddings = get_embeddings()
-
-    vectorstore = Chroma.from_documents(
-        documents=chunks,
-        embedding=embeddings,
+    """Backward-compatible vector store wrapper."""
+    manager = VectorStoreManager(
+        persist_dir=persist_dir,
         collection_name=COLLECTION_NAME,
-        persist_directory=str(persist_dir),
     )
-    print(f"Vector store created with {vectorstore._collection.count()} vectors")
-    print(f"Persisted to: {persist_dir}")
-    return vectorstore
+    return manager.upsert_documents(chunks)
 
 
 def load_vectorstore(persist_dir: Path = VECTORSTORE_DIR):
     """Load an existing ChromaDB vector store from disk."""
-    if not persist_dir.exists():
-        raise FileNotFoundError(
-            f"Vector store not found at {persist_dir}. Run ingestion first."
-        )
-    embeddings = get_embeddings()
-    vectorstore = Chroma(
+    manager = VectorStoreManager(
+        persist_dir=persist_dir,
         collection_name=COLLECTION_NAME,
-        embedding_function=embeddings,
-        persist_directory=str(persist_dir),
     )
+    vectorstore = manager.load(create_if_missing=False)
     count = vectorstore._collection.count()
     print(f"Loaded vector store with {count} vectors")
     return vectorstore
@@ -95,68 +89,49 @@ def load_vectorstore(persist_dir: Path = VECTORSTORE_DIR):
 
 def get_retriever(k: int = RETRIEVAL_K):
     """Get a LangChain retriever from the persisted vector store."""
-    vectorstore = load_vectorstore()
-    return vectorstore.as_retriever(
-        search_type="similarity",
-        search_kwargs={"k": k},
+    manager = VectorStoreManager(
+        persist_dir=VECTORSTORE_DIR,
+        collection_name=COLLECTION_NAME,
     )
+    return manager.get_retriever(k=k)
 
 
 def similarity_search(query: str, k: int = RETRIEVAL_K):
     """Direct similarity search returning documents with scores."""
-    vectorstore = load_vectorstore()
-    results = vectorstore.similarity_search_with_relevance_scores(query, k=k)
-    return results
+    manager = VectorStoreManager(
+        persist_dir=VECTORSTORE_DIR,
+        collection_name=COLLECTION_NAME,
+    )
+    try:
+        return manager.similarity_search(query, k=k)
+    except KnowledgeBaseNotReadyError:
+        raise
+    except Exception as error:
+        raise RetrievalError(str(error)) from error
 
 
 def get_vectorstore_stats():
     """Get statistics about the current vector store."""
-    try:
-        vectorstore = load_vectorstore()
-        count = vectorstore._collection.count()
-        # Get unique sources
-        all_metadata = vectorstore._collection.get()["metadatas"]
-        sources = set()
-        for m in all_metadata:
-            if "source_file" in m:
-                sources.add(m["source_file"])
-        return {
-            "total_chunks": count,
-            "total_documents": len(sources),
-            "document_names": sorted(sources),
-            "status": "ready",
-        }
-    except Exception:
-        return {
-            "total_chunks": 0,
-            "total_documents": 0,
-            "document_names": [],
-            "status": "not_initialized",
-        }
+    manager = VectorStoreManager(
+        persist_dir=VECTORSTORE_DIR,
+        collection_name=COLLECTION_NAME,
+    )
+    return manager.get_stats()
 
 
 def ingest_documents(doc_dir: Path = DATA_DIR):
-    """Full ingestion pipeline: load → chunk → embed → store."""
-    print("=" * 60)
-    print("DOCUMENT INGESTION PIPELINE")
-    print("=" * 60)
-
-    print("\n[1/3] Loading PDFs...")
-    documents = load_pdfs(doc_dir)
-
-    print("\n[2/3] Chunking documents...")
-    chunks = chunk_documents(documents)
-
-    print("\n[3/3] Embedding & storing in ChromaDB (local embeddings)...")
-    vectorstore = create_vectorstore(chunks)
-
-    stats = get_vectorstore_stats()
-    print("\n" + "=" * 60)
-    print("INGESTION COMPLETE")
-    print(f"  Documents: {stats['total_documents']}")
-    print(f"  Chunks:    {stats['total_chunks']}")
-    print("=" * 60)
-    return vectorstore
+    """Full ingestion pipeline wrapper."""
+    pipeline = IngestionPipeline(
+        doc_dir=doc_dir,
+        persist_dir=VECTORSTORE_DIR,
+        collection_name=COLLECTION_NAME,
+    )
+    try:
+        return pipeline.run()
+    except Exception as error:
+        if isinstance(error, IngestionError):
+            raise
+        raise IngestionError(str(error)) from error
 
 
 if __name__ == "__main__":
