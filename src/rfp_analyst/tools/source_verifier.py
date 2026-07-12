@@ -16,8 +16,16 @@ def verify_answer_grounding(answer: str, supporting_documents: list[object]) -> 
     """Check whether the answer's major claims are backed by cited evidence."""
     source_index = {}
     for document in supporting_documents:
-        source_name = document.metadata.get("source_file", "Unknown")
-        source_index.setdefault(source_name, []).append(document.page_content)
+        if isinstance(document, dict):
+            source_name = document.get("source", "Unknown")
+            page = int(document.get("page", 0) or 0) + 1
+            content = document.get("content", "")
+        else:
+            metadata = document.metadata or {}
+            source_name = metadata.get("source_file", "Unknown")
+            page = int(metadata.get("page", 0) or 0) + 1
+            content = document.page_content
+        source_index.setdefault((source_name, page), []).append(content)
 
     unsupported_claims = []
     checked_claims = []
@@ -25,8 +33,13 @@ def verify_answer_grounding(answer: str, supporting_documents: list[object]) -> 
         line = raw_line.strip()
         if len(line) <= 20 or line.startswith("##"):
             continue
+        if "retrieved evidence does not support this claim" in line.lower():
+            continue
 
-        line_citations = [match.group("source").strip() for match in _CITATION_PATTERN.finditer(line)]
+        line_citations = [
+            (match.group("source").strip(), int(match.group("page")))
+            for match in _CITATION_PATTERN.finditer(line)
+        ]
         line_without_citations = _CITATION_PATTERN.sub("", line)
         sentence_candidates = [segment.strip() for segment in re.split(r"(?<=[.!?])\s+", line_without_citations) if segment.strip()]
 
@@ -40,10 +53,13 @@ def verify_answer_grounding(answer: str, supporting_documents: list[object]) -> 
 
             candidate_sources = line_citations or list(source_index)
             supported = False
-            for source_name in candidate_sources:
-                combined_source_text = " ".join(source_index.get(source_name, []))
+            for source_key in candidate_sources:
+                combined_source_text = " ".join(source_index.get(source_key, []))
                 source_tokens = _tokenize(combined_source_text)
-                if len(claim_tokens.intersection(source_tokens)) >= 2:
+                numeric_claims = set(re.findall(r"\b\d[\d,.%$-]*\b", claim))
+                numeric_evidence = set(re.findall(r"\b\d[\d,.%$-]*\b", combined_source_text))
+                numbers_supported = not numeric_claims or numeric_claims.issubset(numeric_evidence)
+                if len(claim_tokens.intersection(source_tokens)) >= 2 and numbers_supported:
                     supported = True
                     break
 

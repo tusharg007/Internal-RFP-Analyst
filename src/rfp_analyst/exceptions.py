@@ -1,22 +1,20 @@
-﻿"""Project-specific exceptions."""
-
-from __future__ import annotations
+"""Custom exceptions for the Internal RFP Analyst app."""
 
 
 class RFPAnalystError(Exception):
-    """Base application exception."""
+    """Base exception for app-specific failures."""
 
 
 class LLMProviderNotConfiguredError(RFPAnalystError):
-    """Raised when no LLM provider credentials are configured."""
+    """Raised when no supported LLM provider is configured."""
 
 
 class KnowledgeBaseNotReadyError(RFPAnalystError):
-    """Raised when retrieval is attempted before the knowledge base is ready."""
+    """Raised when retrieval is attempted before the vector store is ready."""
 
 
 class NoDocumentsFoundError(RFPAnalystError):
-    """Raised when no source documents are available for ingestion."""
+    """Raised when ingestion is attempted without any source PDFs."""
 
 
 class IngestionError(RFPAnalystError):
@@ -24,7 +22,7 @@ class IngestionError(RFPAnalystError):
 
 
 class RetrievalError(RFPAnalystError):
-    """Raised when retrieval fails."""
+    """Raised when knowledge base retrieval fails."""
 
 
 class UnsupportedFileError(RFPAnalystError):

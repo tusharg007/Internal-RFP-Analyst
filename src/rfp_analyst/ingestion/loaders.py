@@ -1,4 +1,4 @@
-﻿"""Validated document loading utilities."""
+"""Validated document loading utilities."""
 
 from __future__ import annotations
 
@@ -79,7 +79,10 @@ def validate_pdf(pdf_path: Path) -> int:
     return page_count
 
 
-def load_pdf_sources(doc_dir: Path = DATA_DIR) -> list[LoadedSource]:
+def load_pdf_sources(
+    doc_dir: Path = DATA_DIR,
+    document_origin: str = "sample",
+) -> list[LoadedSource]:
     """Load, validate, and enrich all PDFs in a directory."""
     pdf_files = sorted(doc_dir.glob("*.pdf"))
     if not pdf_files:
@@ -102,6 +105,7 @@ def load_pdf_sources(doc_dir: Path = DATA_DIR) -> list[LoadedSource]:
                 document.metadata["file_hash"] = file_hash
                 document.metadata["page"] = int(document.metadata.get("page", page_index))
                 document.metadata["document_type"] = document_type
+                document.metadata["document_origin"] = document_origin
 
             loaded_sources.append(
                 LoadedSource(
@@ -111,9 +115,10 @@ def load_pdf_sources(doc_dir: Path = DATA_DIR) -> list[LoadedSource]:
                     page_count=page_count,
                     document_type=document_type,
                     documents=documents,
+                    document_origin=document_origin,
                 )
             )
-            print(f"  Loaded: {pdf_path.name} ({page_count} pages)")
+            print(f"  Loaded: {pdf_path.name} ({page_count} pages, origin={document_origin})")
     except NoDocumentsFoundError:
         raise
     except Exception as error:

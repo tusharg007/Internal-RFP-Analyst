@@ -1,40 +1,70 @@
-﻿# Evaluation Suite
+﻿# Evaluation Modes
 
-This project includes a deterministic evaluation suite in `evals/` so we can validate retrieval, tool orchestration, grounding, and fallback behavior without depending on paid model calls.
+This project now separates two very different kinds of evaluation output.
 
-## What it covers
+## Offline Smoke Evaluation
 
-- Direct fact lookup
-- Project comparison
-- Budget extraction
-- Timeline extraction
-- Tech stack search
-- Compliance framework search
-- Ambiguous question handling
-- No-answer / insufficient evidence behavior
-- Proposal outline generation
-- Multi-document synthesis
+The offline smoke evaluation is intentionally lightweight and deterministic.
 
-## Files
+- Script: `evals/run_evals.py`
+- Data source: a small mock corpus in Python
+- Answer generation: deterministic mock synthesis
+- Purpose: catch obvious packaging, formatting, and snapshot-regression issues quickly
 
-- `evals/golden_questions.yaml`: the golden question set
-- `evals/run_evals.py`: deterministic runner that uses mocked retrieval and non-API answer synthesis
-- `evals/metrics.py`: aggregate metric calculations
-- `evals/results.json`: generated output after an eval run
+This evaluation is **not** evidence of real retrieval quality. A perfect score here only means the mock harness still behaves as expected.
 
-## Metrics
+## Real KB Evaluation
 
-- `retrieval_hit_rate`: how often expected source documents are retrieved
-- `citation_coverage`: how often answers that should cite sources actually include citations
-- `grounded_answer_score`: fraction of answers that pass grounding verification
-- `average_latency`: average per-question runtime in milliseconds
-- `tool_call_count`: average number of tool steps used per question
-- `failure_rate`: fraction of eval cases that fail expectations
+The real knowledge-base evaluation runs against the actual sample PDF corpus, the generated evaluation upload fixture, and the Chroma-backed retrieval stack.
 
-## UI snapshot
+- Script: `evals/run_kb_evals.py`
+- Data source: generated sample PDFs in `data/documents` plus a temporary evaluation upload fixture
+- Retrieval path: real ingestion into an isolated temporary vectorstore plus the actual graph and retrieval layer used by the app
+- Metrics recorded per case:
+  - retrieved sources
+  - citation coverage against expected source files
+  - no-answer behavior
+  - retrieval latency
+  - optional LLM-answer latency when an API key is configured
 
-If `evals/results.json` exists, the Streamlit sidebar shows an `Evaluation Snapshot` section with the latest metric summary and pass count.
+By default, the real KB evaluation runs in **retrieval-only mode**. This keeps evaluation available even when no `GROQ_API_KEY` or `GOOGLE_API_KEY` is configured.
 
-## Notes
+If either API key is present, the script can also run in **LLM-answer mode** and record answer previews plus answer latency.
 
-The eval runner is intentionally deterministic. It uses a small in-memory corpus and mocked retrieval behavior so the suite can run in CI or on local machines without external API dependencies.
+## Running the Evaluations
+
+### Offline smoke evaluation
+
+```bash
+python -m evals.run_evals
+```
+
+This writes `evals/offline_smoke_results.json`.
+
+### Real KB evaluation
+
+```bash
+python -m evals.run_kb_evals
+```
+
+This script will:
+
+1. ensure the sample PDFs exist
+2. ingest them into an isolated temporary Chroma index
+3. run golden questions through the actual retrieval layer
+4. persist `evals/real_kb_results.json`
+
+The isolated vectorstore and temporary upload directory keep evaluation from depending on local uploaded files or replacing/locking the app's local `vectorstore/` directory on Windows.
+
+## Streamlit UI
+
+The sidebar shows these snapshots separately:
+
+- `Offline Smoke Evaluation`
+- `Real KB Evaluation`
+
+If no real KB evaluation has been run yet, the app explicitly shows:
+
+`No real KB evaluation run found`
+
+That distinction is important because only the real KB evaluation exercises the actual retrieval stack.

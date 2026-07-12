@@ -1,96 +1,75 @@
-﻿id: q1
-category: direct_fact_lookup
-question: What tech stack did we use for the last banking audit?
+id: sample_retrieval
+category: scoped_sample_retrieval
+question: What technology stack was used for the banking digital audit?
+retrieval_scope: sample
 expected_sources:
-  - Banking_Audit.pdf
-expected_keywords:
-  - Azure SQL
-  - Power BI
-expect_citations: true
+  - 01_Banking_Sector_Digital_Audit_2024.pdf
+expected_origins:
+  - sample
+expected_tools:
+  - search_knowledge_base
+expects_no_answer: false
 ---
-id: q2
-category: project_comparison
-question: Compare the banking and insurance projects.
+id: upload_retrieval
+category: scoped_upload_retrieval
+question: What controls and delivery requirements are in the uploaded client RFP?
+retrieval_scope: upload
 expected_sources:
-  - Banking_Audit.pdf
-  - Insurance_Automation.pdf
-expected_keywords:
-  - budget
-  - timeline
-expect_citations: true
+  - eval_target_rfp.pdf
+expected_origins:
+  - upload
+expected_tools:
+  - search_knowledge_base
+expects_no_answer: false
 ---
-id: q3
-category: budget_extraction
-question: What was the budget for the healthcare migration project?
+id: cross_corpus_analysis
+category: cross_corpus_rfp_analysis
+question: Extract requirements, find gaps and case studies, compare fit, create a proposal outline, and verify recommendations for the uploaded RFP.
+retrieval_scope: all
 expected_sources:
-  - Healthcare_Migration.pdf
-expected_keywords:
-  - $1,200,000
-expect_citations: true
+  - eval_target_rfp.pdf
+expected_origins:
+  - upload
+  - sample
+expected_tools:
+  - extract_rfp_requirements
+  - find_relevant_case_studies
+  - compare_projects
+  - proposal_writer
+expects_no_answer: false
 ---
-id: q4
-category: timeline_extraction
-question: What was the timeline for the retail supply chain analytics platform?
-expected_sources:
-  - Retail_Supply_Chain.pdf
-expected_keywords:
-  - 24 weeks
-expect_citations: true
+id: previous_sources
+category: previous_answer_sources
+question: What sources did you use?
+expected_sources: []
+expected_tools:
+  - previous_sources
+expects_no_answer: false
+chat_history:
+  - role: assistant
+    content: The uploaded RFP requires HIPAA controls.
+    reasoning:
+      - source: eval_target_rfp.pdf
+        page: 1
+        document_origin: upload
 ---
-id: q5
-category: tech_stack_search
-question: Which projects used Azure services?
-expected_sources:
-  - Banking_Audit.pdf
-  - Healthcare_Migration.pdf
-  - Insurance_Automation.pdf
-expected_keywords:
-  - Azure
-expect_citations: true
----
-id: q6
-category: compliance_framework_search
-question: What compliance frameworks did we follow in pharma projects?
-expected_sources:
-  - Pharma_Clinical_Trials.pdf
-expected_keywords:
-  - FDA 21 CFR Part 11
-  - GDPR
-expect_citations: true
----
-id: q7
-category: ambiguous_question_handling
-question: Can you compare it with the other one?
-expected_keywords:
-  - ambiguous
-  - clarify
-expect_citations: false
----
-id: q8
+id: unsupported_query
 category: no_answer_behavior
-question: What was the blockchain architecture used in the aerospace project?
-expected_keywords:
-  - couldn't find
-  - refine the question
-expect_citations: false
+question: What is the CEO's private phone number for the aerospace blockchain program?
+expected_sources: []
+expected_tools:
+  - search_knowledge_base
+expects_no_answer: true
 ---
-id: q9
-category: proposal_outline_generation
-question: Write a proposal outline for an Azure migration RFP that requires dashboards and HIPAA compliance.
+id: specialized_comparison
+category: specialized_tool_execution
+question: Compare the healthcare migration versus insurance automation projects.
+retrieval_scope: sample
 expected_sources:
-  - Healthcare_Migration.pdf
-expected_keywords:
-  - Executive Summary
-  - Client Requirements
-expect_citations: true
----
-id: q10
-category: multi_document_synthesis
-question: Which projects combined Azure with compliance-heavy delivery, and what outcomes did they achieve?
-expected_sources:
-  - Healthcare_Migration.pdf
-  - Pharma_Clinical_Trials.pdf
-expected_keywords:
-  - HIPAA
-  - FDA 21 CFR Part 11
-expect_citations: true
+  - 02_Healthcare_Data_Migration_to_Azure_Cloud.pdf
+  - 04_Insurance_Claims_Processing_Automation.pdf
+expected_origins:
+  - sample
+expected_tools:
+  - compare_projects
+expects_no_answer: false

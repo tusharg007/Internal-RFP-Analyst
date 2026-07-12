@@ -1,4 +1,4 @@
-﻿"""Vector store management for ingestion and retrieval."""
+"""Vector store management for ingestion and retrieval."""
 
 from __future__ import annotations
 
@@ -11,10 +11,25 @@ from langchain_core.documents import Document
 from config import COLLECTION_NAME, EMBEDDING_MODEL, RETRIEVAL_K, VECTORSTORE_DIR
 from rfp_analyst.exceptions import KnowledgeBaseNotReadyError
 
+VALID_SCOPES = {"all", "sample", "upload"}
+
 
 def get_embeddings():
     """Initialize local embeddings for ingestion and search."""
     return FastEmbedEmbeddings(model_name=EMBEDDING_MODEL)
+
+
+def deduplicate_documents_by_chunk_id(documents: list[Document]) -> tuple[list[Document], list[str]]:
+    """Return documents with unique chunk IDs, preserving first occurrence."""
+    unique_chunks_by_id: dict[str, Document] = {}
+    duplicate_ids: list[str] = []
+    for document in documents:
+        chunk_id = document.metadata["chunk_id"]
+        if chunk_id in unique_chunks_by_id:
+            duplicate_ids.append(chunk_id)
+            continue
+        unique_chunks_by_id[chunk_id] = document
+    return list(unique_chunks_by_id.values()), duplicate_ids
 
 
 class VectorStoreManager:
@@ -48,10 +63,13 @@ class VectorStoreManager:
         """Add only new chunk IDs into the collection."""
         vectorstore = self.load(create_if_missing=True)
         existing_ids = set(vectorstore._collection.get().get("ids", []))
+        unique_documents, duplicate_ids = deduplicate_documents_by_chunk_id(documents)
+        if duplicate_ids:
+            print(f"Skipped {len(duplicate_ids)} duplicate chunk ID(s) before Chroma upsert")
 
         new_documents = []
         new_ids = []
-        for document in documents:
+        for document in unique_documents:
             chunk_id = document.metadata["chunk_id"]
             if chunk_id in existing_ids:
                 continue
@@ -59,22 +77,34 @@ class VectorStoreManager:
             new_ids.append(chunk_id)
 
         if new_documents:
+            if len(new_ids) != len(set(new_ids)):
+                raise ValueError("Duplicate chunk IDs detected before Chroma upsert")
             vectorstore.add_documents(new_documents, ids=new_ids)
 
         print(f"Vector store contains {vectorstore._collection.count()} vectors")
         print(f"Persisted to: {self.persist_dir}")
         return vectorstore
 
-    def get_retriever(self, k: int = RETRIEVAL_K):
+    def get_retriever(self, k: int = RETRIEVAL_K, scope: str = "all"):
         """Get a retriever for similarity search."""
+        search_kwargs = {"k": k}
+        if scope in {"sample", "upload"}:
+            search_kwargs["filter"] = {"document_origin": scope}
         return self.load(create_if_missing=False).as_retriever(
             search_type="similarity",
-            search_kwargs={"k": k},
+            search_kwargs=search_kwargs,
         )
 
-    def similarity_search(self, query: str, k: int = RETRIEVAL_K):
+    def similarity_search(self, query: str, k: int = RETRIEVAL_K, scope: str = "all"):
         """Run similarity search with relevance scores."""
-        return self.load(create_if_missing=False).similarity_search_with_relevance_scores(query, k=k)
+        vectorstore = self.load(create_if_missing=False)
+        kwargs = {"k": k}
+        if scope in {"sample", "upload"}:
+            kwargs["filter"] = {"document_origin": scope}
+        try:
+            return vectorstore.similarity_search_with_relevance_scores(query, **kwargs)
+        except TypeError:
+            return vectorstore.similarity_search_with_relevance_scores(query, k=k)
 
     def get_stats(self) -> dict:
         """Return collection stats for the UI."""

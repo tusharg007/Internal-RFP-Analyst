@@ -16,6 +16,7 @@ class IngestionRecord:
     file_hash: str
     page_count: int
     document_type: str | None = None
+    document_origin: str = "sample"
     chunk_ids: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
@@ -36,3 +37,4 @@ class LoadedSource:
     page_count: int
     document_type: str | None
     documents: list[Document]
+    document_origin: str = "sample"

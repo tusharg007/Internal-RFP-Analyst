@@ -52,6 +52,9 @@ def test_extract_rfp_requirements():
     result = extract_rfp_requirements("The solution must support Azure. The vendor should include dashboards.")
     assert len(result["requirements"]) >= 2
     assert result["requirements"][0]["id"].startswith("REQ-")
+    assert result["gaps"]
+    assert all("Inferred gap" in gap["detail"] for gap in result["gaps"])
+    assert all(gap["status"] == "absent_or_ambiguous" for gap in result["gaps"])
 
 
 def test_find_relevant_case_studies_with_mocked_retriever():
@@ -59,15 +62,77 @@ def test_find_relevant_case_studies_with_mocked_retriever():
     result = find_relevant_case_studies(requirements, search_fn=fake_search_fn)
     assert result["matches"]
     assert result["matches"][0]["source"] == "Banking_Audit.pdf"
+    assert result["matches"][0]["fit_score"] >= result["matches"][-1]["fit_score"]
+    assert result["matches"][0]["citations"][0]["source"] == "Banking_Audit.pdf"
+
+
+def test_case_studies_rank_by_requirement_coverage():
+    def ranked_search_fn(query: str, k: int = 6):
+        return [
+            (
+                make_doc(
+                    "Strong_Case.pdf",
+                    0,
+                    "Azure migration with HIPAA compliance controls, Power BI dashboards, phased milestones, and measurable outcomes.",
+                ),
+                0.82,
+            ),
+            (
+                make_doc("Weak_Case.pdf", 0, "Generic analytics reporting project."),
+                0.99,
+            ),
+        ]
+
+    requirements = [{"id": "REQ-01", "text": "Azure HIPAA dashboards phased outcomes"}]
+    result = find_relevant_case_studies(requirements, search_fn=ranked_search_fn)
+
+    assert result["matches"][0]["source"] == "Strong_Case.pdf"
+    assert result["matches"][0]["fit_score"] == 5
+    assert "regulatory/HIPAA alignment" not in result["matches"][0]["missing_coverage"]
 
 
 def test_generate_proposal_outline():
     case_studies = {
-        "matches": [{"source": "Banking_Audit.pdf", "pages": [0], "snippets": ["Azure SQL and Power BI"]}]
+        "matches": [
+            {
+                "source": "Banking_Audit.pdf",
+                "pages": [0],
+                "snippets": ["Azure SQL and Power BI"],
+                "fit_score": 4,
+                "matched_requirements": ["REQ-01"],
+                "missing_coverage": ["phased delivery"],
+            }
+        ]
     }
-    outline = generate_proposal_outline("Write a proposal", case_studies, [{"id": "REQ-01", "text": "Azure"}])
+    outline = generate_proposal_outline(
+        "Write a proposal",
+        case_studies,
+        [
+            {
+                "id": "REQ-01",
+                "text": "Azure",
+                "source_file": "Target.pdf",
+                "page": 0,
+                "inferred_gaps": [
+                    {
+                        "detail": "Inferred gap: the target requirement does not specify timeline; treat this as absent or ambiguous information until confirmed."
+                    }
+                ],
+            }
+        ],
+    )
     assert "## Executive Summary" in outline["outline"]
     assert "[Source: Banking_Audit.pdf, Page 1]" in outline["outline"]
+    headings = [line for line in outline["outline"].splitlines() if line.startswith("## ")]
+    assert headings == [
+        "## Executive Summary",
+        "## Requirement Understanding and Gaps",
+        "## Proposed Architecture and Security",
+        "## Dashboard and Analytics Workstream",
+        "## Phased Delivery and Risk Management",
+        "## Case Studies, Outcomes and Success Metrics",
+    ]
+    assert "absent or ambiguous" in outline["outline"]
 
 
 def test_verify_answer_grounding_catches_unsupported_claims():

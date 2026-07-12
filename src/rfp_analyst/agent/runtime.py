@@ -6,7 +6,12 @@ from langchain_core.messages import HumanMessage
 
 from config import AGENT_MODE
 from rag_engine import get_vectorstore_stats
-from rfp_analyst.agent.graph import run_agent_graph
+from rfp_analyst.agent.graph import (
+    prepare_query_payload as graph_prepare_query_payload,
+    run_agent_graph,
+    run_query as graph_run_query,
+    stream_query_response as graph_stream_query_response,
+)
 from rfp_analyst.agent.prompts import build_simple_prompt
 from rfp_analyst.agent.state import AgentState
 from rfp_analyst.exceptions import KnowledgeBaseNotReadyError, RetrievalError
@@ -79,60 +84,17 @@ def prepare_agentic_query(user_query: str, chat_history: list | None = None) -> 
 
 
 def prepare_query_payload(user_query: str, chat_history: list | None = None) -> dict:
-    if get_agent_mode() == "simple":
-        return prepare_simple_query(user_query, chat_history)
-    return prepare_agentic_query(user_query, chat_history)
+    """Deprecated compatibility wrapper for the canonical graph runtime."""
+    return graph_prepare_query_payload(user_query, chat_history)
 
 
 def stream_query_response(llm, payload):
+    """Deprecated compatibility wrapper for the canonical graph runtime."""
     if isinstance(payload, str):
-        for chunk in llm.stream([HumanMessage(content=payload)]):
-            if chunk.content:
-                yield chunk.content
-        return
-
-    prebuilt_answer = payload.get("prebuilt_answer")
-    if prebuilt_answer:
-        yield from _stream_text(prebuilt_answer)
-        return
-
-    prompt = payload.get("prompt", "")
-    if not prompt:
-        raise KnowledgeBaseNotReadyError(KNOWLEDGE_BASE_NOT_READY_MESSAGE)
-
-    full_response = ""
-    for chunk in llm.stream([HumanMessage(content=prompt)]):
-        if chunk.content:
-            full_response += chunk.content
-            yield chunk.content
-
-    verification = verify_answer_grounding(full_response, payload.get("documents", []))
-    if not verification["is_grounded"]:
-        warning_lines = ["\n\nGrounding check: some claims may not be fully supported:"]
-        warning_lines.extend(f"- {claim}" for claim in verification["unsupported_claims"][:3])
-        yield "\n".join(warning_lines)
+        payload = {"prompt": payload, "response_mode": "llm", "retrieved_documents": []}
+    yield from graph_stream_query_response(llm, payload)
 
 
 def run_query(llm, user_query: str, chat_history: list | None = None) -> dict:
-    payload = prepare_query_payload(user_query, chat_history)
-    if payload.get("prebuilt_answer"):
-        return {
-            "answer": payload["prebuilt_answer"],
-            "reasoning_trace": payload["reasoning_trace"],
-            "all_messages": [],
-        }
-
-    prompt = payload.get("prompt", "")
-    if not prompt:
-        raise RetrievalError(KNOWLEDGE_BASE_NOT_READY_MESSAGE)
-
-    response = llm.invoke([HumanMessage(content=prompt)])
-    answer = response.content
-    verification = verify_answer_grounding(answer, payload.get("documents", []))
-    if not verification["is_grounded"]:
-        answer += "\n\nGrounding check: some claims may not be fully supported."
-    return {
-        "answer": answer,
-        "reasoning_trace": payload["reasoning_trace"],
-        "all_messages": [],
-    }
+    """Deprecated compatibility wrapper for the canonical graph runtime."""
+    return graph_run_query(llm, user_query, chat_history=chat_history)

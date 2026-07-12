@@ -1,281 +1,441 @@
-<div align="center">
+[![CI](https://github.com/tusharg007/Internal-RFP-Analyst/actions/workflows/ci.yml/badge.svg)](https://github.com/tusharg007/Internal-RFP-Analyst/actions/workflows/ci.yml)
 
-# 🔍 Internal RFP Analyst
+# Internal RFP Analyst
 
-### AI-Powered RAG Knowledge Agent for Enterprise Consulting
+Tool-orchestrated Agentic RAG for requirement extraction, internal case-study matching, evidence-backed proposal generation, and post-generation grounding.
 
-[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Streamlit_Cloud-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://app-rfp-analyst-ne9xjgfqqdmtrrmgns8jfa.streamlit.app/)
-[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![LangChain](https://img.shields.io/badge/LangChain-0.3+-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://langchain.com)
-[![Groq](https://img.shields.io/badge/Groq-LPU_Inference-F55036?style=for-the-badge)](https://groq.com)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+Internal RFP Analyst is a Python 3.11+ Streamlit application for analyzing uploaded target documents against an internal case-study corpus. It combines PDF ingestion, ChromaDB retrieval, a LangGraph-based orchestration runtime, deterministic specialized tools, prompt compaction, LLM synthesis, and post-generation verification with optional bounded repair.
 
-**Instantly search past proposals, RFP responses, project outlines, and case studies using natural language.** Built with a production-grade RAG pipeline featuring local ONNX embeddings, streaming LLM responses, and multi-provider failover.
+The repository is structured as a reproducible single-user demonstration. It includes tests, evaluation runners, and deployment guidance, but it is not presented as a production-scale multi-tenant service.
 
-[Live Demo](https://app-rfp-analyst-ne9xjgfqqdmtrrmgns8jfa.streamlit.app/) · [Architecture](#-architecture) · [Quick Start](#-quick-start) · [Challenges & Solutions](#-engineering-challenges--solutions)
+## Project Overview
 
-</div>
+Internal RFP analysis needs more than document search. A user may need to treat one uploaded document as the target requirements, search internal case studies separately, identify missing details needed for a proposal, compare prior work, and generate a cited response. A basic retrieve-and-generate workflow tends to blend those roles into one context window and makes it easy to confuse target requirements with internal examples.
 
----
+This project keeps those responsibilities separate:
 
-## ✨ Key Features
+- Uploaded PDFs are the target corpus.
+- Generated sample PDFs are the internal case-study corpus.
+- Retrieval can be scoped to uploaded documents, sample documents, or all indexed documents.
+- Cross-corpus RFP analysis retrieves target evidence from uploads and case-study evidence from samples.
+- The LangGraph runtime coordinates health checks, intent routing, tool planning, retrieval, tool execution, prompt budgeting, LLM generation, and grounding verification.
 
-| Feature | Description |
-|---|---|
-| 🔍 **Semantic Search** | Natural language queries over a ChromaDB vector store with relevance-scored retrieval |
-| ⚡ **Streaming Responses** | Word-by-word response streaming via `st.write_stream` for instant perceived performance |
-| 🧠 **Local Embeddings** | ONNX-based FastEmbed (`bge-small-en-v1.5`) — zero API calls, zero rate limits for retrieval |
-| 🔄 **Multi-Provider LLM** | Groq (Llama 3.3 70B) primary + Gemini fallback — automatic provider selection |
-| 📄 **PDF Ingestion** | Upload custom PDFs or use the built-in 10-document consulting knowledge base |
-| 📚 **Source Citations** | Every answer cites exact document name and page number |
-| 💬 **Conversation Memory** | Chat history maintained in-session for contextual follow-ups |
-| ☁️ **Zero-Config Deploy** | Auto-generates sample documents and ingests on first Streamlit Cloud boot |
+The result is not just search. The user receives requirement summaries, inferred gaps, ranked case studies, comparison outputs, proposal outlines, page-level citations, grouped source traces, and graceful fallbacks when evidence or configuration is missing.
 
----
+## Key Capabilities
 
-## 🏗️ Architecture
+- PDF upload validation with filename sanitization, MIME checks, size limits, and page-count limits.
+- Generated synthetic sample case-study corpus for repeatable local setup.
+- Deterministic and idempotent ingestion with duplicate-file and duplicate-chunk handling.
+- Unique chunk identifiers based on origin, file identity, page, chunk position, and content hash.
+- ChromaDB persistence with local FastEmbed embeddings.
+- Retrieval scopes for uploaded documents, sample documents, and all documents.
+- Relevance filtering with explicit insufficient-evidence fallbacks.
+- Conversational follow-up resolution using recent cited entities.
+- Previous-answer source recall without another retrieval call.
+- Requirement extraction with inferred absent/ambiguous gap identification.
+- Evidence-based case-study scoring across Azure migration, regulatory/HIPAA fit, dashboards and analytics, phased delivery, and measurable outcomes.
+- Project comparison across timeline, budget, technology stack, and outcomes.
+- Six-section proposal-outline generation with cited evidence.
+- Prompt compaction and prompt-budget tracing before LLM calls.
+- Post-generation grounding verification with one bounded repair pass when needed.
+- Visible execution traces that expose tool names and summaries without private chain-of-thought.
+- Offline smoke evaluation and real knowledge-base evaluation.
+- Friendly handling for missing providers, invalid API keys, oversized model requests, empty scopes, low relevance, and Windows vectorstore locks.
 
-```mermaid
-flowchart TB
-    subgraph UI["🖥️ Streamlit UI"]
-        A["User Query"] --> B["Chat Interface"]
-        B --> C["st.write_stream"]
-    end
+## Architecture Diagrams
 
-    subgraph RAG["⚡ RAG Pipeline"]
-        D["FastEmbed ONNX<br/><i>bge-small-en-v1.5</i>"] --> E["ChromaDB<br/><i>Vector Store</i>"]
-        E --> F["Top-K Retrieval<br/><i>k=6 chunks</i>"]
-    end
-
-    subgraph LLM["🤖 LLM Layer"]
-        G{"Provider<br/>Selection"}
-        G -->|"Primary"| H["Groq LPU<br/><i>Llama 3.3 70B</i>"]
-        G -->|"Fallback"| I["Google Gemini<br/><i>2.0 Flash</i>"]
-    end
-
-    subgraph INGEST["📥 Ingestion Pipeline"]
-        J["PDF Documents"] --> K["PyMuPDF Loader"]
-        K --> L["Recursive Chunking<br/><i>512 tokens, 50 overlap</i>"]
-        L --> D
-    end
-
-    A --> F
-    F --> |"Context + Prompt"| G
-    H --> C
-    I --> C
-
-    style UI fill:#1a1a2e,stroke:#667eea,color:#fff
-    style RAG fill:#16213e,stroke:#0f3460,color:#fff
-    style LLM fill:#1a1a2e,stroke:#e94560,color:#fff
-    style INGEST fill:#16213e,stroke:#533483,color:#fff
-```
-
-### Request Flow (Single Query)
+### System Architecture
 
 ```mermaid
-sequenceDiagram
-    participant U as 👤 User
-    participant S as 🖥️ Streamlit
-    participant E as ⚡ FastEmbed (Local)
-    participant C as 🗄️ ChromaDB
-    participant L as 🤖 Groq/Gemini
-
-    U->>S: "What tech stack did we use for banking?"
-    S->>E: Embed query (local, ~5ms)
-    E->>C: Similarity search (k=6)
-    C-->>S: Top 6 relevant chunks + metadata
-    S->>L: Single prompt with context
-    L-->>S: Streaming response tokens
-    S-->>U: Word-by-word answer with citations
-    
-    Note over E,C: Zero API calls for retrieval
-    Note over L: Single LLM call per query
+flowchart TD
+    UI["Streamlit UI<br/>app.py"] --> Adapter["Application adapter<br/>agent.py"]
+    Adapter --> Graph["LangGraph orchestration<br/>src/rfp_analyst/agent/graph.py"]
+    Graph --> Routing["Intent routing and tool planning"]
+    Routing --> Tools["Specialized tools"]
+    Tools --> Retrieval["Scoped retrieval"]
+    Retrieval --> Store["ChromaDB / indexed PDFs"]
+    Graph --> Budget["Prompt compaction and budgeting"]
+    Budget --> LLM["Groq or Gemini generation"]
+    LLM --> Verify["Grounding verification and optional repair"]
+    Verify --> Answer["Final answer with citations and traces"]
 ```
 
----
+### Document-Ingestion Pipeline
 
-## 🛠️ Technology Stack
-
-| Layer | Technology | Why This Choice |
-|---|---|---|
-| **LLM (Primary)** | Groq — Llama 3.3 70B | Fastest free inference (LPU), 30 RPM, sub-second latency |
-| **LLM (Fallback)** | Google Gemini 2.0 Flash | Free tier backup, 15 RPM |
-| **Embeddings** | FastEmbed (ONNX) — `bge-small-en-v1.5` | Local execution, no API calls, no rate limits |
-| **Vector Store** | ChromaDB (persistent) | Lightweight, embedded, perfect for document-scale RAG |
-| **RAG Framework** | LangChain 0.3+ | Industry-standard abstractions for retrieval chains |
-| **PDF Processing** | PyMuPDF | Fastest Python PDF parser, preserves layout metadata |
-| **UI** | Streamlit | Rapid prototyping with built-in streaming support |
-| **Deployment** | Streamlit Community Cloud | Free hosting with GitHub auto-deploy |
-
----
-
-## 🚀 Quick Start
-
-### Option 1: Use the Live Demo
-👉 **[app-rfp-analyst.streamlit.app](https://app-rfp-analyst-ne9xjgfqqdmtrrmgns8jfa.streamlit.app/)** — No setup required. The app auto-generates sample documents on first load.
-
-### Option 2: Run Locally
-
-#### 1. Get a Free API Key (Choose One)
-
-| Provider | Speed | Free Limit | Get Key |
-|---|---|---|---|
-| **Groq** ⭐ Recommended | ~100 tok/s | 30 RPM, 6000 RPD | [console.groq.com/keys](https://console.groq.com/keys) |
-| Google Gemini | ~30 tok/s | 15 RPM | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
-
-#### 2. Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/tusharg007/Internal-RFP-Analyst.git
-cd Internal-RFP-Analyst
-
-# Create virtual environment
-python -m venv venv
-venv\Scripts\activate          # Windows
-# source venv/bin/activate     # Mac/Linux
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure API key
-copy .env.example .env
-# Edit .env → add your GROQ_API_KEY (or GOOGLE_API_KEY)
+```mermaid
+flowchart TD
+    Sample["Generated sample PDFs"] --> Validate["Validation and origin assignment"]
+    Upload["Uploaded PDFs"] --> Validate
+    Validate --> Load["PDF loading"]
+    Load --> Chunk["Chunking"]
+    Chunk --> Metadata["Metadata and deterministic IDs"]
+    Metadata --> Dedup["Duplicate file and chunk handling"]
+    Dedup --> Embed["Embedding"]
+    Embed --> Chroma["ChromaDB"]
+    Chroma --> Stats["Knowledge-base statistics"]
 ```
 
-#### 3. Launch
+### Agentic RAG Workflow
 
-```bash
-streamlit run app.py
+```mermaid
+flowchart TD
+    Start["START"] --> Health["health_check"]
+    Health --> Classify["classify_intent"]
+    Classify --> Plan["plan_tools"]
+    Plan --> Retrieve["execute_retrieval"]
+    Retrieve --> Tools["execute_specialized_tool"]
+    Tools --> Prompt["synthesize_prompt"]
+    Prompt --> Evidence["evidence_availability_check"]
+    Evidence --> Final["final_response"]
+    Final --> Generate["LLM generation"]
+    Generate --> Verify["grounding_verifier"]
+    Verify --> Repair{"repair needed?"}
+    Repair -->|yes| AnswerRepair["answer_repair"]
+    AnswerRepair --> FinalVerify["final_grounding_verifier"]
+    Repair -->|no| FinalVerify
 ```
 
-The app will auto-generate 10 sample consulting documents and build the vector store on first launch.
-
----
-
-## 💬 Example Queries
-
-| Query | What It Tests |
-|---|---|
-| *"List all projects with their timelines"* | Full knowledge base traversal |
-| *"What tech stack did we use for the banking audit?"* | Precise document retrieval |
-| *"Compare the healthcare and insurance projects"* | Cross-document synthesis |
-| *"Which projects used Azure services?"* | Multi-document filtering |
-| *"What was the budget for the supply chain platform?"* | Specific fact extraction |
-| *"What compliance frameworks did we follow in pharma?"* | Domain-specific retrieval |
-
----
-
-## 🧪 Engineering Challenges & Solutions
-
-### Challenge 1: Gemini API Rate Limits Killed the App
-
-**Problem:** The original architecture used Google Gemini for *both* embeddings and LLM generation. The free tier (100 embedding req/min, 15 LLM req/min) was exhausted within minutes, returning `429 RESOURCE_EXHAUSTED` errors. The multi-step ReAct agent made 3-5 LLM calls per query, compounding the problem.
-
-**Solution: Hybrid local + cloud architecture**
+### Cross-Corpus RFP Analysis
 
 ```mermaid
 flowchart LR
-    subgraph BEFORE["❌ Before — All API Calls"]
-        A1["Gemini Embeddings API"] -->|"Rate Limited"| B1["429 Error"]
-        A2["Gemini LLM x 3-5 calls"] -->|"Rate Limited"| B1
-    end
+    Uploads["Uploaded target documents"] --> Target["Target-context retrieval"]
+    Target --> Requirements["Requirement extraction"]
+    Requirements --> Gaps["Inferred gap analysis"]
 
-    subgraph AFTER["✅ After — Minimal API Calls"]
-        C1["FastEmbed Local<br/><i>Zero API calls</i>"] -->|"Instant"| D1["Success"]
-        C2["Groq LLM x 1 call<br/><i>30 RPM limit</i>"] -->|"Sub-second"| D1
-    end
+    Samples["Sample case studies"] --> Cases["Case-study retrieval and scoring"]
+    Cases --> Compare["Fit comparison"]
 
-    style BEFORE fill:#2d1117,stroke:#f85149,color:#fff
-    style AFTER fill:#0d1117,stroke:#3fb950,color:#fff
+    Gaps --> Proposal["Proposal generation"]
+    Compare --> Proposal
+    Proposal --> Budget["Prompt budgeting"]
+    Budget --> LLM["LLM synthesis"]
+    LLM --> Verify["Verification and optional repair"]
+    Verify --> Response["Cited response"]
 ```
 
-| Metric | Before | After | Improvement |
-|---|---|---|---|
-| API calls per query | 4-6 (embed + 3-5 LLM) | **1** (LLM only) | **83% reduction** |
-| Embedding rate limits | 100/min (API) | **∞** (local) | **Eliminated** |
-| LLM rate limits | 15 RPM (Gemini) | **30 RPM** (Groq) | **2x headroom** |
+## How the Agentic RAG Workflow Works
 
-### Challenge 2: 10+ Minute Response Times
+The canonical runtime lives in [src/rfp_analyst/agent/graph.py](src/rfp_analyst/agent/graph.py). It uses a real LangGraph `StateGraph` when `langgraph` is available and falls back to the same node functions in deterministic order otherwise.
 
-**Problem:** The ReAct agent architecture (LangGraph) made multiple sequential LLM calls — tool selection → execution → result processing → possibly more tools → final answer. Each call could trigger a rate-limit retry with exponential backoff (10s → 20s → 40s), compounding to 10+ minute waits.
+### State management
 
-**Solution: Single-call RAG with streaming**
+The graph state carries the user query, chat history, retrieval scope, vectorstore statistics, retrieval function, planned tools, retrieved documents, compact retrieval context, tool outputs, traces, prompt text, answer state, resolved conversational entities, and prompt-budget metadata.
 
-- Replaced multi-step ReAct agent with a **single LLM call** architecture
-- All context (retrieved chunks + project list + chat history) is assembled locally and sent in one prompt
-- **Streaming responses** via `st.write_stream()` — text appears word-by-word, so the user sees output within 500ms even if full generation takes 3-5s
+### Intent routing
 
-| Metric | Before (ReAct) | After (Single-Call RAG) |
-|---|---|---|
-| LLM calls per query | 3-5 | **1** |
-| Worst-case response time | 10+ minutes | **3-8 seconds** |
-| Perceived latency | Full wait → wall of text | **~500ms** (streaming) |
+Implemented intents are:
 
-### Challenge 3: Sample Question Buttons Did Nothing
+- `search`
+- `compare`
+- `proposal`
+- `rfp_analysis`
+- `previous_sources`
+- `ambiguous`
 
-**Problem:** Clicking a sample question button added the message to chat history and triggered `st.rerun()`, but after the rerun, only the `st.chat_input()` code path processed queries — sample button clicks were silently ignored.
+Requests are routed through explicit node execution rather than a single free-form chain. Follow-up resolution happens before retrieval, and ambiguous references produce a clarification message instead of broad retrieval.
 
-**Solution:** Introduced a `pending_query` session state flag. Button clicks set this flag before rerun. After rerun, a dedicated handler detects the pending query and routes it through the same processing pipeline as typed messages.
+### Tool orchestration
 
-### Challenge 4: Ephemeral Filesystem on Streamlit Cloud
+The runtime executes real deterministic helpers for:
 
-**Problem:** Streamlit Cloud's filesystem resets on every cold start, losing the vector store and requiring re-ingestion.
+- scoped knowledge-base search
+- requirement extraction
+- inferred gap identification
+- case-study ranking
+- project comparison
+- proposal-outline generation
+- source verification
 
-**Solution:** Auto-setup pipeline — on first load, the app detects an empty vector store, generates 10 sample PDFs via `document_generator.py`, and ingests them automatically. With local embeddings, this entire process completes in **under 15 seconds** (vs. minutes with API-based embeddings).
+Tool outputs feed later graph nodes and also appear in compact form in the final prompt.
 
----
+### Scoped retrieval
 
-## 📁 Project Structure
+Retrieval can run against:
 
+- `upload`
+- `sample`
+- `all`
+
+The vector store filters by `document_origin` for `upload` and `sample`. In `rfp_analysis`, uploads are always the target context and sample documents are always internal case studies. The workflow never concludes that uploads are missing just because retrieved scores fell below the threshold.
+
+### Cross-corpus reasoning
+
+`rfp_analysis` keeps uploaded target evidence and sample case-study evidence separate all the way through:
+
+1. retrieve uploaded target evidence
+2. extract requirements and inferred gaps from uploads
+3. search sample documents for relevant case studies
+4. compare fit using deterministic scoring
+5. generate a proposal outline from both branches
+
+This is what makes the workflow materially different from a basic "chat with documents" setup.
+
+### Prompt budgeting
+
+The prompt builder uses compact sections rather than raw Python object serialization. It keeps:
+
+- current user request
+- compact uploaded target evidence
+- compact inferred gaps and requirement summaries
+- compact sample case-study evidence
+- compact comparison/proposal outputs
+- short conversation history
+
+It drops lower-value context when needed and records a visible `prompt_budget` trace with estimated input tokens, reserved output tokens, projected totals, and included evidence counts.
+
+### Grounding
+
+The answer is generated first. Afterwards, `verify_answer_grounding` validates claims against retrieved document text, exact filenames, page numbers, numeric evidence, and named technologies. If unsupported or vague-cited claims remain, the runtime performs one bounded repair pass and verifies again.
+
+### Observability
+
+The UI exposes safe traces only:
+
+- tool names
+- input summaries
+- output summaries
+- retrieval scope and source selections
+- prompt-budget status
+- verification status
+
+Private chain-of-thought is not shown.
+
+## Feature Walkthrough
+
+1. Generate sample PDFs from the sidebar.
+2. Upload custom PDFs into the dedicated uploads directory.
+3. Click `Ingest Documents` to build or rebuild the knowledge base.
+4. Select a document scope.
+5. Ask an evidence-backed question.
+6. Compare internal case studies.
+7. Ask a conversational follow-up.
+8. Run cross-corpus RFP analysis.
+9. Inspect grouped sources and tool traces.
+10. Run offline and real KB evaluations.
+
+Example prompts:
+
+```text
+Compare the healthcare cloud migration and insurance automation projects.
+Which documents were used for the previous answer?
+Treat uploaded documents as target requirements and numbered PDFs as internal case studies. Return technical requirements, gaps, three case studies and a proposal outline.
+What is the CEO's private phone number?
 ```
+
+Unsupported questions are expected to return an insufficient-evidence fallback rather than a fabricated answer.
+
+## Repository Structure
+
+```text
 Internal-RFP-Analyst/
-├── app.py                    # Streamlit UI with streaming chat
-├── agent.py                  # RAG query engine (Groq/Gemini + retrieval)
-├── rag_engine.py             # Ingestion pipeline (FastEmbed + ChromaDB)
-├── config.py                 # Central configuration & provider selection
-├── document_generator.py     # Generates 10 realistic consulting PDFs
-├── requirements.txt          # Python dependencies
-├── .env.example              # API key template
-├── .streamlit/
-│   └── config.toml           # Streamlit theme configuration
-├── data/documents/           # PDF documents (auto-generated)
-└── vectorstore/              # ChromaDB persistent storage
+|-- app.py
+|-- agent.py
+|-- rag_engine.py
+|-- config.py
+|-- document_generator.py
+|-- src/rfp_analyst/
+|   |-- agent/
+|   |-- ingestion/
+|   |-- retrieval/
+|   |-- tools/
+|   `-- ui/
+|-- evals/
+|-- tests/
+|-- docs/
+|-- pyproject.toml
+`-- requirements.txt
 ```
 
-### Module Responsibilities
+See [docs/FILE_MAP.md](docs/FILE_MAP.md) for the complete file-by-file explanation.
 
-| Module | Lines | Responsibility |
-|---|---|---|
-| `config.py` | ~75 | API keys, model selection, RAG parameters, system prompt |
-| `rag_engine.py` | ~165 | PDF loading → chunking → local embedding → ChromaDB storage/retrieval |
-| `agent.py` | ~155 | LLM provider selection, prompt assembly, streaming query execution |
-| `app.py` | ~280 | Streamlit UI, session management, chat rendering, error handling |
-| `document_generator.py` | ~550 | Generates 10 industry-specific consulting PDFs with realistic content |
+## Quick Start
 
----
+### Windows PowerShell
 
-## 🔧 Configuration
-
-### Environment Variables
-
-| Variable | Required | Description |
-|---|---|---|
-| `GROQ_API_KEY` | ⭐ Recommended | Groq API key for fastest inference ([get free key](https://console.groq.com/keys)) |
-| `GOOGLE_API_KEY` | Optional | Google Gemini key as fallback ([get free key](https://aistudio.google.com/apikey)) |
-
-### For Streamlit Cloud Deployment
-
-Add secrets in **Settings → Secrets**:
-
-```toml
-GROQ_API_KEY = "gsk_your_key_here"
-# Optional fallback:
-# GOOGLE_API_KEY = "your_google_key_here"
+```powershell
+git clone https://github.com/tusharg007/Internal-RFP-Analyst.git
+cd Internal-RFP-Analyst
+git checkout agentic-rag-v2
+py -3.11 -m venv .venv
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m pip install -e .
+Copy-Item .env.example .env
+python -m streamlit run app.py
 ```
 
----
+### POSIX / macOS / Linux
 
-## 📜 License
+```bash
+git clone https://github.com/tusharg007/Internal-RFP-Analyst.git
+cd Internal-RFP-Analyst
+git checkout agentic-rag-v2
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m pip install -e .
+cp .env.example .env
+python -m streamlit run app.py
+```
 
-This project is for educational and portfolio demonstration purposes. Built by [Tushar Ghosh](https://github.com/tusharg007).
+## Configuration Reference
+
+All meaningful environment variables come from [config.py](config.py) and [.env.example](.env.example).
+
+| Variable | Purpose | Default | Required | Accepted values | Security notes |
+| --- | --- | --- | --- | --- | --- |
+| `GROQ_API_KEY` | Enables Groq chat generation | empty | No | Groq API key string | Secret, never commit |
+| `GOOGLE_API_KEY` | Enables Gemini chat generation | empty | No | Google API key string | Secret, never commit |
+| `AGENT_MODE` | Compatibility switch for simple vs agentic helpers | `agentic` | No | `simple`, `agentic` | Not sensitive |
+| `MIN_RELEVANCE_SCORE` | Retrieval relevance threshold | `0.50` | No | float string | Not sensitive |
+| `MAX_PROMPT_TOKENS` | Maximum estimated prompt tokens | `6500` | No | integer | Not sensitive |
+| `RFP_ANALYSIS_MAX_OUTPUT_TOKENS` | Reserved output token budget for RFP analysis | `1200` | No | integer | Not sensitive |
+| `MAX_CONTEXT_CHARS_PER_CHUNK` | Max characters kept per chunk in prompt compaction | `1000` | No | integer | Not sensitive |
+| `MAX_HISTORY_MESSAGES` | Max recent messages included in prompt compaction | `3` | No | integer | Not sensitive |
+| `MAX_TARGET_CHUNKS` | Max uploaded target chunks in compact prompt | `4` | No | integer | Not sensitive |
+| `MAX_CASE_STUDIES` | Max case studies retained for compact prompt | `3` | No | integer | Not sensitive |
+| `MAX_CHUNKS_PER_CASE_STUDY` | Max chunks retained per case study in compact prompt | `2` | No | integer | Not sensitive |
+| `MAX_UPLOAD_SIZE_MB` | Upload size limit | `25` | No | integer | Not sensitive |
+| `MAX_UPLOAD_PAGE_COUNT` | Upload page-count limit | `250` | No | integer | Not sensitive |
+| `RFP_ANALYST_DEBUG` | Allows raw provider details in known error messages | off | No | `0/1`, `false/true`, `no/yes`, `off/on` | Enable only locally |
+
+Other meaningful constants in `config.py` are code-level configuration rather than environment variables:
+
+- `GROQ_MODEL`
+- `GEMINI_MODEL`
+- `LLM_TEMPERATURE`
+- `LLM_MAX_TOKENS`
+- `EMBEDDING_MODEL`
+- `CHUNK_SIZE`
+- `CHUNK_OVERLAP`
+- `COLLECTION_NAME`
+- directory paths and evaluation output paths
+
+## Running the Application
+
+On first startup:
+
+1. launch Streamlit
+2. optionally generate sample PDFs
+3. optionally upload PDFs
+4. click `Ingest Documents`
+5. wait for the health panel to show the knowledge base as ready
+
+Important runtime behaviors:
+
+- Uploaded files are stored but not searchable until ingestion succeeds.
+- If the vectorstore is missing, the app shows a clean readiness message instead of crashing.
+- Document scope controls which corpus is searched.
+- Source traces can be toggled from the sidebar.
+- Clearing chat history removes session messages and cached runtime objects.
+- If no provider key is configured, chat stays disabled but upload, generation, and ingestion still work.
+
+## Testing and Evaluation
+
+Validation commands:
+
+```powershell
+python -m py_compile app.py agent.py rag_engine.py config.py document_generator.py
+python -m compileall -f src tests evals
+python -m pytest -q
+python -m evals.run_evals
+python -m evals.run_kb_evals
+```
+
+Latest verified local test count in this repository pass: `119 passed`.
+
+Evaluation modes:
+
+- Unit and integration tests exercise runtime behavior, graph routing, ingestion, UI safety, and regression cases.
+- Offline deterministic smoke evaluation checks evaluation plumbing with a mock corpus and deterministic answers.
+- Real knowledge-base evaluation exercises the actual ingestion, retrieval, and graph path against the generated corpus and a temporary evaluation upload fixture.
+- Manual LLM answer-quality validation is still useful for judging writing quality and provider-specific behavior after the deterministic checks pass.
+
+The smoke evaluation is not evidence of real RAG quality.
+
+## Deployment
+
+### Streamlit Community Cloud
+
+Use:
+
+- repository: `tusharg007/Internal-RFP-Analyst`
+- branch: `agentic-rag-v2`
+- entry point: `app.py`
+
+Deployment notes:
+
+- install dependencies from `requirements.txt`
+- configure `GROQ_API_KEY` or `GOOGLE_API_KEY` in Streamlit Secrets if chat is needed
+- the filesystem is ephemeral, so uploaded files and vectorstores do not persist like a managed storage layer
+- sample documents or uploads may need to be regenerated and reingested after redeployments
+- the architecture is intended as a single-user demonstration and does not provide multi-tenant data isolation
+
+## Reliability and Safety
+
+- API keys are resolved from Streamlit secrets, then environment variables, then `.env` during normal local runtime.
+- Uploaded documents are ignored by chat until ingestion succeeds.
+- Upload validation enforces PDF type, safe filenames, file-size limits, and page-count limits.
+- Ingestion builds into a temporary directory before replacing the active vectorstore.
+- Duplicate files and duplicate chunks are filtered before Chroma upsert.
+- Retrieval uses scope filters and a configurable relevance threshold.
+- Low-evidence or unsupported requests return a fallback instead of fabricated facts.
+- Prompt-size protection compacts evidence and formats token-limit provider errors into user-facing guidance.
+- Grounding verification checks filename/page citations, numeric claims, and named technologies.
+- Automated grounding helps, but it does not guarantee that every unsupported claim is caught.
+
+## Known Limitations
+
+- Single-user Streamlit storage model
+- Local persistent vectorstore design
+- Synthetic sample PDF corpus
+- Small evaluation corpus
+- Embedding and retrieval quality depend on the local model and indexed content
+- LLM answer quality still depends on the configured provider
+- No authentication or authorization
+- No distributed task queue or background ingestion workers
+- No managed observability backend
+- Grounding verification is bounded and heuristic, not formal proof
+
+## Future Extensions
+
+Future work could include:
+
+- hybrid BM25 plus dense retrieval
+- reranking
+- managed vector databases
+- authentication and tenant isolation
+- background ingestion workers
+- LangSmith or OpenTelemetry tracing
+- larger evaluation datasets
+- human approval checkpoints for proposal generation
+- structured export formats for proposal outputs
+
+These are roadmap ideas, not implemented features.
+
+## Additional Documentation
+
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [docs/AGENTIC_RAG.md](docs/AGENTIC_RAG.md)
+- [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md)
+- [docs/TESTING_AND_EVALUATION.md](docs/TESTING_AND_EVALUATION.md)
+- [docs/FILE_MAP.md](docs/FILE_MAP.md)
+- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
+
+## Screenshots
+
+No safe repository screenshots are currently committed.
+
+Useful future screenshots would be:
+
+- the Streamlit home screen with a ready knowledge base
+- the upload and ingestion sidebar flow
+- a cross-corpus RFP analysis answer with grouped traces
+- the evaluation snapshot panel
+
+Only commit screenshots that exclude API keys, private uploads, and machine-specific sensitive information.
