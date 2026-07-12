@@ -259,6 +259,56 @@ What is the CEO's private phone number?
 
 Unsupported questions are expected to return an insufficient-evidence fallback rather than a fabricated answer.
 
+## Screenshots
+
+### Application overview
+
+The Streamlit interface exposes knowledge-base health, indexed document and chunk counts, document-scope controls, provider configuration, ingestion actions, and suggested analysis prompts.
+
+<p align="center">
+  <img
+    src="docs/assets/01-application-overview.png"
+    alt="Internal RFP Analyst application overview"
+    width="900"
+  />
+</p>
+
+### Cross-corpus RFP analysis
+
+Uploaded documents are treated as target requirements, while the numbered sample PDFs remain a separate internal case-study corpus. The workflow extracts requirements, identifies missing details, ranks relevant prior projects, and builds an evidence-backed proposal outline.
+
+<p align="center">
+  <img
+    src="docs/assets/02-cross-corpus-analysis.png"
+    alt="Cross-corpus RFP analysis with requirements and case-study matching"
+    width="900"
+  />
+</p>
+
+### Agent execution trace
+
+The source panel exposes safe workflow observability, including intent routing, scoped retrieval, specialized tool execution, prompt budgeting, answer generation, and post-generation grounding verification.
+
+<p align="center">
+  <img
+    src="docs/assets/03-agent-execution-trace.png"
+    alt="LangGraph Agentic RAG execution trace"
+    width="900"
+  />
+</p>
+
+### Evaluation results
+
+The application distinguishes deterministic offline smoke checks from the real knowledge-base evaluation so retrieval and workflow validation are not confused with general LLM correctness.
+
+<p align="center">
+  <img
+    src="docs/assets/04-evaluation-results.png"
+    alt="Offline smoke and real knowledge-base evaluation results"
+    width="900"
+  />
+</p>
+
 ## Repository Structure
 
 ```text
@@ -290,7 +340,6 @@ See [docs/FILE_MAP.md](docs/FILE_MAP.md) for the complete file-by-file explanati
 ```powershell
 git clone https://github.com/tusharg007/Internal-RFP-Analyst.git
 cd Internal-RFP-Analyst
-git checkout agentic-rag-v2
 py -3.11 -m venv .venv
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
 .\.venv\Scripts\Activate.ps1
@@ -306,7 +355,6 @@ python -m streamlit run app.py
 ```bash
 git clone https://github.com/tusharg007/Internal-RFP-Analyst.git
 cd Internal-RFP-Analyst
-git checkout agentic-rag-v2
 python3.11 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
@@ -459,16 +507,3 @@ These are roadmap ideas, not implemented features.
 - [docs/TESTING_AND_EVALUATION.md](docs/TESTING_AND_EVALUATION.md)
 - [docs/FILE_MAP.md](docs/FILE_MAP.md)
 - [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
-
-## Screenshots
-
-No safe repository screenshots are currently committed.
-
-Useful future screenshots would be:
-
-- the Streamlit home screen with a ready knowledge base
-- the upload and ingestion sidebar flow
-- a cross-corpus RFP analysis answer with grouped traces
-- the evaluation snapshot panel
-
-Only commit screenshots that exclude API keys, private uploads, and machine-specific sensitive information.
