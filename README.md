@@ -2,11 +2,44 @@
 
 # Internal RFP Analyst
 
+## Agentic RAG for Cross-Corpus RFP Analysis
+
 Tool-orchestrated Agentic RAG for requirement extraction, internal case-study matching, evidence-backed proposal generation, and post-generation grounding.
 
 Internal RFP Analyst is a Python 3.11+ Streamlit application for analyzing uploaded target documents against an internal case-study corpus. It combines PDF ingestion, ChromaDB retrieval, a LangGraph-based orchestration runtime, deterministic specialized tools, prompt compaction, LLM synthesis, and post-generation verification with optional bounded repair.
 
 The repository is structured as a reproducible single-user demonstration. It includes tests, evaluation runners, and deployment guidance, but it is not presented as a production-scale multi-tenant service.
+
+## Highlights
+
+- `:page_facing_up:` Uploaded PDFs and generated sample PDFs are kept as separate corpora.
+- `:compass:` LangGraph orchestration routes search, comparison, proposal, and RFP-analysis flows.
+- `:mag:` Retrieval is scope-aware across uploaded, sample, or all indexed documents.
+- `:shield:` Grounding verification and bounded repair reduce unsupported claims.
+- `:test_tube:` The repo includes unit/integration tests, offline smoke evals, and real KB evals.
+
+## Tools Used
+
+- `LangGraph` for orchestration and graph-based runtime flow
+- `LangChain` for retrieval plumbing, document handling, and provider integrations
+- `ChromaDB` for local vector storage
+- `FastEmbed` for local embeddings
+- `Streamlit` for the application UI
+- `PyMuPDF` and `fpdf2` for PDF loading and synthetic PDF generation
+- `Pytest` and `streamlit.testing.v1.AppTest` for regression coverage
+
+## Tech Stack
+
+| Layer | Technology |
+| --- | --- |
+| Language | Python 3.11 |
+| UI | Streamlit |
+| Orchestration | LangGraph |
+| Retrieval | LangChain + ChromaDB |
+| Embeddings | FastEmbed |
+| Document Processing | PyMuPDF, fpdf2 |
+| Configuration | `.env`, Streamlit Secrets |
+| Testing | pytest, compile checks, evaluation runners |
 
 ## Project Overview
 
