@@ -1,16 +1,37 @@
-[![CI](https://github.com/tusharg007/Internal-RFP-Analyst/actions/workflows/ci.yml/badge.svg)](https://github.com/tusharg007/Internal-RFP-Analyst/actions/workflows/ci.yml)
+<div align="center">
 
-# Internal RFP Analyst
+# :brain: Internal RFP Analyst
 
-## Agentic RAG for Cross-Corpus RFP Analysis
+### Agentic RAG for Cross-Corpus RFP Analysis
 
 Tool-orchestrated Agentic RAG for requirement extraction, internal case-study matching, evidence-backed proposal generation, and post-generation grounding.
+
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/downloads/)
+[![Streamlit](https://img.shields.io/badge/Interface-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-0F172A)](https://github.com/langchain-ai/langgraph)
+[![ChromaDB](https://img.shields.io/badge/Vector%20Store-ChromaDB-F97316)](https://www.trychroma.com/)
+[![pytest](https://img.shields.io/badge/Tested%20with-pytest-0A9EDC?logo=pytest&logoColor=white)](https://docs.pytest.org/)
+[![CI](https://github.com/tusharg007/Internal-RFP-Analyst/actions/workflows/ci.yml/badge.svg)](https://github.com/tusharg007/Internal-RFP-Analyst/actions/workflows/ci.yml)
+
+</div>
+
+<p align="center">
+  <a href="#technology-stack">Technology Stack</a> &middot;
+  <a href="#project-overview">Overview</a> &middot;
+  <a href="#architecture-diagrams">Architecture</a> &middot;
+  <a href="#agentic-rag-workflow">Agentic RAG</a> &middot;
+  <a href="#screenshots">Screenshots</a> &middot;
+  <a href="#quick-start">Quick Start</a> &middot;
+  <a href="#testing-and-evaluation">Testing</a> &middot;
+  <a href="#deployment">Deployment</a> &middot;
+  <a href="#additional-documentation">Documentation</a>
+</p>
 
 Internal RFP Analyst is a Python 3.11+ Streamlit application for analyzing uploaded target documents against an internal case-study corpus. It combines PDF ingestion, ChromaDB retrieval, a LangGraph-based orchestration runtime, deterministic specialized tools, prompt compaction, LLM synthesis, and post-generation verification with optional bounded repair.
 
 The repository is structured as a reproducible single-user demonstration. It includes tests, evaluation runners, and deployment guidance, but it is not presented as a production-scale multi-tenant service.
 
-## Highlights
+## :sparkles: Highlights
 
 - `:page_facing_up:` Uploaded PDFs and generated sample PDFs are kept as separate corpora.
 - `:compass:` LangGraph orchestration routes search, comparison, proposal, and RFP-analysis flows.
@@ -18,30 +39,37 @@ The repository is structured as a reproducible single-user demonstration. It inc
 - `:shield:` Grounding verification and bounded repair reduce unsupported claims.
 - `:test_tube:` The repo includes unit/integration tests, offline smoke evals, and real KB evals.
 
-## Tools Used
+<a id="technology-stack"></a>
+
+## :toolbox: Technology Stack
 
 - `LangGraph` for orchestration and graph-based runtime flow
 - `LangChain` for retrieval plumbing, document handling, and provider integrations
 - `ChromaDB` for local vector storage
 - `FastEmbed` for local embeddings
 - `Streamlit` for the application UI
+- `Groq` and `Google Gemini` for optional LLM-backed answer generation
 - `PyMuPDF` and `fpdf2` for PDF loading and synthetic PDF generation
-- `Pytest` and `streamlit.testing.v1.AppTest` for regression coverage
+- `pytest` and `streamlit.testing.v1.AppTest` for regression coverage
+- `GitHub Actions` for continuous integration checks
 
-## Tech Stack
+### Stack at a Glance
 
-| Layer | Technology |
+| Layer | Technologies |
 | --- | --- |
 | Language | Python 3.11 |
-| UI | Streamlit |
-| Orchestration | LangGraph |
-| Retrieval | LangChain + ChromaDB |
-| Embeddings | FastEmbed |
-| Document Processing | PyMuPDF, fpdf2 |
-| Configuration | `.env`, Streamlit Secrets |
-| Testing | pytest, compile checks, evaluation runners |
+| Interface | Streamlit |
+| Agent orchestration | LangGraph |
+| LLM integration | Groq, Google Gemini |
+| Retrieval and RAG | LangChain, ChromaDB, FastEmbed |
+| Document processing | PyMuPDF, fpdf2 |
+| Validation and configuration | `.env`, environment variables, Streamlit Secrets |
+| Testing and evaluation | pytest, offline smoke evaluation, real KB evaluation |
+| Automation | GitHub Actions |
 
-## Project Overview
+<a id="project-overview"></a>
+
+## :dart: Project Overview
 
 Internal RFP analysis needs more than document search. A user may need to treat one uploaded document as the target requirements, search internal case studies separately, identify missing details needed for a proposal, compare prior work, and generate a cited response. A basic retrieve-and-generate workflow tends to blend those roles into one context window and makes it easy to confuse target requirements with internal examples.
 
@@ -55,7 +83,7 @@ This project keeps those responsibilities separate:
 
 The result is not just search. The user receives requirement summaries, inferred gaps, ranked case studies, comparison outputs, proposal outlines, page-level citations, grouped source traces, and graceful fallbacks when evidence or configuration is missing.
 
-## Key Capabilities
+## :sparkles: Key Capabilities
 
 - PDF upload validation with filename sanitization, MIME checks, size limits, and page-count limits.
 - Generated synthetic sample case-study corpus for repeatable local setup.
@@ -76,7 +104,9 @@ The result is not just search. The user receives requirement summaries, inferred
 - Offline smoke evaluation and real knowledge-base evaluation.
 - Friendly handling for missing providers, invalid API keys, oversized model requests, empty scopes, low relevance, and Windows vectorstore locks.
 
-## Architecture Diagrams
+<a id="architecture-diagrams"></a>
+
+## :building_construction: Architecture Diagrams
 
 ### System Architecture
 
@@ -148,7 +178,9 @@ flowchart LR
     Verify --> Response["Cited response"]
 ```
 
-## How the Agentic RAG Workflow Works
+<a id="agentic-rag-workflow"></a>
+
+## :brain: How the Agentic RAG Workflow Works
 
 The canonical runtime lives in [src/rfp_analyst/agent/graph.py](src/rfp_analyst/agent/graph.py). It uses a real LangGraph `StateGraph` when `langgraph` is available and falls back to the same node functions in deterministic order otherwise.
 
@@ -235,7 +267,9 @@ The UI exposes safe traces only:
 
 Private chain-of-thought is not shown.
 
-## Feature Walkthrough
+<a id="feature-walkthrough"></a>
+
+## :arrows_counterclockwise: Feature Walkthrough
 
 1. Generate sample PDFs from the sidebar.
 2. Upload custom PDFs into the dedicated uploads directory.
@@ -259,7 +293,59 @@ What is the CEO's private phone number?
 
 Unsupported questions are expected to return an insufficient-evidence fallback rather than a fabricated answer.
 
-## Repository Structure
+<a id="screenshots"></a>
+
+## :camera_flash: Screenshots
+
+### Application overview
+
+The Streamlit interface exposes knowledge-base health, indexed document and chunk counts, document-scope controls, provider configuration, ingestion actions, and suggested analysis prompts.
+
+<p align="center">
+  <img
+    src="docs/assets/01-application-overview.png"
+    alt="Internal RFP Analyst application overview"
+    width="900"
+  />
+</p>
+
+### Cross-corpus RFP analysis
+
+Uploaded documents are treated as target requirements, while the numbered sample PDFs remain a separate internal case-study corpus. The workflow extracts requirements, identifies missing details, ranks relevant prior projects, and builds an evidence-backed proposal outline.
+
+<p align="center">
+  <img
+    src="docs/assets/02-cross-corpus-analysis.png"
+    alt="Cross-corpus RFP analysis with requirements and case-study matching"
+    width="900"
+  />
+</p>
+
+### Agent execution trace
+
+The source panel exposes safe workflow observability, including intent routing, scoped retrieval, specialized tool execution, prompt budgeting, answer generation, and post-generation grounding verification.
+
+<p align="center">
+  <img
+    src="docs/assets/03-agent-execution-trace.png"
+    alt="LangGraph Agentic RAG execution trace"
+    width="900"
+  />
+</p>
+
+### Evaluation results
+
+The application distinguishes deterministic offline smoke checks from the real knowledge-base evaluation so retrieval and workflow validation are not confused with general LLM correctness.
+
+<p align="center">
+  <img
+    src="docs/assets/04-evaluation-results.png"
+    alt="Offline smoke and real knowledge-base evaluation results"
+    width="900"
+  />
+</p>
+
+## :file_folder: Repository Structure
 
 ```text
 Internal-RFP-Analyst/
@@ -283,14 +369,15 @@ Internal-RFP-Analyst/
 
 See [docs/FILE_MAP.md](docs/FILE_MAP.md) for the complete file-by-file explanation.
 
-## Quick Start
+<a id="quick-start"></a>
+
+## :rocket: Quick Start
 
 ### Windows PowerShell
 
 ```powershell
 git clone https://github.com/tusharg007/Internal-RFP-Analyst.git
 cd Internal-RFP-Analyst
-git checkout agentic-rag-v2
 py -3.11 -m venv .venv
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
 .\.venv\Scripts\Activate.ps1
@@ -306,7 +393,6 @@ python -m streamlit run app.py
 ```bash
 git clone https://github.com/tusharg007/Internal-RFP-Analyst.git
 cd Internal-RFP-Analyst
-git checkout agentic-rag-v2
 python3.11 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
@@ -316,7 +402,7 @@ cp .env.example .env
 python -m streamlit run app.py
 ```
 
-## Configuration Reference
+## :gear: Configuration Reference
 
 All meaningful environment variables come from [config.py](config.py) and [.env.example](.env.example).
 
@@ -368,7 +454,9 @@ Important runtime behaviors:
 - Clearing chat history removes session messages and cached runtime objects.
 - If no provider key is configured, chat stays disabled but upload, generation, and ingestion still work.
 
-## Testing and Evaluation
+<a id="testing-and-evaluation"></a>
+
+## :test_tube: Testing and Evaluation
 
 Validation commands:
 
@@ -391,7 +479,9 @@ Evaluation modes:
 
 The smoke evaluation is not evidence of real RAG quality.
 
-## Deployment
+<a id="deployment"></a>
+
+## :cloud: Deployment
 
 ### Streamlit Community Cloud
 
@@ -409,7 +499,7 @@ Deployment notes:
 - sample documents or uploads may need to be regenerated and reingested after redeployments
 - the architecture is intended as a single-user demonstration and does not provide multi-tenant data isolation
 
-## Reliability and Safety
+## :shield: Reliability and Safety
 
 - API keys are resolved from Streamlit secrets, then environment variables, then `.env` during normal local runtime.
 - Uploaded documents are ignored by chat until ingestion succeeds.
@@ -422,7 +512,7 @@ Deployment notes:
 - Grounding verification checks filename/page citations, numeric claims, and named technologies.
 - Automated grounding helps, but it does not guarantee that every unsupported claim is caught.
 
-## Known Limitations
+## :warning: Known Limitations
 
 - Single-user Streamlit storage model
 - Local persistent vectorstore design
@@ -435,7 +525,7 @@ Deployment notes:
 - No managed observability backend
 - Grounding verification is bounded and heuristic, not formal proof
 
-## Future Extensions
+## :world_map: Future Extensions
 
 Future work could include:
 
@@ -451,7 +541,9 @@ Future work could include:
 
 These are roadmap ideas, not implemented features.
 
-## Additional Documentation
+<a id="additional-documentation"></a>
+
+## :books: Additional Documentation
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - [docs/AGENTIC_RAG.md](docs/AGENTIC_RAG.md)
@@ -459,16 +551,3 @@ These are roadmap ideas, not implemented features.
 - [docs/TESTING_AND_EVALUATION.md](docs/TESTING_AND_EVALUATION.md)
 - [docs/FILE_MAP.md](docs/FILE_MAP.md)
 - [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
-
-## Screenshots
-
-No safe repository screenshots are currently committed.
-
-Useful future screenshots would be:
-
-- the Streamlit home screen with a ready knowledge base
-- the upload and ingestion sidebar flow
-- a cross-corpus RFP analysis answer with grouped traces
-- the evaluation snapshot panel
-
-Only commit screenshots that exclude API keys, private uploads, and machine-specific sensitive information.
