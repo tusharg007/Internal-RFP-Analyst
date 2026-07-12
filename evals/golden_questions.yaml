@@ -1,0 +1,75 @@
+id: sample_retrieval
+category: scoped_sample_retrieval
+question: What technology stack was used for the banking digital audit?
+retrieval_scope: sample
+expected_sources:
+  - 01_Banking_Sector_Digital_Audit_2024.pdf
+expected_origins:
+  - sample
+expected_tools:
+  - search_knowledge_base
+expects_no_answer: false
+---
+id: upload_retrieval
+category: scoped_upload_retrieval
+question: What controls and delivery requirements are in the uploaded client RFP?
+retrieval_scope: upload
+expected_sources:
+  - eval_target_rfp.pdf
+expected_origins:
+  - upload
+expected_tools:
+  - search_knowledge_base
+expects_no_answer: false
+---
+id: cross_corpus_analysis
+category: cross_corpus_rfp_analysis
+question: Extract requirements, find gaps and case studies, compare fit, create a proposal outline, and verify recommendations for the uploaded RFP.
+retrieval_scope: all
+expected_sources:
+  - eval_target_rfp.pdf
+expected_origins:
+  - upload
+  - sample
+expected_tools:
+  - extract_rfp_requirements
+  - find_relevant_case_studies
+  - compare_projects
+  - proposal_writer
+expects_no_answer: false
+---
+id: previous_sources
+category: previous_answer_sources
+question: What sources did you use?
+expected_sources: []
+expected_tools:
+  - previous_sources
+expects_no_answer: false
+chat_history:
+  - role: assistant
+    content: The uploaded RFP requires HIPAA controls.
+    reasoning:
+      - source: eval_target_rfp.pdf
+        page: 1
+        document_origin: upload
+---
+id: unsupported_query
+category: no_answer_behavior
+question: What is the CEO's private phone number for the aerospace blockchain program?
+expected_sources: []
+expected_tools:
+  - search_knowledge_base
+expects_no_answer: true
+---
+id: specialized_comparison
+category: specialized_tool_execution
+question: Compare the healthcare migration versus insurance automation projects.
+retrieval_scope: sample
+expected_sources:
+  - 02_Healthcare_Data_Migration_to_Azure_Cloud.pdf
+  - 04_Insurance_Claims_Processing_Automation.pdf
+expected_origins:
+  - sample
+expected_tools:
+  - compare_projects
+expects_no_answer: false

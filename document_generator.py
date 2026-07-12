@@ -4,10 +4,13 @@ Generates realistic fintech consulting documents as PDFs.
 """
 
 import os
-from fpdf import FPDF
 from pathlib import Path
 
-DATA_DIR = Path(__file__).parent / "data" / "documents"
+from fpdf import FPDF
+
+from config import SAMPLE_DOCS_DIR
+
+DATA_DIR = SAMPLE_DOCS_DIR
 
 DOCUMENTS = [
     {

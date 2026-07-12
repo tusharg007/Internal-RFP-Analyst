@@ -1,20 +1,36 @@
-# ─── Environment ───
+﻿# Environment and secrets
 .env
+.streamlit/secrets.toml
+.venv/
 venv/
+.python_packages/
+
+# Python cache and build output
 __pycache__/
 *.pyc
+*.egg-info/
+.ruff_cache/
+.pytest_cache/
+.pytest_tmp/
 
-# ─── Vector Store (regenerated on deploy) ───
+# Logs
+*.log
+
+# Generated runtime artifacts
 vectorstore/
-
-# ─── Generated PDFs (regenerated on deploy) ───
+vectorstore_build_*/
 data/documents/*.pdf
+data/uploads/
+evals/results.json
+evals/offline_smoke_results.json
+evals/kb_eval_results.json
+evals/real_kb_results.json
 
-# ─── IDE ───
+# IDE
 .vscode/
 .idea/
 *.swp
 
-# ─── OS ───
+# OS
 Thumbs.db
 .DS_Store

@@ -1,58 +1,125 @@
-"""
-RAG Query Engine — Fast retrieval-augmented generation with streaming.
-Uses Groq (primary, fastest) or Gemini (fallback) for LLM generation.
-Local embeddings for retrieval — zero API overhead for search.
-"""
+"""RAG query engine with provider selection and streaming generation."""
 
-from langchain_core.messages import HumanMessage
+import os
 
-from config import (
-    GROQ_API_KEY,
-    GOOGLE_API_KEY,
-    GROQ_MODEL,
-    GEMINI_MODEL,
-    LLM_TEMPERATURE,
-    LLM_MAX_TOKENS,
-    AGENT_SYSTEM_PROMPT,
-    RETRIEVAL_K,
+from config import GEMINI_MODEL, GROQ_MODEL, LLM_MAX_TOKENS, LLM_TEMPERATURE, get_api_keys
+from rfp_analyst.agent.graph import (
+    KB_NOT_READY_MESSAGE,
+    NO_SCOPE_DOCUMENTS_MESSAGE,
+    prepare_query_payload,
+    run_query,
+    stream_query_response,
 )
-from rag_engine import similarity_search, get_vectorstore_stats
+from rfp_analyst.exceptions import LLMProviderNotConfiguredError
 
 
-# ─── LLM Initialization ──────────────────────────────────────────────────────
+LLM_CONFIG_WARNING = (
+    "No LLM provider is configured. Add GROQ_API_KEY or GOOGLE_API_KEY in your .env "
+    "file locally, or in Streamlit secrets when deployed."
+)
+LLM_AUTH_ERROR_MESSAGE = (
+    "LLM authentication failed. Your API key is invalid or expired. Update "
+    "GROQ_API_KEY or GOOGLE_API_KEY in .env locally or Streamlit Secrets on deployment."
+)
+LLM_TOKEN_BUDGET_ERROR_MESSAGE = (
+    "The analysis exceeded the current model's token budget. The request was "
+    "compacted automatically, but the remaining evidence is still too large. "
+    "Reduce the document scope or retry with a higher-capacity provider."
+)
+LLM_AUTH_ERROR_MARKERS = (
+    "401",
+    "invalid_api_key",
+    "invalid api key",
+    "authentication",
+    "unauthorized",
+)
+LLM_TOKEN_BUDGET_ERROR_MARKERS = (
+    "413",
+    "request too large",
+    "tokens per minute",
+    "rate_limit_exceeded",
+    "context length",
+    "maximum context",
+)
+
+
+def is_debug_mode_enabled() -> bool:
+    """Return whether raw provider error details may be shown."""
+    return os.getenv("RFP_ANALYST_DEBUG", "").lower() in {"1", "true", "yes", "on"}
+
+
+def is_llm_auth_error(error: Exception) -> bool:
+    """Detect provider authentication failures without exposing secret-bearing details."""
+    error_text = str(error).lower()
+    return any(marker in error_text for marker in LLM_AUTH_ERROR_MARKERS)
+
+
+def is_llm_token_budget_error(error: Exception) -> bool:
+    """Detect token-limit and request-size failures without exposing raw provider payloads."""
+    error_text = str(error).lower()
+    return any(marker in error_text for marker in LLM_TOKEN_BUDGET_ERROR_MARKERS)
+
+
+def format_llm_error(error: Exception, debug: bool = False) -> str | None:
+    """Return a safe user-facing LLM error message when the error is recognized."""
+    if not is_llm_auth_error(error):
+        if not is_llm_token_budget_error(error):
+            return None
+        if debug:
+            return f"{LLM_TOKEN_BUDGET_ERROR_MESSAGE}\n\nDebug details: {error}"
+        return LLM_TOKEN_BUDGET_ERROR_MESSAGE
+    if debug:
+        return f"{LLM_AUTH_ERROR_MESSAGE}\n\nDebug details: {error}"
+
+    return LLM_AUTH_ERROR_MESSAGE
+
+
+def sanitize_answer_text(answer: str) -> str:
+    """Remove unsupported placeholder citations before showing an answer."""
+    return str(answer or "").replace(
+        "[Source: None]",
+        "The retrieved evidence does not support this claim.",
+    )
+
 
 def _get_provider_name():
     """Return which LLM provider is active."""
-    if GROQ_API_KEY:
+    groq_api_key, google_api_key = get_api_keys()
+    if groq_api_key:
         return f"Groq ({GROQ_MODEL})"
-    elif GOOGLE_API_KEY:
+    if google_api_key:
         return f"Gemini ({GEMINI_MODEL})"
-    return "None"
+    return "Not configured"
+
+
+def is_llm_provider_configured() -> bool:
+    """Return whether any supported LLM provider is configured."""
+    groq_api_key, google_api_key = get_api_keys()
+    return bool(groq_api_key or google_api_key)
 
 
 def get_llm():
-    """Get LLM with automatic provider selection. Groq preferred (faster)."""
-    if GROQ_API_KEY:
+    """Get the active LLM instance."""
+    groq_api_key, google_api_key = get_api_keys()
+    if groq_api_key:
         from langchain_groq import ChatGroq
+
         return ChatGroq(
             model=GROQ_MODEL,
-            api_key=GROQ_API_KEY,
+            api_key=groq_api_key,
             temperature=LLM_TEMPERATURE,
             max_tokens=LLM_MAX_TOKENS,
         )
-    elif GOOGLE_API_KEY:
+    if google_api_key:
         from langchain_google_genai import ChatGoogleGenerativeAI
+
         return ChatGoogleGenerativeAI(
             model=GEMINI_MODEL,
-            google_api_key=GOOGLE_API_KEY,
+            google_api_key=google_api_key,
             temperature=LLM_TEMPERATURE,
             max_output_tokens=LLM_MAX_TOKENS,
         )
-    else:
-        raise ValueError(
-            "No API key found. Set GROQ_API_KEY (recommended, https://console.groq.com) "
-            "or GOOGLE_API_KEY (https://aistudio.google.com/apikey)"
-        )
+    raise LLMProviderNotConfiguredError(LLM_CONFIG_WARNING)
 
 
 def create_agent():
@@ -60,99 +127,132 @@ def create_agent():
     return get_llm()
 
 
-# ─── Context Retrieval ────────────────────────────────────────────────────────
+def _payload_to_reasoning_trace(payload: dict) -> list[dict]:
+    traces = []
+    for step in payload.get("traces", []):
+        tool_name = step.get("tool")
+        if tool_name == "search_knowledge_base":
+            traces.append(
+                {
+                    "tool": tool_name,
+                    "input": step.get("input", {"query": payload.get("user_query", "")}),
+                    "input_summary": step.get("input_summary", ""),
+                    "output_summary": step.get("output_summary", ""),
+                }
+            )
+            grouped_sources = {}
+            for document in step.get("documents", []):
+                dedupe_key = (
+                    document.get("source"),
+                    document.get("page"),
+                )
+                if dedupe_key in grouped_sources:
+                    grouped_sources[dedupe_key]["match_count"] += 1
+                    grouped_sources[dedupe_key]["chunk_ids"].append(document.get("chunk_id", ""))
+                    if float(document.get("score", 0) or 0) > float(grouped_sources[dedupe_key]["score"] or 0):
+                        grouped_sources[dedupe_key]["score"] = document.get("score", "0.00")
+                    continue
+                grouped_sources[dedupe_key] = {
+                    "source": document.get("source", "Unknown"),
+                    "page": int(document.get("page", 1) or 1),
+                    "score": document.get("score", "0.00"),
+                    "chunk_id": document.get("chunk_id", ""),
+                    "chunk_ids": [document.get("chunk_id", "")],
+                    "document_origin": document.get("document_origin", "sample"),
+                    "match_count": 1,
+                }
+            for source_card in grouped_sources.values():
+                match_suffix = (
+                    f" · {source_card['match_count']} matching chunks"
+                    if source_card["match_count"] > 1
+                    else ""
+                )
+                traces.append(
+                    {
+                        "tool_response": f"{source_card['source']} (Page {source_card['page']})",
+                        "snippet": f"retrieval score {source_card['score']}{match_suffix}",
+                        "source": source_card["source"],
+                        "page": source_card["page"],
+                        "score": source_card["score"],
+                        "chunk_id": source_card["chunk_id"],
+                        "chunk_ids": source_card["chunk_ids"],
+                        "document_origin": source_card["document_origin"],
+                        "match_count": source_card["match_count"],
+                    }
+                )
+        elif tool_name and tool_name not in {"health_check"}:
+            traces.append(
+                {
+                    "tool": tool_name,
+                    "input": {"query": payload.get("user_query", "")},
+                    "input_summary": step.get("input_summary", ""),
+                    "output_summary": step.get("output_summary", step.get("verification_status", "")),
+                }
+            )
+    return traces or payload.get("traces", [])
 
-def _retrieve_context(user_query: str):
-    """Retrieve relevant documents and format context. Local, instant."""
+
+def prepare_query(
+    user_query: str,
+    chat_history: list | None = None,
+    retrieval_scope: str = "all",
+    vectorstore_stats: dict | None = None,
+):
+    """Prepare the graph payload and convert traces for the existing UI."""
+    payload = prepare_query_payload(
+        user_query=user_query,
+        chat_history=chat_history,
+        retrieval_scope=retrieval_scope,
+        vectorstore_stats=vectorstore_stats,
+    )
+    reasoning_trace = _payload_to_reasoning_trace(payload)
+    payload["_ui_reasoning_trace"] = reasoning_trace
+    return payload, reasoning_trace
+
+
+def query_agent_stream(llm, prompt_or_payload):
+    """Stream query output using the graph payload or a legacy prompt string."""
     try:
-        results = similarity_search(user_query, k=RETRIEVAL_K)
-    except Exception:
-        return "", [], []
+        if isinstance(prompt_or_payload, dict):
+            yield from stream_query_response(llm, prompt_or_payload)
+            return
 
-    context_parts = []
-    sources_used = []
-    for doc, score in results:
-        source = doc.metadata.get("source_file", "Unknown")
-        page = doc.metadata.get("page", "?")
-        context_parts.append(
-            f"[Source: {source}, Page {int(page) + 1}]\n{doc.page_content}"
+        payload = {
+            "prompt": str(prompt_or_payload),
+            "response_mode": "llm",
+        }
+        yield from stream_query_response(llm, payload)
+    except Exception as exc:
+        safe_message = format_llm_error(exc, debug=is_debug_mode_enabled())
+        if safe_message:
+            yield safe_message
+            return
+        raise
+
+
+def query_agent(llm, user_query: str, thread_id: str = "default", chat_history: list | None = None, retrieval_scope: str = "all"):
+    """Non-streaming query retained for backward compatibility."""
+    try:
+        result = run_query(
+            llm,
+            user_query,
+            thread_id=thread_id,
+            chat_history=chat_history,
+            retrieval_scope=retrieval_scope,
         )
-        sources_used.append({"source": source, "page": page, "score": f"{score:.2f}"})
-
-    context = "\n\n---\n\n".join(context_parts) if context_parts else "No relevant documents found."
-    return context, context_parts, sources_used
-
-
-def _build_prompt(user_query, context, chat_history=None):
-    """Build the full prompt with context, history, and question."""
-    stats = get_vectorstore_stats()
-    project_list = "\n".join(
-        f"  - {name}" for name in stats.get("document_names", [])
-    ) or "  No documents ingested yet."
-
-    history_text = ""
-    if chat_history:
-        recent = [m for m in chat_history[-6:] if m.get("role") in ("user", "assistant")]
-        for msg in recent:
-            role = "User" if msg["role"] == "user" else "Assistant"
-            history_text += f"{role}: {msg['content'][:300]}\n"
-
-    return f"""{AGENT_SYSTEM_PROMPT}
-
-── Available Documents ──
-{project_list}
-Total: {stats.get('total_documents', 0)} documents, {stats.get('total_chunks', 0)} chunks
-
-── Retrieved Context ──
-{context}
-
-{f"── Recent Conversation ──{chr(10)}{history_text}" if history_text else ""}
-── Question ──
-{user_query}
-
-Answer thoroughly with source citations."""
-
-
-# ─── Query Functions ──────────────────────────────────────────────────────────
-
-def prepare_query(user_query: str, chat_history: list = None):
-    """Prepare retrieval context and prompt. Returns (sources, prompt)."""
-    context, context_parts, sources_used = _retrieve_context(user_query)
-    prompt = _build_prompt(user_query, context, chat_history)
-
-    reasoning_trace = []
-    if sources_used:
-        reasoning_trace.append({
-            "tool": "search_knowledge_base",
-            "input": {"query": user_query},
-        })
-        for s in sources_used[:3]:
-            reasoning_trace.append({
-                "tool_response": f"{s['source']} (Page {s['page']})",
-                "snippet": next(
-                    (p[:200] for p in context_parts if s["source"] in p), "..."
-                ),
-            })
-
-    return prompt, reasoning_trace
-
-
-def query_agent_stream(llm, prompt):
-    """Stream LLM response chunks. Yields text as it's generated."""
-    for chunk in llm.stream([HumanMessage(content=prompt)]):
-        if chunk.content:
-            yield chunk.content
-
-
-def query_agent(llm, user_query: str, thread_id: str = "default", chat_history: list = None):
-    """Non-streaming query (backward compatible). Single LLM call."""
-    prompt, reasoning_trace = prepare_query(user_query, chat_history)
-    response = llm.invoke([HumanMessage(content=prompt)])
-    return {
-        "answer": response.content,
-        "reasoning_trace": reasoning_trace,
-        "all_messages": [],
-    }
+    except Exception as exc:
+        safe_message = format_llm_error(exc, debug=is_debug_mode_enabled())
+        if safe_message:
+            return {
+                "answer": safe_message,
+                "reasoning_trace": [],
+                "all_messages": [],
+                "payload": {},
+            }
+        raise
+    result["answer"] = sanitize_answer_text(result.get("answer", ""))
+    result["reasoning_trace"] = _payload_to_reasoning_trace(result.get("payload", {}))
+    return result
 
 
 if __name__ == "__main__":

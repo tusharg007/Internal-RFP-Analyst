@@ -1,0 +1,36 @@
+﻿name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -e ".[dev]"
+
+      - name: Compile critical entry points
+        run: python -m py_compile app.py agent.py rag_engine.py config.py document_generator.py
+
+      - name: Compile source tree
+        run: python -m compileall -f src tests evals
+
+      - name: Run pytest
+        run: python -m pytest -q
+
+      - name: Run offline smoke evaluation
+        run: python -m evals.run_evals
