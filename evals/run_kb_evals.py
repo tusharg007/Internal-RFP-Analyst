@@ -143,7 +143,7 @@ def _run_case(case: dict, *, vectorstore_stats: dict, retrieval_fn, llm=None) ->
     origins_ok = all(origin in retrieved_origins for origin in case.get("expected_origins", []))
     passed = citation_coverage >= 0.5 and no_answer_ok and tools_ok and origins_ok
     if expects_no_answer:
-        passed = no_answer_ok
+        passed = no_answer_ok and tools_ok and origins_ok
 
     return {
         "question": question,
@@ -229,4 +229,3 @@ def run_real_kb_eval(
 if __name__ == "__main__":
     summary = run_real_kb_eval()
     print(json.dumps(summary, indent=2))
-

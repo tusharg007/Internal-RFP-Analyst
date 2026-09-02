@@ -7,6 +7,133 @@ import re
 from config import AGENT_SYSTEM_PROMPT
 
 
+ROUTER_PROMPT = """You are a router for an Internal RFP Analyst.
+
+Route to "kb" if the user asks about:
+- RFP analysis, requirements, gaps, or proposal responses
+- Project or case-study comparisons
+- Consulting delivery experience, architecture, technology, budgets, or timelines
+- Document search or any business or technical question requiring evidence
+
+Route to "direct" only for greetings, thanks, or very simple conversation that does
+not require document retrieval.
+
+Question:
+{question}
+
+Return valid JSON only.
+Example:
+{{"route": "kb"}}
+"""
+
+
+KB_GRADER_PROMPT = """You are an evidence grader for an Internal RFP Analyst.
+
+Question:
+{question}
+
+Private KB evidence:
+{context}
+
+Return "good" only when the evidence is relevant, internally consistent, and sufficient
+to answer the question without unsupported assumptions. Return "weak" when the evidence
+is irrelevant, incomplete, contradictory, or insufficient.
+
+Return valid JSON only, using exactly one of these forms:
+{{"grade": "good"}}
+{{"grade": "weak"}}
+"""
+
+
+WEB_GRADER_PROMPT = """You are an evidence grader for an Internal RFP Analyst.
+
+Question:
+{question}
+
+Web search evidence:
+{web_results}
+
+Return "good" only when the web evidence is relevant, credible, and sufficient to
+answer the question without unsupported assumptions. Return "weak" when it is
+irrelevant, incomplete, contradictory, or insufficient.
+
+Return valid JSON only, using exactly one of these forms:
+{{"grade": "good"}}
+{{"grade": "weak"}}
+"""
+
+
+QUERY_REWRITER_PROMPT = """Rewrite the question for better retrieval and web search.
+
+Rules:
+- Preserve the original intent.
+- Make it specific and search-friendly.
+- Do not answer the question.
+- Return only the rewritten query value in the `rewritten_query` JSON field.
+- Preserve source constraints such as "my resume", "uploaded document", "Private KB",
+  or "all projects". Never turn a request about the contents of a private document
+  into generic advice or a public-web question.
+
+Original question:
+{question}
+
+Example:
+{{"rewritten_query": "specific search query"}}
+"""
+
+
+KB_GENERATION_PROMPT = """You are an Internal RFP Analyst for a global fintech consulting firm.
+
+Source type: Private KB
+
+Answer using only the private knowledge-base context provided.
+- Cite every factual claim as [Source: <doc>, Page <page>].
+- Copy the source filename exactly as shown in the context and do not Markdown-escape
+  underscores inside citations.
+- In a Markdown table, put the supporting citation in the same row as the claim; do
+  not move table citations to a separate section.
+- Never invent facts, citations, project details, metrics, dates, or client outcomes.
+- If the context does not support a claim, say: "The retrieved evidence does not support this claim."
+- Use clear, concise Markdown with headings, bullets, and tables where useful.
+- Do not use general model knowledge to fill evidence gaps.
+
+Question:
+{question}
+
+Private KB context:
+{context}
+"""
+
+
+WEB_GENERATION_PROMPT = """You are an Internal RFP Analyst.
+
+Source type: Web Search
+
+The private knowledge base was insufficient, so answer using only the web-search
+evidence below.
+- Do not invent facts, sources, URLs, metrics, dates, or quotations.
+- Cite useful sources with their title and URL, preferably as [Title](URL).
+- If the evidence does not support a claim, state that clearly instead of guessing.
+- Use clear Markdown and distinguish sourced facts from cautious interpretation.
+
+Question:
+{question}
+
+Web search context:
+{web_context}
+"""
+
+
+DIRECT_ANSWER_PROMPT = """You are an Internal RFP Analyst.
+
+Respond briefly and naturally to the conversational message below. Do not claim to
+have searched the Private KB or Web Search, and do not invent citations.
+
+Message:
+{question}
+"""
+
+
 def classify_query_intent(query: str) -> str:
     lower = query.lower()
     if any(keyword in lower for keyword in ("compare", "versus", "vs", "difference")):

@@ -50,6 +50,15 @@ def _get_env_file_value(name: str) -> str:
     return str(values.get(name, "") or "").strip()
 
 
+def _resolve_key(name: str) -> str:
+    """Resolve an API key from Streamlit secrets, the environment, or ``.env``."""
+    return (
+        _get_streamlit_secret(name)
+        or os.getenv(name, "")
+        or _get_env_file_value(name)
+    ).strip()
+
+
 def _get_int_setting(name: str, default: int) -> int:
     raw_value = os.getenv(name, "") or _get_env_file_value(name)
     if not raw_value:
@@ -62,26 +71,23 @@ def _get_int_setting(name: str, default: int) -> int:
 
 def get_api_keys() -> tuple[str, str]:
     """Resolve API keys dynamically so Streamlit reruns pick up .env changes."""
-    groq_api_key = (
-        _get_streamlit_secret("GROQ_API_KEY")
-        or os.getenv("GROQ_API_KEY", "")
-        or _get_env_file_value("GROQ_API_KEY")
-    )
-    google_api_key = (
-        _get_streamlit_secret("GOOGLE_API_KEY")
-        or os.getenv("GOOGLE_API_KEY", "")
-        or _get_env_file_value("GOOGLE_API_KEY")
-    )
-    return groq_api_key.strip(), google_api_key.strip()
+    return _resolve_key("GROQ_API_KEY"), _resolve_key("GOOGLE_API_KEY")
 
 
 GROQ_API_KEY, GOOGLE_API_KEY = get_api_keys()
 
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = "openai/gpt-oss-120b"
 GEMINI_MODEL = "gemini-2.0-flash"
 
-LLM_TEMPERATURE = 0.3
+GENERATION_TEMPERATURE = 0.3
+# Backward-compatible alias for existing callers; new code should use the name above.
+LLM_TEMPERATURE = GENERATION_TEMPERATURE
 LLM_MAX_TOKENS = 2048
+
+TAVILY_API_KEY = _resolve_key("TAVILY_API_KEY")
+TAVILY_MAX_RESULTS = 5
+MAX_QUERY_RETRIES = 1
+GRADING_TEMPERATURE = 0.0
 
 EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 

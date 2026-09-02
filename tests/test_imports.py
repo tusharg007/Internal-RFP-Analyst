@@ -27,8 +27,13 @@ import pytest
         "rfp_analyst.tools.source_verifier",
         "rfp_analyst.agent.state",
         "rfp_analyst.agent.prompts",
+        "rfp_analyst.agent.router",
+        "rfp_analyst.agent.grader",
+        "rfp_analyst.agent.query_rewriter",
+        "rfp_analyst.agent.schemas_decisions",
         "rfp_analyst.agent.graph",
         "rfp_analyst.agent.runtime",
+        "rfp_analyst.tools.web_search",
     ],
 )
 def test_module_imports(module_name):

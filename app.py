@@ -45,7 +45,7 @@ from rfp_analyst.exceptions import (
 )
 from rfp_analyst.health import get_app_health
 from rfp_analyst.ui import get_chat_avatar
-from rfp_analyst.uploads import persist_uploaded_pdf
+from rfp_analyst.uploads import is_uploaded_pdf_unchanged, persist_uploaded_pdf
 
 SCOPE_LABELS = {
     "upload": "Uploaded documents only",
@@ -281,6 +281,11 @@ def handle_uploaded_files(uploaded_files) -> None:
     saved_files = []
     for uploaded_file in uploaded_files:
         try:
+            if is_uploaded_pdf_unchanged(uploaded_file, uploads_dir=UPLOADS_DIR):
+                # Streamlit retains file-uploader selections across reruns. An
+                # unchanged file is already persisted and must not become
+                # "pending" again immediately after successful ingestion.
+                continue
             save_path = persist_uploaded_pdf(uploaded_file, uploads_dir=UPLOADS_DIR)
             saved_files.append(save_path.name)
         except UnsupportedFileError as exc:
@@ -395,15 +400,16 @@ def process_query(user_query: str, show_reasoning: bool, retrieval_scope: str):
         return
 
     try:
+        if st.session_state.agent is None:
+            st.session_state.agent = create_agent()
+
         prompt, reasoning_trace = prepare_query(
             user_query,
             chat_history=st.session_state.messages,
             retrieval_scope=retrieval_scope,
             vectorstore_stats=stats,
+            llm=st.session_state.agent,
         )
-
-        if st.session_state.agent is None:
-            st.session_state.agent = create_agent()
 
         with st.chat_message("assistant", avatar=get_chat_avatar("assistant")):
             full_response = st.write_stream(

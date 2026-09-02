@@ -2,8 +2,11 @@
 
 import importlib
 import re
+import sys
+from types import ModuleType
 
-from config import MAX_PROMPT_TOKENS, RFP_ANALYSIS_MAX_OUTPUT_TOKENS
+from config import MAX_PROMPT_TOKENS, MAX_QUERY_RETRIES, RFP_ANALYSIS_MAX_OUTPUT_TOKENS
+import agent as ui_agent
 
 from rfp_analyst.agent.graph import (
     INSUFFICIENT_EVIDENCE_MESSAGE,
@@ -12,9 +15,39 @@ from rfp_analyst.agent.graph import (
     compile_query_graph,
     prepare_query_payload,
     run_query,
+    decide_after_kb_grade,
+    decide_after_web_grade,
 )
+from rfp_analyst.agent.grader import grade_kb_evidence, grade_web_evidence
+from rfp_analyst.agent.query_rewriter import rewrite_query
+from rfp_analyst.agent.router import route_after_router, route_question
+from rfp_analyst.agent.schemas_decisions import EvidenceGrade, QueryRewrite, RouteDecision
+from rfp_analyst.agent.prompts import (
+    KB_GENERATION_PROMPT,
+    KB_GRADER_PROMPT,
+    QUERY_REWRITER_PROMPT,
+    ROUTER_PROMPT,
+    WEB_GENERATION_PROMPT,
+    WEB_GRADER_PROMPT,
+)
+from rfp_analyst.tools import web_search
+from rfp_analyst.tools.source_verifier import verify_answer_grounding
 
 graph_module = importlib.import_module("rfp_analyst.agent.graph")
+
+
+def test_specialized_prompts_have_required_contracts():
+    assert "Private KB" in KB_GENERATION_PROMPT
+    assert "[Source: <doc>, Page <page>]" in KB_GENERATION_PROMPT
+    assert "Markdown" in KB_GENERATION_PROMPT
+    assert "Web Search" in WEB_GENERATION_PROMPT
+    assert "[Title](URL)" in WEB_GENERATION_PROMPT
+    assert "RFP analysis" in ROUTER_PROMPT
+    assert '{"grade": "good"}' in KB_GRADER_PROMPT.format(question="q", context="c")
+    assert '{"grade": "weak"}' in WEB_GRADER_PROMPT.format(question="q", web_results="w")
+    assert "Do not answer" in QUERY_REWRITER_PROMPT.format(question="q")
+    assert "context" in KB_GENERATION_PROMPT.format(question="q", context="c").lower()
+    assert "web search context" in WEB_GENERATION_PROMPT.format(question="q", web_context="w").lower()
 
 
 class FakeDoc:
@@ -67,6 +100,398 @@ def test_graph_compiles():
     graph = compile_query_graph()
     assert graph is not None
     assert hasattr(graph, "invoke")
+
+
+class FakeStructuredRouter:
+    def __init__(self, decision):
+        self.decision = decision
+        self.prompt = ""
+
+    def invoke(self, prompt):
+        self.prompt = prompt
+        return self.decision
+
+
+class FakeRouterLLM:
+    def __init__(self, decision):
+        self.schema = None
+        self.method = None
+        self.structured_router = FakeStructuredRouter(decision)
+
+    def with_structured_output(self, schema, method):
+        self.schema = schema
+        self.method = method
+        return self.structured_router
+
+
+def test_router_uses_structured_output_and_refines_kb_intent():
+    llm = FakeRouterLLM(RouteDecision(route="kb"))
+
+    result = route_question(
+        {"user_query": "Compare the healthcare and insurance projects", "router_llm": llm}
+    )
+
+    assert llm.schema is RouteDecision
+    assert llm.method == "json_mode"
+    assert "Compare the healthcare" in llm.structured_router.prompt
+    assert result == {
+        "intent": "compare",
+        "source_used": "kb",
+        "current_query": "Compare the healthcare and insurance projects",
+    }
+
+
+def test_router_returns_direct_branch_for_simple_conversation():
+    result = route_question(
+        {"user_query": "Thanks!", "router_llm": FakeRouterLLM(RouteDecision(route="direct"))}
+    )
+
+    assert result["intent"] == "direct"
+    assert result["source_used"] == "direct"
+    assert route_after_router(result) == "direct_answer"
+
+
+def test_router_falls_back_without_an_llm_provider():
+    result = route_question(
+        {"user_query": "Write a proposal for the banking RFP", "allow_llm_routing": False}
+    )
+
+    assert result["intent"] == "proposal"
+    assert result["source_used"] == "kb"
+    assert route_after_router(result) == "retrieve_kb"
+
+
+def test_kb_grader_uses_structured_output():
+    llm = FakeRouterLLM(EvidenceGrade(grade="good"))
+
+    result = grade_kb_evidence(
+        {
+            "user_query": "What cloud platform did the banking project use?",
+            "retrieved_documents": [
+                {"source": "banking_case_study.pdf", "content": "The project used Azure services."}
+            ],
+            "grader_llm": llm,
+        }
+    )
+
+    assert result == {"kb_grade": "good"}
+    assert llm.schema is EvidenceGrade
+    assert llm.method == "json_mode"
+    assert "banking_case_study.pdf" in llm.structured_router.prompt
+
+
+def test_web_grader_uses_structured_output():
+    llm = FakeRouterLLM(EvidenceGrade(grade="weak"))
+
+    result = grade_web_evidence(
+        {
+            "user_query": "What is the current cloud market outlook?",
+            "web_results": "A short, incomplete result.",
+            "grader_llm": llm,
+        }
+    )
+
+    assert result == {"web_grade": "weak"}
+    assert llm.schema is EvidenceGrade
+    assert llm.method == "json_mode"
+    assert "incomplete result" in llm.structured_router.prompt
+
+
+def test_grader_fallbacks_and_conditional_decisions():
+    assert grade_kb_evidence({"retrieved_documents": [], "allow_llm_grading": False}) == {"kb_grade": "weak"}
+    assert grade_web_evidence({"web_results": "", "allow_llm_grading": False}) == {"web_grade": "weak"}
+    assert decide_after_kb_grade({"kb_grade": "good"}) == "execute_tools"
+    assert decide_after_kb_grade({"kb_grade": "weak"}) == "search_web"
+    assert decide_after_web_grade({"web_grade": "good", "retry_count": 0}) == "generate_from_web"
+    assert decide_after_web_grade({"web_grade": "weak", "retry_count": 0}) == "rewrite_query"
+    assert decide_after_web_grade({"web_grade": "weak", "retry_count": 1}) == "answer_insufficient"
+
+
+def test_web_search_degrades_gracefully_without_tavily_key(monkeypatch, caplog):
+    monkeypatch.setattr(web_search, "TAVILY_API_KEY", "")
+
+    result = web_search.search_web({"user_query": "What is the cloud market outlook?"})
+
+    assert result == {"web_results": "", "source_used": "web"}
+    assert "TAVILY_API_KEY is not configured" in caplog.text
+
+
+def test_web_search_formats_dict_and_list_tavily_responses(monkeypatch):
+    created = []
+
+    class FakeTavilySearch:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+            created.append(kwargs)
+
+        def invoke(self, _payload):
+            return {
+                "answer": "Tavily summary",
+                "results": [{"title": "Reference", "url": "https://example.test", "content": "Evidence"}],
+            }
+
+    monkeypatch.setattr(web_search, "TAVILY_API_KEY", "test-key")
+    monkeypatch.setenv("TAVILY_API_KEY", "")
+    monkeypatch.setitem(sys.modules, "langchain_tavily", ModuleType("langchain_tavily"))
+    sys.modules["langchain_tavily"].TavilySearch = FakeTavilySearch
+
+    result = web_search.search_web({"current_query": "test query"})
+
+    assert created == [
+        {
+            "max_results": 5,
+            "topic": "general",
+            "include_answer": True,
+            "include_raw_content": False,
+        }
+    ]
+    assert "Tavily summary" in result["web_results"]
+    assert "https://example.test" in result["web_results"]
+    assert "Evidence" in web_search._format_web_results([{"title": "List", "content": "List evidence"}])
+    assert web_search._format_web_results({"error": "network unavailable"}) == ""
+
+
+def test_query_rewriter_uses_structured_output_and_tracks_retries():
+    llm = FakeRouterLLM(QueryRewrite(rewritten_query="banking RFP Azure implementation details"))
+
+    result = rewrite_query(
+        {
+            "user_query": "What did the banking RFP need?",
+            "retry_count": 0,
+            "rewriter_llm": llm,
+        }
+    )
+
+    assert result == {
+        "current_query": "banking RFP Azure implementation details",
+        "retry_count": 1,
+    }
+    assert llm.schema is QueryRewrite
+    assert llm.method == "json_mode"
+    assert "Preserve the original intent" in llm.structured_router.prompt
+
+
+class GraphGenerationLLM:
+    def __init__(self, content):
+        self.content = content
+
+    def invoke(self, _messages):
+        return SimpleNamespace(content=self.content)
+
+
+def test_cyclic_graph_direct_route_generates_inside_graph():
+    payload = prepare_query_payload(
+        "Hello there, Internal RFP Analyst",
+        vectorstore_stats=ready_stats(),
+        retrieval_fn=fake_retrieval,
+        llm=GraphGenerationLLM("Hello! How can I help?"),
+    )
+
+    assert payload["intent"] == "direct"
+    assert payload["source_used"] == "direct"
+    assert payload["answer"] == "Hello! How can I help?"
+    assert all(step.get("tool") != "search_knowledge_base" for step in payload["traces"])
+
+
+def test_cyclic_graph_kb_route_generates_inside_graph():
+    payload = prepare_query_payload(
+        "What technology was used in the banking audit?",
+        vectorstore_stats=ready_stats(),
+        retrieval_fn=fake_retrieval,
+        llm=GraphGenerationLLM(
+            "Evidence for the banking audit technology. [Source: banking_case_study.pdf, Page 1]"
+        ),
+    )
+
+    assert payload["source_used"] == "private_kb"
+    assert payload["answer"].startswith("Evidence for the banking audit technology")
+    tools = [step.get("tool") for step in payload["traces"]]
+    assert "search_knowledge_base" in tools
+    assert "grounding_verifier" in tools
+
+
+def test_project_catalog_query_retrieves_broad_sample_coverage_and_preserves_table():
+    calls = {}
+
+    def retrieve_catalog(query, k, scope):
+        calls.update({"query": query, "k": k, "scope": scope})
+        return [
+            (
+                FakeDoc(
+                    (
+                        "Timeline & Milestones\n"
+                        f"- Phase 1: Discovery for project {index}\n"
+                        f"- Phase 2: Delivery for project {index}\n"
+                        f"Total Duration: {10 + index} weeks"
+                    ),
+                    f"0{index}_Project_{index}.pdf",
+                    page=1,
+                    origin="sample",
+                ),
+                0.42,
+            )
+            for index in range(1, 4)
+        ]
+
+    payload = prepare_query_payload(
+        "List all projects with their timelines",
+        vectorstore_stats={
+            **ready_stats(),
+            "indexed_sample_document_count": 3,
+            "scope_chunk_counts": {"sample": 30, "upload": 0, "all": 30},
+        },
+        retrieval_fn=retrieve_catalog,
+        retrieval_scope="all",
+    )
+
+    assert calls["scope"] == "sample"
+    assert calls["k"] == 9
+    assert "Timeline & Milestones" in calls["query"]
+    assert payload["planned_tools"] == ["search_knowledge_base", "project_catalog"]
+    assert payload["answer"].count("[Source:") == 3
+    assert "The retrieved evidence does not support this claim." not in payload["answer"]
+    assert "| Project | Timeline & Milestones | Total Duration | Source |" in payload["answer"]
+
+
+def test_resume_query_targets_uploads_and_uses_filename_aware_ranking():
+    calls = {}
+
+    def retrieve_resume(query, k, scope):
+        calls.update({"query": query, "k": k, "scope": scope})
+        return [
+            (
+                FakeDoc(
+                    "Technical Skills\nPython, LangGraph, FastAPI, Qdrant, PostgreSQL, Redis, Docker",
+                    "Tushar_Ghosh_Atlys_AI_Intern_Resume.pdf",
+                    page=0,
+                    origin="upload",
+                ),
+                0.29,
+            )
+        ]
+
+    payload = prepare_query_payload(
+        "what is my tech stack in resume",
+        vectorstore_stats={
+            **ready_stats(),
+            "indexed_upload_document_count": 3,
+            "scope_chunk_counts": {"sample": 9, "upload": 12, "all": 21},
+        },
+        retrieval_fn=retrieve_resume,
+        retrieval_scope="all",
+    )
+
+    assert calls["scope"] == "upload"
+    assert calls["k"] == 12
+    assert "Technical Skills" in calls["query"]
+    assert payload["retrieved_documents"][0]["source"].endswith("Resume.pdf")
+    assert payload["retrieved_documents"][0]["raw_score"] == 0.29
+    assert payload["retrieved_documents"][0]["score"] == 0.54
+    assert payload["kb_grade"] == "good"
+    assert all(step.get("tool") != "web_search" for step in payload["traces"])
+
+
+def test_grounding_verifier_accepts_markdown_escaped_filename_citations():
+    result = verify_answer_grounding(
+        "Python and FastAPI are listed. [Source: My\\_Resume.pdf, Page 1]",
+        [
+            {
+                "source": "My_Resume.pdf",
+                "page": 0,
+                "content": "Technical Skills include Python and FastAPI.",
+            }
+        ],
+    )
+
+    assert result["is_grounded"] is True
+
+
+def test_grounding_verifier_uses_filename_year_as_document_identity():
+    result = verify_answer_grounding(
+        "Banking Digital Audit 2024 lasted 16 weeks. "
+        "[Source: 01_Banking_Digital_Audit_2024.pdf, Page 2]",
+        [
+            {
+                "source": "01_Banking_Digital_Audit_2024.pdf",
+                "page": 1,
+                "content": "Timeline and milestones. Total Duration: 16 weeks.",
+            }
+        ],
+    )
+
+    assert result["is_grounded"] is True
+
+
+def test_grounding_repair_drops_unsupported_table_row_without_corrupting_table():
+    answer = (
+        "| Project | Timeline | Source |\n"
+        "| --- | --- | --- |\n"
+        "| Supported | 12 weeks | [Source: supported.pdf, Page 1] |\n"
+        "| Unsupported | 99 weeks | [Source: missing.pdf, Page 1] |"
+    )
+
+    repaired = graph_module._repair_unsupported_answer(answer, ["| Unsupported | 99 weeks |"])
+
+    assert "| Project | Timeline | Source |" in repaired
+    assert "| --- | --- | --- |" in repaired
+    assert "| Supported |" in repaired
+    assert "| Unsupported |" not in repaired
+    assert "The retrieved evidence does not support this claim." not in repaired
+
+
+def test_cyclic_graph_uses_web_fallback_after_weak_kb_evidence(monkeypatch):
+    monkeypatch.setattr(
+        graph_module,
+        "search_web",
+        lambda _state: {"web_results": "Web evidence with a useful URL", "source_used": "web"},
+    )
+    compile_query_graph.cache_clear()
+
+    payload = prepare_query_payload(
+        "What is the current cloud market outlook?",
+        vectorstore_stats=ready_stats(),
+        retrieval_fn=lambda *_args: [],
+        llm=GraphGenerationLLM("Web-backed answer"),
+    )
+
+    assert payload["source_used"] == "web_search"
+    assert payload["answer"] == "Web-backed answer"
+    compile_query_graph.cache_clear()
+
+
+def test_cyclic_graph_bounds_query_rewriting_after_weak_web_evidence(monkeypatch):
+    retrieval_calls = []
+
+    def empty_retrieval(query, *_args):
+        retrieval_calls.append(query)
+        return []
+
+    monkeypatch.setattr(
+        graph_module,
+        "search_web",
+        lambda _state: {"web_results": "", "source_used": "web"},
+    )
+    compile_query_graph.cache_clear()
+
+    payload = prepare_query_payload(
+        "Find the zxqv-991 nonexistent consulting initiative",
+        vectorstore_stats=ready_stats(),
+        retrieval_fn=empty_retrieval,
+    )
+
+    assert payload["retry_count"] == MAX_QUERY_RETRIES
+    assert len(retrieval_calls) == MAX_QUERY_RETRIES + 1
+    assert payload["source_used"] == "insufficient_evidence"
+    tools = [step.get("tool") for step in payload["traces"]]
+    assert tools.count("query_rewriter") == MAX_QUERY_RETRIES
+    assert tools.count("web_search") == MAX_QUERY_RETRIES + 1
+    compile_query_graph.cache_clear()
+
+
+def test_ui_reasoning_trace_displays_source_type_labels():
+    assert ui_agent._payload_to_reasoning_trace({"source_used": "private_kb"})[0]["source_used"] == "Private KB"
+    assert ui_agent._payload_to_reasoning_trace({"source_used": "web_search"})[0]["source_used"] == "Web Search"
+    assert ui_agent._payload_to_reasoning_trace({"source_used": "direct"})[0]["source_used"] == "Direct"
 
 
 def test_search_intent_routes_to_search_knowledge_base():
@@ -766,4 +1191,3 @@ def test_vague_citations_are_removed_by_repair(monkeypatch):
     assert "[Source: respective documents]" not in result["answer"]
     assert "[Source: None]" not in result["answer"]
     assert "The retrieved evidence does not support this claim." in result["answer"]
-

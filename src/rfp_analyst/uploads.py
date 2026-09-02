@@ -53,3 +53,11 @@ def persist_uploaded_pdf(uploaded_file, uploads_dir: Path = UPLOADS_DIR) -> Path
     with target_path.open("wb") as handle:
         handle.write(uploaded_file.getbuffer())
     return target_path
+
+
+def is_uploaded_pdf_unchanged(uploaded_file, uploads_dir: Path = UPLOADS_DIR) -> bool:
+    """Return whether the uploader value already exists byte-for-byte on disk."""
+
+    sanitized_name = validate_uploaded_pdf(uploaded_file)
+    target_path = uploads_dir / sanitized_name
+    return target_path.exists() and target_path.read_bytes() == bytes(uploaded_file.getbuffer())

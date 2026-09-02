@@ -129,6 +129,22 @@ def create_agent():
 
 def _payload_to_reasoning_trace(payload: dict) -> list[dict]:
     traces = []
+    source_label = {
+        "private_kb": "Private KB",
+        "kb": "Private KB",
+        "web_search": "Web Search",
+        "web": "Web Search",
+        "direct": "Direct",
+    }.get(payload.get("source_used"))
+    if source_label:
+        traces.append(
+            {
+                "tool": "source_used",
+                "input_summary": "Answer source",
+                "output_summary": source_label,
+                "source_used": source_label,
+            }
+        )
     for step in payload.get("traces", []):
         tool_name = step.get("tool")
         if tool_name == "search_knowledge_base":
@@ -197,6 +213,7 @@ def prepare_query(
     chat_history: list | None = None,
     retrieval_scope: str = "all",
     vectorstore_stats: dict | None = None,
+    llm=None,
 ):
     """Prepare the graph payload and convert traces for the existing UI."""
     payload = prepare_query_payload(
@@ -204,6 +221,7 @@ def prepare_query(
         chat_history=chat_history,
         retrieval_scope=retrieval_scope,
         vectorstore_stats=vectorstore_stats,
+        llm=llm,
     )
     reasoning_trace = _payload_to_reasoning_trace(payload)
     payload["_ui_reasoning_trace"] = reasoning_trace

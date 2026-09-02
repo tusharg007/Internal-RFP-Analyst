@@ -43,7 +43,9 @@ class VectorStoreManager:
     ):
         self.persist_dir = Path(persist_dir)
         self.collection_name = collection_name
-        self.embedding_function = embedding_function or get_embeddings()
+        # Avoid downloading an embedding model merely to check whether a
+        # persisted collection exists.
+        self.embedding_function = embedding_function
 
     def load(self, create_if_missing: bool = True) -> Chroma:
         """Load or initialize the Chroma collection."""
@@ -53,6 +55,8 @@ class VectorStoreManager:
                     "Knowledge base is not ready. Generate or upload PDFs and click Ingest Documents."
                 )
             self.persist_dir.mkdir(parents=True, exist_ok=True)
+        if self.embedding_function is None:
+            self.embedding_function = get_embeddings()
         return Chroma(
             collection_name=self.collection_name,
             embedding_function=self.embedding_function,

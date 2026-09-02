@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import html
 import re
 from functools import lru_cache
-from typing import Any, Callable, TypedDict
+from typing import Any, Callable, Literal, TypedDict
 
 from config import (
     AGENT_SYSTEM_PROMPT,
@@ -14,6 +15,7 @@ from config import (
     MAX_HISTORY_MESSAGES,
     MAX_PROMPT_TOKENS,
     MAX_TARGET_CHUNKS,
+    MAX_QUERY_RETRIES,
     MIN_RELEVANCE_SCORE,
     RETRIEVAL_K,
     RFP_ANALYSIS_MAX_OUTPUT_TOKENS,
@@ -24,13 +26,23 @@ from rag_engine import (
     get_vectorstore_stats,
     similarity_search,
 )
+from rfp_analyst.agent.grader import grade_kb_evidence, grade_web_evidence
+from rfp_analyst.agent.query_rewriter import rewrite_query
+from rfp_analyst.agent.router import route_after_router, route_question
+from rfp_analyst.agent.prompts import (
+    DIRECT_ANSWER_PROMPT,
+    KB_GENERATION_PROMPT,
+    WEB_GENERATION_PROMPT,
+)
 from rfp_analyst.tools.compare_projects import compare_projects
+from rfp_analyst.tools.project_catalog import build_project_timeline_catalog
 from rfp_analyst.tools.proposal_writer import generate_proposal_outline
 from rfp_analyst.tools.rfp_gap_analyzer import (
     extract_rfp_requirements,
     find_relevant_case_studies,
 )
 from rfp_analyst.tools.source_verifier import verify_answer_grounding
+from rfp_analyst.tools.web_search import search_web
 
 CLARIFICATION_MESSAGE = (
     "Could you clarify which project, document, comparison, or proposal you want me to work on?"
@@ -77,6 +89,10 @@ RFP_TARGET_FOCUS_AREAS = (
 )
 RFP_TARGET_MAX_CHUNKS = 4
 RFP_TARGET_FALLBACK_MARGIN = 0.15
+ADAPTIVE_RETRIEVAL_FALLBACK_MARGIN = 0.15
+PERSONAL_DOCUMENT_SCORE_BOOST = 0.25
+PERSONAL_DOCUMENT_K = 20
+PROJECT_CATALOG_CHUNKS_PER_DOCUMENT = 3
 
 try:
     from langgraph.graph import END, START, StateGraph
@@ -112,6 +128,19 @@ class QueryState(TypedDict, total=False):
     grounded: bool
     graph_backend: str
     prompt_budget: dict[str, Any]
+    source_used: str
+    current_query: str
+    router_llm: Any
+    allow_llm_routing: bool
+    kb_grade: str
+    web_grade: str
+    web_results: str
+    retry_count: int
+    grader_llm: Any
+    allow_llm_grading: bool
+    rewriter_llm: Any
+    allow_llm_rewriting: bool
+    llm: Any
 
 
 class DeterministicCompiledGraph:
@@ -120,18 +149,20 @@ class DeterministicCompiledGraph:
     def __init__(self):
         self.node_order = [
             "health_check",
-            "classify_intent",
-            "plan_tools",
-            "execute_retrieval",
-            "execute_specialized_tool",
+            "route_question",
+            "retrieve_kb",
+            "grade_kb_evidence",
+            "execute_tools",
             "synthesize_prompt",
-            "evidence_availability_check",
-            "final_response",
+            "generate_from_kb",
         ]
 
     def invoke(self, state: QueryState) -> QueryState:
         current = dict(state)
         current["graph_backend"] = "deterministic-fallback"
+        current["allow_llm_routing"] = False
+        current["allow_llm_grading"] = False
+        current["allow_llm_rewriting"] = False
         for node_name in self.node_order:
             node_fn = NODE_FUNCTIONS[node_name]
             updates = node_fn(current)
@@ -148,23 +179,49 @@ def compile_query_graph():
 
     workflow = StateGraph(QueryState)
     workflow.add_node("health_check", health_check)
-    workflow.add_node("classify_intent", classify_intent)
-    workflow.add_node("plan_tools", plan_tools)
-    workflow.add_node("execute_retrieval", execute_retrieval)
-    workflow.add_node("execute_specialized_tool", execute_specialized_tool)
+    workflow.add_node("route_question", route_question_node)
+    workflow.add_node("retrieve_kb", retrieve_kb)
+    workflow.add_node("grade_kb_evidence", grade_kb_evidence_node)
+    workflow.add_node("execute_tools", execute_tools)
     workflow.add_node("synthesize_prompt", synthesize_prompt)
-    workflow.add_node("evidence_availability_check", evidence_availability_check)
-    workflow.add_node("final_response", final_response)
+    workflow.add_node("generate_from_kb", generate_from_kb)
+    workflow.add_node("search_web", search_web_node)
+    workflow.add_node("grade_web_evidence", grade_web_evidence_node)
+    workflow.add_node("rewrite_query", rewrite_query_node)
+    workflow.add_node("generate_from_web", generate_from_web)
+    workflow.add_node("direct_answer", direct_answer)
+    workflow.add_node("answer_insufficient", answer_insufficient)
 
     workflow.add_edge(START, "health_check")
-    workflow.add_edge("health_check", "classify_intent")
-    workflow.add_edge("classify_intent", "plan_tools")
-    workflow.add_edge("plan_tools", "execute_retrieval")
-    workflow.add_edge("execute_retrieval", "execute_specialized_tool")
-    workflow.add_edge("execute_specialized_tool", "synthesize_prompt")
-    workflow.add_edge("synthesize_prompt", "evidence_availability_check")
-    workflow.add_edge("evidence_availability_check", "final_response")
-    workflow.add_edge("final_response", END)
+    workflow.add_edge("health_check", "route_question")
+    workflow.add_conditional_edges(
+        "route_question",
+        route_after_router,
+        {"retrieve_kb": "retrieve_kb", "direct_answer": "direct_answer"},
+    )
+    workflow.add_edge("retrieve_kb", "grade_kb_evidence")
+    workflow.add_conditional_edges(
+        "grade_kb_evidence",
+        decide_after_kb_grade,
+        {"execute_tools": "execute_tools", "search_web": "search_web"},
+    )
+    workflow.add_edge("execute_tools", "synthesize_prompt")
+    workflow.add_edge("synthesize_prompt", "generate_from_kb")
+    workflow.add_edge("search_web", "grade_web_evidence")
+    workflow.add_conditional_edges(
+        "grade_web_evidence",
+        decide_after_web_grade,
+        {
+            "generate_from_web": "generate_from_web",
+            "rewrite_query": "rewrite_query",
+            "answer_insufficient": "answer_insufficient",
+        },
+    )
+    workflow.add_edge("rewrite_query", "retrieve_kb")
+    workflow.add_edge("generate_from_kb", END)
+    workflow.add_edge("generate_from_web", END)
+    workflow.add_edge("direct_answer", END)
+    workflow.add_edge("answer_insufficient", END)
 
     return workflow.compile()
 
@@ -173,6 +230,22 @@ def _append_trace(state: QueryState, step: str, details: dict[str, Any]) -> list
     trace = list(state.get("traces", []))
     trace.append({"step": step, **details})
     return trace
+
+
+def decide_after_kb_grade(state: QueryState) -> Literal["execute_tools", "search_web"]:
+    """Select tool execution or web fallback after grading KB evidence."""
+    return "execute_tools" if state.get("kb_grade") == "good" else "search_web"
+
+
+def decide_after_web_grade(
+    state: QueryState,
+) -> Literal["generate_from_web", "rewrite_query", "answer_insufficient"]:
+    """Generate from good web evidence or retry only within the configured bound."""
+    if state.get("web_grade") == "good":
+        return "generate_from_web"
+    if int(state.get("retry_count", 0) or 0) < MAX_QUERY_RETRIES:
+        return "rewrite_query"
+    return "answer_insufficient"
 
 
 def _is_ambiguous_query(query: str) -> bool:
@@ -274,6 +347,102 @@ def _build_rfp_target_query(query: str) -> str:
     return f"Focus on: {focus}."
 
 
+def _is_project_catalog_query(query: str) -> bool:
+    normalized = " ".join(str(query or "").lower().split())
+    broad_request = bool(re.search(r"\b(list|show|all|every|inventory|catalog)\b", normalized))
+    project_request = bool(re.search(r"\b(projects?|case studies)\b", normalized))
+    repeated_field = bool(
+        re.search(r"\b(timelines?|milestones?|durations?|budgets?|tech(?:nology)? stacks?)\b", normalized)
+    )
+    return broad_request and project_request and repeated_field
+
+
+def _is_personal_document_query(query: str) -> bool:
+    normalized = " ".join(str(query or "").lower().split())
+    return bool(
+        re.search(r"\b(resume|curriculum vitae|cv|professional profile)\b", normalized)
+        and re.search(r"\b(my|mine|uploaded|document|profile|skills?|stack|experience)\b", normalized)
+    )
+
+
+def _scope_stats(state: QueryState, scope: str) -> tuple[int, int]:
+    stats = state.get("vectorstore_stats", {}) or {}
+    chunk_count = int((stats.get("scope_chunk_counts", {}) or {}).get(scope, 0) or 0)
+    if scope == "upload":
+        document_count = int(stats.get("indexed_upload_document_count", 0) or 0)
+    elif scope == "sample":
+        document_count = int(stats.get("indexed_sample_document_count", 0) or 0)
+        if not document_count:
+            document_count = len(stats.get("indexed_sample_files", []) or [])
+    else:
+        document_count = int(stats.get("total_documents", 0) or 0)
+    return chunk_count, document_count
+
+
+def _adaptive_retrieval_plan(
+    state: QueryState,
+    base_query: str,
+    requested_scope: str,
+    requested_k: int,
+) -> tuple[str, str, int, str]:
+    """Choose a query-aware scope and candidate budget without changing UI scope."""
+
+    if _is_project_catalog_query(base_query):
+        scope = "sample" if requested_scope == "all" else requested_scope
+        chunk_count, document_count = _scope_stats(state, scope)
+        desired_k = max(requested_k, max(document_count, 1) * PROJECT_CATALOG_CHUNKS_PER_DOCUMENT)
+        if chunk_count:
+            desired_k = min(desired_k, chunk_count)
+        query = f"{base_query}. Timeline & Milestones. Total Duration."
+        return query, scope, desired_k, "project_catalog"
+
+    if _is_personal_document_query(base_query):
+        scope = "upload" if requested_scope == "all" else requested_scope
+        chunk_count, _ = _scope_stats(state, scope)
+        desired_k = max(requested_k, PERSONAL_DOCUMENT_K)
+        if chunk_count:
+            desired_k = min(desired_k, chunk_count)
+        query = (
+            f"{base_query}. Uploaded resume Technical Skills technologies frameworks "
+            "programming languages tools backend agents RAG."
+        )
+        return query, scope, desired_k, "personal_document"
+
+    return base_query, requested_scope, requested_k, "standard"
+
+
+def _personal_filename_match(source: str) -> bool:
+    normalized = re.sub(r"[_-]+", " ", str(source)).lower()
+    return any(marker in normalized for marker in ("resume", "curriculum vitae", " cv ", "profile"))
+
+
+def _select_catalog_documents(documents: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Keep timeline-bearing chunks while preserving broad source coverage."""
+
+    candidates = [
+        item
+        for item in documents
+        if item["score"] >= max(MIN_RELEVANCE_SCORE - ADAPTIVE_RETRIEVAL_FALLBACK_MARGIN, 0.0)
+    ]
+    candidates.sort(
+        key=lambda item: (
+            not bool(re.search(r"Timeline\s*&\s*Milestones|Total\s+Duration", item.get("content", ""), re.I)),
+            -float(item.get("score", 0.0) or 0.0),
+            item.get("source", ""),
+            item.get("page", 0),
+        )
+    )
+    selected: list[dict[str, Any]] = []
+    per_source: dict[str, int] = {}
+    for item in candidates:
+        source = str(item.get("source", "Unknown"))
+        if per_source.get(source, 0) >= 2:
+            continue
+        selected.append(item)
+        per_source[source] = per_source.get(source, 0) + 1
+    return selected
+
+
 def _dedupe_documents_by_source_page(documents: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
     unique: list[dict[str, Any]] = []
     seen: set[tuple[str, int]] = set()
@@ -286,37 +455,6 @@ def _dedupe_documents_by_source_page(documents: list[dict[str, Any]], limit: int
         if len(unique) >= limit:
             break
     return unique
-
-
-def _classify_query(query: str) -> str:
-    lowered = query.lower().strip()
-    if any(
-        phrase in lowered
-        for phrase in (
-            "what sources did you use",
-            "which documents were used",
-            "show the citations from your last response",
-            "sources for the previous answer",
-        )
-    ):
-        return "previous_sources"
-    if _is_ambiguous_query(lowered):
-        return "ambiguous"
-    analysis_signals = (
-        "extract requirements",
-        "find gaps",
-        "find case studies",
-        "compare fit",
-        "verify recommendations",
-        "proposal outline",
-    )
-    if any(signal in lowered for signal in analysis_signals):
-        return "rfp_analysis"
-    if any(token in lowered for token in ("proposal", "draft", "write", "respond to rfp", "rfp response")):
-        return "proposal"
-    if any(token in lowered for token in ("compare", "difference", "versus", " vs ", "contrast")):
-        return "compare"
-    return "search"
 
 
 def _previous_answer_sources(chat_history: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
@@ -664,50 +802,72 @@ def health_check(state: QueryState) -> QueryState:
 
 def classify_intent(state: QueryState) -> QueryState:
     retrieval_scope = state.get("retrieval_scope", "all")
+    user_query = state.get("user_query", "")
     resolved_query, resolved_entities, resolution_status = _resolve_conversational_query(
-        state.get("user_query", ""),
+        user_query,
         state.get("chat_history"),
         retrieval_scope,
     )
-    intent = _classify_query(resolved_query if resolution_status == "resolved" else state.get("user_query", ""))
-    if intent == "previous_sources":
+    if any(
+        phrase in user_query.lower()
+        for phrase in (
+            "what sources did you use",
+            "which documents were used",
+            "show the citations from your last response",
+            "sources for the previous answer",
+        )
+    ):
         sources = _previous_answer_sources(state.get("chat_history"))
         return {
-            "intent": intent,
+            "intent": "previous_sources",
             "response_mode": "direct",
             "answer": _format_previous_sources(sources),
             "tool_outputs": {"previous_sources": sources},
             "resolved_query": resolved_query,
             "resolved_entities": [],
+            "source_used": "direct",
+            "current_query": user_query,
             "traces": _append_trace(
                 state,
                 "classify_intent",
                 {
                     "tool": "previous_sources",
-                    "intent": intent,
-                    "input_summary": state.get("user_query", "")[:120],
+                    "intent": "previous_sources",
+                    "input_summary": user_query[:120],
                     "output_summary": f"Returned {len(sources)} source citation(s) from the previous answer.",
                 },
             ),
         }
-    if resolution_status == "ambiguous":
+    if resolution_status == "ambiguous" or _is_ambiguous_query(user_query):
         intent = "ambiguous"
+        routing = {"source_used": "direct", "current_query": user_query}
+    else:
+        routing = route_question(state)
+        intent = routing["intent"]
+
     response_mode = "clarification" if intent == "ambiguous" else "llm"
+    if intent == "direct":
+        response_mode = "direct"
     answer = FOLLOWUP_CLARIFICATION_MESSAGE if resolution_status == "ambiguous" else ""
     answer = answer or (CLARIFICATION_MESSAGE if intent == "ambiguous" else "")
+    if intent == "direct":
+        answer = "Hello! How can I help with the Internal RFP knowledge base?"
     return {
         "intent": intent,
         "response_mode": response_mode,
         "answer": answer,
         "resolved_query": resolved_query,
         "resolved_entities": resolved_entities,
+        "source_used": routing["source_used"],
+        "current_query": routing["current_query"],
         "traces": _append_trace(
             state,
             "classify_intent",
             {
                 "tool": "intent_classifier",
                 "intent": intent,
-                "input_summary": state.get("user_query", "")[:120],
+                "route": routing["source_used"],
+                "input_summary": user_query[:120],
                 "resolution_status": resolution_status,
                 "resolved_entities": [entity["source"] for entity in resolved_entities],
             },
@@ -715,11 +875,22 @@ def classify_intent(state: QueryState) -> QueryState:
     }
 
 
+def route_question_node(state: QueryState) -> QueryState:
+    """Preserve conversational safeguards around the structured router node."""
+    result = classify_intent(state)
+    if result.get("intent") not in {"direct", "ambiguous", "previous_sources"}:
+        result["current_query"] = result.get("resolved_query") or result.get("current_query")
+    return result
+
+
 def plan_tools(state: QueryState) -> QueryState:
     intent = state.get("intent", "search")
     planned_tools: list[str] = []
     if intent == "search":
         planned_tools = ["search_knowledge_base"]
+        query = state.get("resolved_query") or state.get("current_query") or state.get("user_query", "")
+        if _is_project_catalog_query(query):
+            planned_tools.append("project_catalog")
     elif intent == "compare":
         planned_tools = ["search_knowledge_base", "compare_projects"]
     elif intent == "proposal":
@@ -752,10 +923,94 @@ def plan_tools(state: QueryState) -> QueryState:
     }
 
 
+def retrieve_kb(state: QueryState) -> QueryState:
+    """Plan KB tools, then execute the existing relevance-filtered retrieval."""
+    planned_state = dict(state)
+    planned_state.update(plan_tools(state))
+    result = execute_retrieval(planned_state)
+    result["planned_tools"] = planned_state["planned_tools"]
+    return result
+
+
+def grade_kb_evidence_node(state: QueryState) -> QueryState:
+    """Grade KB evidence and retain the legacy visible availability trace."""
+    result = grade_kb_evidence(state)
+    grade = result.get("kb_grade", "weak")
+    result["traces"] = _append_trace(
+        state,
+        "grade_kb_evidence",
+        {
+            "tool": "evidence_availability_check",
+            "status": "completed",
+            "grade": grade,
+            "input_summary": "Pre-filtered Private KB evidence",
+            "output_summary": f"Private KB evidence graded {grade}.",
+        },
+    )
+    return result
+
+
+def grade_web_evidence_node(state: QueryState) -> QueryState:
+    """Grade web evidence while preserving an inspectable trace."""
+    result = grade_web_evidence(state)
+    grade = result.get("web_grade", "weak")
+    result["traces"] = _append_trace(
+        state,
+        "grade_web_evidence",
+        {
+            "tool": "web_evidence_grader",
+            "status": "completed",
+            "grade": grade,
+            "input_summary": "Web Search evidence",
+            "output_summary": f"Web Search evidence graded {grade}.",
+        },
+    )
+    return result
+
+
+def search_web_node(state: QueryState) -> QueryState:
+    """Run web fallback and expose only a concise, user-visible trace."""
+    result = search_web(state)
+    has_results = bool(str(result.get("web_results", "")).strip())
+    result["traces"] = _append_trace(
+        state,
+        "search_web",
+        {
+            "tool": "web_search",
+            "status": "completed" if has_results else "unavailable",
+            "input_summary": state.get("current_query") or state.get("user_query", ""),
+            "output_summary": (
+                "Retrieved Web Search evidence."
+                if has_results
+                else "No Web Search evidence was available."
+            ),
+        },
+    )
+    return result
+
+
+def rewrite_query_node(state: QueryState) -> QueryState:
+    """Rewrite a query and record the bounded retry without hidden reasoning."""
+    result = rewrite_query(state)
+    result["traces"] = _append_trace(
+        state,
+        "rewrite_query",
+        {
+            "tool": "query_rewriter",
+            "status": "completed",
+            "retry_count": result.get("retry_count", 0),
+            "input_summary": state.get("current_query") or state.get("user_query", ""),
+            "output_summary": f"Prepared bounded retrieval retry {result.get('retry_count', 0)}.",
+        },
+    )
+    return result
+
+
 def execute_retrieval(state: QueryState) -> QueryState:
     planned_tools = state.get("planned_tools", [])
     is_rfp_analysis = state.get("intent") == "rfp_analysis"
-    retrieval_scope = "upload" if is_rfp_analysis else state.get("retrieval_scope", "all")
+    requested_scope = state.get("retrieval_scope", "all")
+    retrieval_scope = "upload" if is_rfp_analysis else requested_scope
     if "search_knowledge_base" not in planned_tools:
         return {
             "retrieved_documents": [],
@@ -783,8 +1038,17 @@ def execute_retrieval(state: QueryState) -> QueryState:
 
     retrieval_fn = state.get("retrieval_fn") or similarity_search
     retrieval_k = int(state.get("retrieval_k", RETRIEVAL_K))
-    base_query = state.get("resolved_query") or state.get("user_query", "")
-    retrieval_query = _build_rfp_target_query(base_query) if is_rfp_analysis else base_query
+    base_query = state.get("current_query") or state.get("resolved_query") or state.get("user_query", "")
+    if is_rfp_analysis:
+        retrieval_query = _build_rfp_target_query(base_query)
+        retrieval_mode = "rfp_analysis"
+    else:
+        retrieval_query, retrieval_scope, retrieval_k, retrieval_mode = _adaptive_retrieval_plan(
+            state,
+            base_query,
+            requested_scope,
+            retrieval_k,
+        )
     try:
         raw_results = retrieval_fn(retrieval_query, retrieval_k, retrieval_scope)
     except TypeError:
@@ -798,11 +1062,17 @@ def execute_retrieval(state: QueryState) -> QueryState:
             page = int(page)
         except Exception:
             page = 0
+        raw_score = float(score)
+        source = metadata.get("source_file", "Unknown")
+        adjusted_score = raw_score
+        if retrieval_mode == "personal_document" and _personal_filename_match(source):
+            adjusted_score = min(1.0, raw_score + PERSONAL_DOCUMENT_SCORE_BOOST)
         documents.append(
             {
-                "source": metadata.get("source_file", "Unknown"),
+                "source": source,
                 "page": page,
-                "score": float(score),
+                "score": adjusted_score,
+                "raw_score": raw_score,
                 "content": getattr(doc, "page_content", ""),
                 "chunk_id": metadata.get("chunk_id", ""),
                 "document_origin": metadata.get("document_origin", "sample"),
@@ -820,6 +1090,17 @@ def execute_retrieval(state: QueryState) -> QueryState:
     below_threshold_count = len(documents) - len(relevant_documents)
     selected_documents = relevant_documents
     target_fallback_used = False
+
+    if retrieval_mode == "project_catalog":
+        selected_documents = _select_catalog_documents(documents)
+    elif retrieval_mode == "personal_document" and not selected_documents:
+        near_threshold = [
+            item
+            for item in documents
+            if _personal_filename_match(item["source"])
+            and item["score"] >= max(MIN_RELEVANCE_SCORE - ADAPTIVE_RETRIEVAL_FALLBACK_MARGIN, 0.0)
+        ]
+        selected_documents = _dedupe_documents_by_source_page(near_threshold, PERSONAL_DOCUMENT_K)
 
     if is_rfp_analysis:
         selected_documents = _dedupe_documents_by_source_page(selected_documents, RFP_TARGET_MAX_CHUNKS)
@@ -840,13 +1121,18 @@ def execute_retrieval(state: QueryState) -> QueryState:
             "tool": "search_knowledge_base",
             "status": "completed",
             "scope": retrieval_scope,
+            "requested_scope": requested_scope,
+            "retrieval_mode": retrieval_mode,
             "input": {
                 "query": retrieval_query,
                 "original_query": state.get("user_query", ""),
                 "k": retrieval_k,
                 "scope": retrieval_scope,
             },
-            "input_summary": f"Search scope={retrieval_scope}; k={retrieval_k}",
+            "input_summary": (
+                f"Search scope={retrieval_scope}; k={retrieval_k}"
+                + (f"; adaptive mode={retrieval_mode}" if retrieval_mode != "standard" else "")
+            ),
             "output_summary": (
                 f"Retrieved {len(documents)} relevant chunk(s); "
                 f"filtered {below_threshold_count} below threshold {MIN_RELEVANCE_SCORE:.2f}"
@@ -856,10 +1142,11 @@ def execute_retrieval(state: QueryState) -> QueryState:
                     "source": item["source"],
                     "page": item["page"] + 1,
                     "score": f"{item['score']:.2f}",
+                    "raw_score": f"{item.get('raw_score', item['score']):.2f}",
                     "chunk_id": item["chunk_id"],
                     "document_origin": item["document_origin"],
                 }
-                for item in documents[:6]
+                for item in documents[:20]
             ],
         },
     )
@@ -925,6 +1212,8 @@ def execute_retrieval(state: QueryState) -> QueryState:
     return {
         "retrieved_documents": documents,
         "retrieval_context": _format_sources(documents),
+        "response_mode": "llm",
+        "answer": "",
         "traces": traces,
     }
 
@@ -989,6 +1278,23 @@ def execute_specialized_tool(state: QueryState) -> QueryState:
     outputs = dict(state.get("tool_outputs", {}))
     traces = list(state.get("traces", []))
     notes = []
+
+    if "project_catalog" in state.get("planned_tools", []):
+        result = build_project_timeline_catalog(state.get("retrieved_documents", []))
+        outputs["project_catalog"] = result
+        if result.get("answer_markdown"):
+            notes.append(result["answer_markdown"])
+        traces.append(
+            {
+                "step": "execute_specialized_tool",
+                "tool": "project_catalog",
+                "status": "completed",
+                "input_summary": "Retrieved timeline-bearing project evidence",
+                "output_summary": (
+                    f"Extracted grounded timelines for {result.get('project_count', 0)} project document(s)."
+                ),
+            }
+        )
 
     if intent == "compare":
         result = compare_projects(
@@ -1099,6 +1405,11 @@ def execute_specialized_tool(state: QueryState) -> QueryState:
         "tool_outputs": outputs,
         "traces": traces,
     }
+
+
+def execute_tools(state: QueryState) -> QueryState:
+    """Run the specialized tools selected by the existing intent planner."""
+    return execute_specialized_tool(state)
 
 
 def synthesize_prompt(state: QueryState) -> QueryState:
@@ -1277,15 +1588,161 @@ def final_response(state: QueryState) -> QueryState:
     }
 
 
+def _invoke_generation(state: QueryState, prompt: str, source_used: str, verify_kb: bool) -> QueryState:
+    """Invoke the supplied LLM inside the graph and preserve visible grounding traces."""
+    llm = state.get("llm")
+    if llm is None:
+        return {
+            "answer": state.get("answer", ""),
+            "response_mode": state.get("response_mode", "llm"),
+            "source_used": source_used,
+            "traces": _append_trace(
+                state,
+                "final_response",
+                {
+                    "tool": "final_response",
+                    "response_mode": "llm",
+                    "output_summary": "Prepared generation prompt; no LLM instance was supplied.",
+                },
+            ),
+        }
+
+    response = llm.invoke([_human_message(prompt)])
+    answer = str(getattr(response, "content", response) or "")
+    traces = _append_trace(
+        state,
+        "final_response",
+        {
+            "tool": "final_response",
+            "response_mode": "llm",
+            "source_used": source_used,
+            "output_summary": "Generated an answer inside the graph.",
+        },
+    )
+    if not verify_kb:
+        return {
+            "answer": _sanitize_answer_text(answer),
+            "response_mode": "llm",
+            "source_used": source_used,
+            "traces": traces,
+        }
+
+    verification_payload = {
+        "retrieved_documents": state.get("retrieved_documents", []),
+        "traces": traces,
+    }
+    answer, verification = _verify_generated_answer(verification_payload, answer)
+    return {
+        "answer": answer,
+        "response_mode": "llm",
+        "source_used": source_used,
+        "grounded": verification["is_grounded"],
+        "traces": verification_payload["traces"],
+    }
+
+
+def generate_from_kb(state: QueryState) -> QueryState:
+    """Generate and ground a private-KB answer within the graph."""
+    catalog = (state.get("tool_outputs", {}) or {}).get("project_catalog", {}) or {}
+    catalog_answer = str(catalog.get("answer_markdown", "") or "").strip()
+    if catalog_answer:
+        traces = _append_trace(
+            state,
+            "final_response",
+            {
+                "tool": "final_response",
+                "response_mode": "deterministic_grounded",
+                "source_used": "private_kb",
+                "output_summary": "Rendered the project inventory directly from extracted KB fields.",
+            },
+        )
+        verification_payload = {
+            "retrieved_documents": state.get("retrieved_documents", []),
+            "traces": traces,
+        }
+        answer, verification = _verify_generated_answer(verification_payload, catalog_answer)
+        return {
+            "answer": answer,
+            "response_mode": "llm",
+            "source_used": "private_kb",
+            "grounded": verification["is_grounded"],
+            "traces": verification_payload["traces"],
+        }
+
+    prompt = KB_GENERATION_PROMPT.format(
+        question=state.get("user_query", ""),
+        context=state.get("retrieval_context", ""),
+    )
+    if state.get("specialized_notes"):
+        prompt += "\n\nSpecialized analysis:\n" + state["specialized_notes"]
+    return _invoke_generation(state, prompt, "private_kb", verify_kb=True)
+
+
+def generate_from_web(state: QueryState) -> QueryState:
+    """Generate an answer from web evidence after successful web grading."""
+    prompt = WEB_GENERATION_PROMPT.format(
+        question=state.get("user_query", ""),
+        web_context=state.get("web_results", ""),
+    )
+    return _invoke_generation(state, prompt, "web_search", verify_kb=False)
+
+
+def direct_answer(state: QueryState) -> QueryState:
+    """Answer a conversational message without retrieval."""
+    if state.get("intent") == "previous_sources" or state.get("response_mode") == "clarification":
+        return {
+            "source_used": "direct",
+            "traces": _append_trace(
+                state,
+                "final_response",
+                {"tool": "final_response", "response_mode": "direct", "output_summary": "Returned prior source citations."},
+            ),
+        }
+    llm = state.get("llm")
+    answer = "Hello! How can I help with the Internal RFP knowledge base?"
+    if llm is not None:
+        response = llm.invoke(
+            [_human_message(DIRECT_ANSWER_PROMPT.format(question=state.get("user_query", "")))]
+        )
+        answer = str(getattr(response, "content", response) or answer)
+    return {
+        "answer": _sanitize_answer_text(answer),
+        "response_mode": "direct",
+        "source_used": "direct",
+        "traces": _append_trace(
+            state,
+            "final_response",
+            {"tool": "final_response", "response_mode": "direct", "output_summary": "Generated a direct response without retrieval."},
+        ),
+    }
+
+
+def answer_insufficient(state: QueryState) -> QueryState:
+    """Return a graceful response after bounded KB and web evidence attempts."""
+    answer = state.get("answer") or (
+        f"{INSUFFICIENT_EVIDENCE_MESSAGE} I could not find enough reliable evidence "
+        "in the private knowledge base or web search results to answer confidently."
+    )
+    return {
+        "answer": answer,
+        "response_mode": "fallback",
+        "source_used": "insufficient_evidence",
+        "traces": _append_trace(
+            state,
+            "final_response",
+            {"tool": "final_response", "response_mode": "fallback", "output_summary": "Returned insufficient-evidence response after bounded retries."},
+        ),
+    }
+
+
 NODE_FUNCTIONS = {
     "health_check": health_check,
-    "classify_intent": classify_intent,
-    "plan_tools": plan_tools,
-    "execute_retrieval": execute_retrieval,
-    "execute_specialized_tool": execute_specialized_tool,
+    "route_question": route_question_node,
+    "retrieve_kb": retrieve_kb,
+    "grade_kb_evidence": grade_kb_evidence_node,
+    "execute_tools": execute_tools,
     "synthesize_prompt": synthesize_prompt,
-    "evidence_availability_check": evidence_availability_check,
-    "final_response": final_response,
+    "generate_from_kb": generate_from_kb,
 }
 
 
@@ -1296,6 +1753,7 @@ def prepare_query_payload(
     retrieval_fn: Callable[[str, int, str], list] | None = None,
     retrieval_k: int = RETRIEVAL_K,
     retrieval_scope: str = "all",
+    llm: Any | None = None,
 ) -> dict[str, Any]:
     """Run the orchestration graph and return the full query payload."""
     graph = compile_query_graph()
@@ -1308,6 +1766,10 @@ def prepare_query_payload(
         "retrieval_scope": retrieval_scope,
         "traces": [],
         "response_mode": "llm",
+        "llm": llm,
+        "current_query": user_query,
+        "retry_count": 0,
+        "web_results": "",
         "resolved_query": user_query,
         "resolved_entities": [],
         "tool_outputs": {},
@@ -1373,7 +1835,8 @@ _GENERIC_SOURCE_PATTERN = re.compile(r"\[Source:\s*[^,\]]+\]", re.IGNORECASE)
 
 
 def _sanitize_answer_text(answer: str) -> str:
-    sanitized = str(answer or "").replace("[Source: None]", UNSUPPORTED_CLAIM_MESSAGE)
+    sanitized = html.unescape(str(answer or ""))
+    sanitized = sanitized.replace("\t", " ").replace("[Source: None]", UNSUPPORTED_CLAIM_MESSAGE)
     sanitized = _BAD_CITATION_PATTERN.sub(UNSUPPORTED_CLAIM_MESSAGE, sanitized)
     sanitized = _GENERIC_SOURCE_PATTERN.sub(UNSUPPORTED_CLAIM_MESSAGE, sanitized)
     return sanitized
@@ -1398,10 +1861,16 @@ def _repair_unsupported_answer(answer: str, unsupported_claims: list[str]) -> st
             repaired_lines.append(line)
             continue
         if _has_vague_or_invalid_citations(line):
+            if line.strip().startswith("|") and line.strip().endswith("|"):
+                changed = True
+                continue
             repaired_lines.append(UNSUPPORTED_CLAIM_MESSAGE)
             changed = True
             continue
         if any(claim in line for claim in unsupported):
+            if line.strip().startswith("|") and line.strip().endswith("|"):
+                changed = True
+                continue
             if line.lstrip().startswith("-"):
                 repaired_lines.append("- The retrieved evidence does not support this claim.")
             else:
@@ -1493,7 +1962,10 @@ def _verify_generated_answer(payload: dict[str, Any], answer: str) -> tuple[str,
 
 
 def stream_query_response(llm, payload: dict[str, Any]):
-    """Stream either a direct fallback response or an LLM completion."""
+    """Stream graph-produced answers, retaining legacy prompt streaming support."""
+    if "answer" in payload:
+        yield _sanitize_answer_text(payload.get("answer", ""))
+        return
     if payload.get("response_mode") in {"clarification", "fallback", "direct"}:
         yield _sanitize_answer_text(payload.get("answer", ""))
         return
@@ -1525,19 +1997,14 @@ def run_query(
     del thread_id
     payload = prepare_query_payload(
         user_query=user_query,
+        llm=llm,
         chat_history=chat_history,
         vectorstore_stats=vectorstore_stats,
         retrieval_fn=retrieval_fn,
         retrieval_scope=retrieval_scope,
     )
 
-    if payload.get("response_mode") in {"clarification", "fallback", "direct"}:
-        answer = _sanitize_answer_text(payload.get("answer", ""))
-    else:
-        response = llm.invoke([_human_message(payload.get("prompt", ""))])
-        answer, verification = _verify_generated_answer(payload, response.content)
-        if not verification["is_grounded"]:
-            answer += "\n\nGrounding check: some claims are not supported by the retrieved evidence."
+    answer = _sanitize_answer_text(payload.get("answer", ""))
 
     return {
         "answer": answer,

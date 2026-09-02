@@ -9,12 +9,12 @@ import agent
 import document_generator
 import rag_engine
 from rfp_analyst.agent.graph import prepare_query_payload
+from rfp_analyst.uploads import is_uploaded_pdf_unchanged, persist_uploaded_pdf
 from rfp_analyst.exceptions import IngestionError
 from rfp_analyst.ingestion.chunking import build_chunk_id, chunk_loaded_sources
 from rfp_analyst.ingestion import loaders
 from rfp_analyst.retrieval.vector_store import VectorStoreManager
 from rfp_analyst.schemas import LoadedSource
-from rfp_analyst.uploads import persist_uploaded_pdf
 
 
 class FakeUpload:
@@ -26,6 +26,17 @@ class FakeUpload:
 
     def getbuffer(self):
         return self._data
+
+
+def test_unchanged_uploader_value_is_idempotent_after_persistence(tmp_path):
+    upload = FakeUpload("resume.pdf", b"same-pdf-bytes")
+
+    assert is_uploaded_pdf_unchanged(upload, uploads_dir=tmp_path) is False
+    persist_uploaded_pdf(upload, uploads_dir=tmp_path)
+    assert is_uploaded_pdf_unchanged(upload, uploads_dir=tmp_path) is True
+    assert is_uploaded_pdf_unchanged(
+        FakeUpload("resume.pdf", b"changed-pdf-bytes"), uploads_dir=tmp_path
+    ) is False
 
 
 class FakeLoader:

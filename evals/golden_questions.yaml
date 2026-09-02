@@ -73,3 +73,46 @@ expected_origins:
 expected_tools:
   - compare_projects
 expects_no_answer: false
+---
+id: web_fallback
+category: web_fallback
+question: What are the latest volcanic monitoring updates for the qzxv-771 caldera observatory?
+retrieval_scope: all
+expected_sources: []
+expected_tools:
+  - search_knowledge_base
+  - web_search
+expects_no_answer: true
+---
+id: bounded_query_rewrite
+category: query_rewriting
+question: Find evidence for the zxqv-991 nonexistent consulting initiative.
+retrieval_scope: all
+expected_sources: []
+expected_tools:
+  - search_knowledge_base
+  - web_search
+  - query_rewriter
+expects_no_answer: true
+---
+id: project_timeline_catalog
+category: broad_project_inventory
+question: List all projects with their timelines.
+retrieval_scope: all
+expected_sources:
+  - 01_Banking_Sector_Digital_Audit_2024.pdf
+  - 02_Healthcare_Data_Migration_to_Azure_Cloud.pdf
+  - 03_Retail_Supply_Chain_Analytics_Platform.pdf
+  - 04_Insurance_Claims_Processing_Automation.pdf
+  - 05_Telecom_Network_Optimization_with_AI.pdf
+  - 06_Government_Tax_Filing_Modernization.pdf
+  - 07_Pharma_Clinical_Trial_Data_Platform.pdf
+  - 08_Energy_Sector_ESG_Reporting_Dashboard.pdf
+  - 09_Financial_Services_Anti-Fraud_Detection_System.pdf
+  - 10_Manufacturing_IoT_Predictive_Maintenance_Platform.pdf
+expected_origins:
+  - sample
+expected_tools:
+  - search_knowledge_base
+  - project_catalog
+expects_no_answer: false

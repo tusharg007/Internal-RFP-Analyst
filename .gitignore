@@ -4,6 +4,7 @@
 .venv/
 venv/
 .python_packages/
+Agentic RAG professional/
 
 # Python cache and build output
 __pycache__/
