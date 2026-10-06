@@ -24,6 +24,18 @@ rewrite weak queries, execute deterministic RFP tools, and verify generated answ
 
 ---
 
+## Alternative GraphRAG Implementation
+
+The Neo4j-based GraphRAG edition is available separately on
+[`feature/graphrag-neo4j`](https://github.com/tusharg007/Internal-RFP-Analyst/tree/feature/graphrag-neo4j).
+It adds provenance-aware graph retrieval alongside Chroma semantic evidence, with
+`vector_only`, `graph_only`, and `hybrid` retrieval modes.
+
+| Branch | Implementation |
+| --- | --- |
+| [`main`](https://github.com/tusharg007/Internal-RFP-Analyst/tree/main) | Original cyclic Agentic RAG + Chroma vector retrieval. |
+| [`feature/graphrag-neo4j`](https://github.com/tusharg007/Internal-RFP-Analyst/tree/feature/graphrag-neo4j) | Neo4j GraphRAG + Chroma, supporting vector, graph, and hybrid retrieval. |
+
 ## Overview
 
 Internal RFP Analyst is a local-first Streamlit application for searching private
