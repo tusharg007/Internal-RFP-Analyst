@@ -2,23 +2,23 @@
 
 # Internal RFP Analyst
 
-### Cyclic Agentic RAG for evidence-grounded RFP analysis
+### Provenance-aware GraphRAG for evidence-grounded RFP analysis
 
-Route questions, retrieve private knowledge, grade evidence, fall back to web search,
-rewrite weak queries, execute deterministic RFP tools, and verify generated answers.
+The GraphRAG edition of Internal RFP Analyst. It preserves the original Chroma-based
+Agentic RAG workflow and adds optional Neo4j relationship retrieval; source chunks remain
+the evidence supplied to answer generation and grounding.
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-1C3C3C)](https://github.com/langchain-ai/langgraph)
 [![Groq](https://img.shields.io/badge/Groq-openai%2Fgpt--oss--120b-F55036)](https://groq.com/)
 [![Tavily](https://img.shields.io/badge/Web-Tavily-111827)](https://tavily.com/)
-[![Tests](https://img.shields.io/badge/tests-pytest-22C55E?logo=pytest&logoColor=white)](#testing-and-evaluation)
-[![Real KB Eval](https://img.shields.io/badge/real%20KB%20eval-9%2F9-22C55E)](#testing-and-evaluation)
+[![Tests](https://img.shields.io/badge/tests-pytest-22C55E?logo=pytest&logoColor=white)](#evaluation)
 [![CI](https://github.com/tusharg007/Internal-RFP-Analyst/actions/workflows/ci.yml/badge.svg)](https://github.com/tusharg007/Internal-RFP-Analyst/actions/workflows/ci.yml)
 
 **Current package version: `0.1.0`**
 
-[Overview](#overview) · [Architecture](#architecture) · [Workflow](#agentic-rag-workflow) · [Tech stack](#technology-stack) · [Walkthrough](#application-walkthrough) · [Structure](#project-structure) · [Setup](#quick-start) · [Testing](#testing-and-evaluation)
+[Overview](#overview) · [Architecture](#architecture) · [Graph schema](#neo4j-domain-schema) · [Setup](#quick-start) · [Evaluation](#evaluation) · [Structure](#project-structure)
 
 </div>
 
@@ -26,59 +26,40 @@ rewrite weak queries, execute deterministic RFP tools, and verify generated answ
 
 ## Overview
 
-Internal RFP Analyst is a local-first Streamlit application for searching private
-consulting documents, comparing prior projects, analyzing uploaded RFPs, and creating
-evidence-backed proposal material.
+This branch is the **GraphRAG edition** of the existing Internal RFP Analyst. It
+combines ChromaDB semantic retrieval, LangGraph orchestration, deterministic RFP tools,
+and citation/grounding checks with an optional Neo4j domain graph for source-backed
+relationships and multi-hop retrieval.
 
-The current version is a cyclic Agentic RAG system rather than a linear
-retrieve-and-generate pipeline. A LangGraph workflow decides:
+| Branch | Retrieval implementation |
+| --- | --- |
+| `main` | Original Agentic RAG with Chroma-based semantic retrieval. |
+| `feature/graphrag-neo4j` | Chroma vector retrieval plus optional Neo4j GraphRAG: `vector_only`, `graph_only`, and `hybrid` modes. |
 
-- whether a question needs the private knowledge base or a direct answer;
-- whether retrieved private evidence is strong enough;
-- when Tavily web search should be used;
-- when a weak query should be rewritten and retried;
-- which deterministic RFP tools should execute;
-- which generation prompt and source label should be used; and
-- whether final claims are supported by cited document pages.
+Graph support is optional. `vector_only` remains the default and works with Neo4j
+disabled. Graph assertions help select relevant original evidence; they are not
+independent proof and do not replace document/page grounding. This project does not
+claim that graph or hybrid retrieval outperforms vector retrieval.
 
-The project is a reproducible single-user demonstration with extensive regression and
-evaluation coverage. It is not presented as a production multi-tenant platform.
+## Problem statement
 
-See the [production-readiness audit](docs/PRODUCTION_READINESS_AUDIT.md) for
-security fixes, actual verification results and remaining Neo4j/RAGAS release gates.
+RFP analysis often asks connected questions across case studies: which projects used a
+technology in a given industry, which also mention a framework, what outcomes were
+reported, or which prior projects appear relevant to a target requirement. Semantic
+search is useful for finding passages, but does not explicitly represent typed
+project-to-technology, industry, framework, requirement, and outcome relationships.
 
-Optional [hybrid GraphRAG](docs/GRAPH_RETRIEVAL.md) now complements Chroma with
-Neo4j-backed relationship retrieval and original-document evidence fusion.
-`RFP_RETRIEVAL_MODE=vector_only` retains the existing behavior; `auto` selects
-vector, graph or hybrid retrieval by query characteristics. See the linked guide
-for synchronization, reader credentials, fallback, limits and verification.
-RAGAS is an optional semantic evaluation layer using actual final answers and captured
-generation evidence. Existing deterministic evaluations remain unchanged. See
-[RAGAS evaluation and baseline calibration](docs/RAGAS_EVALUATION.md); live judge
-and graph-mode baselines require explicit configuration and a synchronized graph.
+This branch adds a bounded graph projection to help find those relationships, then
+hydrates graph witnesses from existing indexed Chroma chunks. Chroma remains the source
+of original text evidence; graph retrieval does not independently generate facts.
 
-## Current capabilities
+## Why GraphRAG for RFP analysis?
 
-- Generate a synthetic 10-document consulting case-study corpus.
-- Upload and validate custom PDFs.
-- Keep sample case studies and uploaded target documents in separate corpora.
-- Build an idempotent ChromaDB knowledge base with deterministic chunk IDs.
-- Route greetings and simple chat directly without retrieval.
-- Search `sample`, `upload`, or `all` document scopes.
-- Adapt retrieval for broad project inventories and resume/CV questions.
-- Grade private-KB and web evidence with Pydantic structured output.
-- Fall back to Tavily when private evidence is weak.
-- Rewrite weak queries once and cycle back through retrieval.
-- Extract RFP requirements and identify absent or ambiguous gaps.
-- Rank internal case studies against target requirements.
-- Compare projects across timeline, budget, technology stack, and outcomes.
-- Build structured proposal outlines.
-- Produce deterministic, fully cited project timeline catalogs.
-- Generate separate Private KB, Web Search, and Direct answers.
-- Verify citations, numbers, filenames, pages, and Markdown table rows.
-- Perform one bounded repair pass for unsupported generated claims.
-- Display safe source and tool traces without exposing private chain-of-thought.
-- Degrade cleanly when an LLM, Tavily, a scope, or the vector store is unavailable.
+RFP queries may combine constraints or compare entities across documents. Neo4j
+represents the supported domain relationships extracted from the indexed corpus. This
+makes relationship-oriented candidate selection explicit, while Chroma remains
+responsible for semantic passage retrieval and original text. Hybrid retrieval combines
+the two candidate sources; it is not assumed to be better in every case.
 
 ## Architecture
 
@@ -89,23 +70,27 @@ flowchart LR
     User["User"] --> UI["Streamlit UI<br/>app.py"]
     UI --> Adapter["Application adapter<br/>agent.py"]
     Adapter --> Graph["Cyclic LangGraph runtime<br/>agent/graph.py"]
-    Graph --> Router["Structured router"]
-    Graph --> Graders["KB and web graders"]
-    Graph --> Tools["Deterministic RFP tools"]
-    Graph --> Generator["Path-specific generation"]
-    Tools --> Retriever["Scoped adaptive retrieval"]
-    Retriever --> Chroma["ChromaDB"]
-    Chroma --> Embeddings["FastEmbed<br/>BAAI/bge-small-en-v1.5"]
-    Graders --> Groq["Groq<br/>openai/gpt-oss-120b"]
-    Graders -. optional fallback .-> Gemini["Gemini 2.0 Flash"]
-    Graph --> Tavily["Tavily web search"]
-    Generator --> Verify["Grounding verifier"]
+    Graph --> Router["Existing KB/direct router"]
+    Router --> Retrieval["Retrieval mode decision"]
+    Retrieval -->|vector_only| Chroma["ChromaDB semantic search"]
+    Retrieval -->|graph_only| Neo4j["Neo4j fixed-template projection"]
+    Retrieval -->|hybrid| Hybrid["Neo4j + Chroma candidates"]
+    Neo4j --> Hydrate["Validate graph provenance;<br/>hydrate original Chroma chunks"]
+    Hybrid --> Hydrate
+    Chroma --> Evidence["Deduplicate and rank evidence"]
+    Hydrate --> Evidence
+    Evidence --> Graders["Evidence grading"]
+    Evidence --> Tools["Deterministic RFP tools"]
+    Tools --> Generator["Path-specific generation"]
+    Graders --> Generator
+    Graph --> Tavily["Optional Tavily fallback"]
+    Generator --> Verify["Citation/page grounding"]
     Verify --> Repair["Bounded answer repair"]
-    Repair --> Response["Cited answer + source traces"]
+    Repair --> Response["Answer + source traces"]
     Verify --> Response
 ```
 
-### Document ingestion
+### Indexing and optional graph publication
 
 ```mermaid
 flowchart TD
@@ -118,10 +103,16 @@ flowchart TD
     Chunk --> IDs["Deterministic chunk IDs"]
     IDs --> Dedup["File and chunk deduplication"]
     Dedup --> Embed["FastEmbed vectors"]
-    Embed --> Build["Temporary Chroma build"]
-    Build --> Swap["Active-store replacement"]
-    Swap --> Health["Scope-aware KB health snapshot"]
+    Embed --> Chroma["Existing indexed Chroma corpus"]
+    Chroma --> Export["Read-only corpus export"]
+    Export --> Extract["Controlled domain extraction"]
+    Extract --> Validate["Validate quotes and provenance"]
+    Validate --> Snapshot["Transactional Neo4j snapshot"]
 ```
+
+PDF indexing into Chroma and graph snapshot publication are separate operations. The
+graph rebuild consumes the already indexed collection; it does not replace Chroma's
+document-ingestion workflow.
 
 ### Source trust boundary
 
@@ -141,6 +132,78 @@ flowchart LR
 
 Private evidence is never silently presented as web evidence, and a direct answer never
 claims retrieval occurred. The UI displays `Private KB`, `Web Search`, or `Direct`.
+
+## Retrieval modes
+
+Set `RFP_RETRIEVAL_MODE` to `vector_only` (default), `graph_only`, `hybrid`, or `auto`.
+The retrieval decision is deterministic and based on query characteristics; the
+existing LLM router separately decides KB versus direct answer.
+
+| Mode | Behavior and intended fit |
+| --- | --- |
+| `vector_only` | Existing Chroma semantic search for summaries, narrative questions, and passage-finding. |
+| `graph_only` | Bounded Neo4j relationship/field projection, followed by validation and retrieval of supporting original chunks. |
+| `hybrid` | Combines graph witnesses and vector candidates, deduplicates them, then ranks/fuses original text evidence. |
+| `auto` | Chooses by query shape: prose/passages favor vectors; structured relationships and connected constraints may select graph or hybrid. |
+
+Graph failures are explicit in traces. Production graph modes may degrade to vector
+retrieval when graph service or synchronized-snapshot requirements are not met; strict
+evaluation graph-only mode refuses that fallback. Requested and effective modes remain
+distinct. See [Graph retrieval](docs/GRAPH_RETRIEVAL.md) for safety and fallback details.
+
+## Neo4j domain schema
+
+The schema is deliberately small and corpus-specific. It does not add generic `Client`,
+`Capability`, or inferred `SATISFIES` nodes/edges.
+
+| Label | Role / representative properties |
+| --- | --- |
+| `RFPDocument` | Indexed source identity: `document_id`, `source_file`, `document_origin`, `file_hash`, document `kind`, `revision`, `access_partition`, `corpus_id`, `corpus_version`. |
+| `RFPChunk` | Original Chroma evidence anchor: `evidence_id`, existing `chunk_id`, document/source/origin/hash, zero-based `page_index`, `text_hash`, `span_start`, `span_end`, `span_scope`, corpus identifiers. |
+| `RFPDomainEntity` | Controlled `kind` (`Project`, `Requirement`, `Technology`, `Industry`, `ComplianceFramework`), canonical `entity_id` and `name`, plus document identity where applicable. |
+| `RFPAssertion` | `assertion_id`, `subject_id`, `object_id`, `evidence_id`, `subject_kind`, `requirement`, `predicate`, `object_name`, `value`, `unit`, `modality`, `quote`, `start`, `end`, `confidence`, `extraction_method`, `extractor_version`, `review_status`, corpus identifiers. |
+| `RFPSnapshot` | `corpus_id`, `corpus_version`, `indexed_digest`, extractor/normalization/format/chunker/embedding version descriptors, coverage, document/chunk/entity/assertion counts, and `ingested_at`. |
+| `RFPCorpusHead` | `corpus_id` and active `active_version` pointer. |
+
+Fixed relationships are `RFPChunk-[:IN_DOCUMENT]->RFPDocument`;
+`RFPDomainEntity-[:IN_DOCUMENT]->RFPDocument` and
+`RFPDomainEntity-[:SUPPORTED_BY]->RFPChunk` for identity support;
+`Project|Requirement-[:HAS_ASSERTION]->RFPAssertion`;
+`RFPAssertion-[:SUPPORTED_BY]->RFPChunk`; and
+`RFPAssertion-[:OBJECT]->RFPDomainEntity` for entity-valued facts. Support edges carry
+span metadata such as `start`, `end`, and `span_scope`.
+
+Allowed assertion predicates are `uses_technology`, `in_industry`, `mentions_framework`,
+`requires_technology`, `requires_framework`, `timeline`, `budget`, and `outcome`.
+Outcome modality is retained. A framework mention or proposed control is not proof of
+compliance/certification; a projected outcome is not reported as achieved.
+
+## Provenance design
+
+Each graph fact points to an indexed document and supporting original Chroma chunk.
+Document identity includes filename, origin, and file hash; chunk identity retains the
+existing Chroma chunk ID and content hash, page index, and explicit span scope. Extraction
+validates quotes and spans against original chunk text and publishes versioned snapshots.
+Graph retrieval validates the active snapshot and hydrates evidence from indexed text
+before generation.
+
+The indexed corpus currently does not retain source-page character offsets for graph
+facts. Accordingly, extraction marks its validated quote spans as chunk-local
+(`span_scope=chunk`) rather than presenting them as page-coordinate offsets. Page numbers
+remain attached to the original chunk for citations.
+
+This provides source/chunk/path traceability, **not** a formal claim-to-evidence graph
+for every sentence in a generated answer or a semantic entailment proof. Final answer
+citations and grounding continue to use the existing document/page verifier.
+
+## Graph query safety
+
+User questions do not become arbitrary Cypher. Runtime retrieval uses fixed query
+templates with parameterized values, a fixed label/relationship vocabulary, read access,
+and bounded projection/traversal/result budgets. No generic Cypher tool or
+write-capable LLM-generated graph query is exposed. Application read-mode safeguards do
+not substitute for Neo4j server-side privileges; database-level RBAC has not been
+verified in this repository's test run.
 
 ## Agentic RAG workflow
 
@@ -247,118 +310,55 @@ table rows are dropped as rows instead of replaced by malformed free text.
 | Layer | Current technology |
 | --- | --- |
 | Language | Python 3.11+ |
-| UI | Streamlit 1.38+ |
-| Agent orchestration | LangGraph 0.2+ |
-| RAG framework | LangChain 0.3+ |
-| Primary LLM | Groq `openai/gpt-oss-120b` |
-| Optional LLM fallback | Google `gemini-2.0-flash` |
+| UI | Streamlit |
+| Agent orchestration | LangGraph |
+| LLM integration | LangChain; Groq `openai/gpt-oss-120b` and Google `gemini-3.8-flash` configuration |
 | Structured output | Pydantic v2 + JSON mode |
 | Web fallback | Tavily via `langchain-tavily` |
-| Vector database | ChromaDB via `langchain-chroma` |
-| Embeddings | FastEmbed `BAAI/bge-small-en-v1.5` |
+| Vector store / embeddings | ChromaDB via `langchain-chroma`; FastEmbed `BAAI/bge-small-en-v1.5` |
+| Graph store | Optional Neo4j via the Neo4j Python driver |
+| Semantic evaluation | Optional RAGAS; configurable Google or Groq judge |
 | PDF ingestion | PyMuPDF |
 | PDF generation | fpdf2 |
 | Configuration | python-dotenv, environment variables, Streamlit Secrets |
 | Evaluation data | YAML |
-| Testing | pytest + Streamlit AppTest |
+| Testing | pytest |
 | CI | GitHub Actions |
 
-> **Pinecone is not used in this version.** The active vector store is local ChromaDB,
-> so no `PINECONE_API_KEY` is required.
+RAGAS is evaluation infrastructure, not part of the normal user-facing retrieval path.
 
-## Application walkthrough
-
-### 1. Configure providers
-
-Copy `.env.example` to `.env`. Groq is the primary generation path; Tavily is required
-only for live web fallback.
-
-```dotenv
-GROQ_API_KEY=gsk_...
-GOOGLE_API_KEY=
-TAVILY_API_KEY=tvly-...
-```
-
-Never commit `.env` or `.streamlit/secrets.toml`.
-
-### 2. Start the UI
-
-```powershell
-python -m streamlit run app.py
-```
-
-The sidebar reports provider readiness, document/chunk counts, scope, pending uploads,
-and the latest evaluation snapshot.
-
-### 3. Create or upload documents
-
-- **Generate Sample PDFs** creates the reproducible 10-project corpus.
-- **Upload Custom PDFs** accepts resumes, RFPs, proposals, and other PDFs.
-- **Ingest Documents** builds or rebuilds the knowledge base.
-
-Unchanged uploader selections are idempotent: Streamlit reruns do not mark already
-persisted files as pending again.
-
-### 4. Choose document scope
-
-| Scope | Meaning |
-| --- | --- |
-| All documents | Search samples and uploads |
-| Sample documents only | Search internal case-study examples |
-| Uploaded documents only | Search private uploaded files |
-
-The graph can narrow `all` for strongly typed resume/CV or project-catalog requests.
-
-### 5. Exercise the main paths
-
-**Private KB**
+## Example GraphRAG query
 
 ```text
-What technology stack was used for the banking digital audit?
+Which healthcare projects used Microsoft Azure and had compliance requirements,
+and what source-backed outcomes were reported?
 ```
 
-**Broad project inventory**
+Depending on the retrieval policy, this relationship-oriented query can use a bounded
+graph projection or hybrid retrieval. Supporting source chunks are retrieved from the
+existing index and passed through the same evidence grading and answer grounding as
+other KB queries. The example describes intended behavior, not a benchmark result.
 
-```text
-List all projects with their timelines.
-```
+## Running the application
 
-This returns an intact row-cited table covering all 10 sample projects.
+1. Install the core requirements and editable package using [Quick start](#quick-start).
+2. Configure an application LLM key in `.env` or Streamlit Secrets. Configure Tavily only
+   if live web fallback is desired.
+3. Start the UI:
 
-**Uploaded resume**
+   ```powershell
+   python -m streamlit run app.py
+   ```
 
-```text
-What is my tech stack in the uploaded resume?
-```
+4. Generate or upload PDFs in the sidebar and use **Ingest Documents** to build the
+   Chroma index. Neo4j publication is a separate, explicit operation; it does not run
+   automatically as part of a chat request.
+5. Optionally enable graph retrieval after configuring Neo4j, publishing a matching
+   snapshot, and selecting a graph retrieval mode.
 
-This targets uploaded evidence instead of turning the request into generic web advice.
-
-**Web fallback**
-
-```text
-What are the latest external developments relevant to this technology?
-```
-
-**Direct answer**
-
-```text
-Hello! What can you help me with?
-```
-
-**Bounded insufficient evidence**
-
-```text
-Find evidence for the zxqv-991 nonexistent consulting initiative.
-```
-
-The final case attempts private retrieval, web fallback, one rewrite, and then returns an
-honest insufficient-evidence response.
-
-### 6. Inspect safe traces
-
-Enable **Show Source Traces** to inspect the answer source, router intent, selected tools,
-retrieval scope and `k`, filenames/pages/scores, evidence grades, retry count,
-prompt-budget status, and grounding status. Hidden chain-of-thought is not displayed.
+The source trace distinguishes requested/effective retrieval modes and shows operational
+evidence metadata; it does not expose private chain-of-thought. Streamlit answer source
+labels remain `Private KB`, `Web Search`, and `Direct`.
 
 ## Screenshots
 
@@ -374,66 +374,36 @@ prompt-budget status, and grounding status. Hidden chain-of-thought is not displ
 
 ```text
 Internal-RFP-Analyst/
-├── app.py                         # Streamlit UI and session lifecycle
-├── agent.py                       # UI-facing LLM and graph adapter
-├── config.py                      # Models, keys, thresholds, paths, budgets
-├── rag_engine.py                  # Ingestion, stats, retrieval facade
-├── document_generator.py          # Sample consulting PDF generator
-├── requirements.txt
-├── pyproject.toml
-├── Makefile
+├── app.py                         # Streamlit UI
+├── agent.py                       # Application adapter
+├── config.py                      # Environment/secrets and model settings
+├── rag_engine.py                  # Chroma ingestion and retrieval facade
+├── document_generator.py          # Public sample PDF generation
+├── requirements*.txt / pyproject.toml
 ├── .env.example
 ├── .github/workflows/ci.yml
 ├── src/rfp_analyst/
-│   ├── agent/
-│   │   ├── graph.py               # Cyclic graph and generation nodes
-│   │   ├── router.py              # Structured KB/direct routing
-│   │   ├── grader.py              # Structured KB/web grading
-│   │   ├── query_rewriter.py      # Bounded query rewriting
-│   │   ├── prompts.py             # Specialized prompts
-│   │   ├── schemas_decisions.py   # RouteDecision/EvidenceGrade/QueryRewrite
-│   │   ├── state.py
-│   │   └── runtime.py
-│   ├── ingestion/
-│   │   ├── loaders.py
-│   │   ├── chunking.py
-│   │   ├── pipeline.py
-│   │   └── registry.py
-│   ├── retrieval/vector_store.py  # Chroma lifecycle and scoped search
-│   ├── tools/
-│   │   ├── compare_projects.py
-│   │   ├── project_catalog.py     # Deterministic timeline catalog
-│   │   ├── proposal_writer.py
-│   │   ├── rfp_gap_analyzer.py
-│   │   ├── search_kb.py
-│   │   ├── source_verifier.py
-│   │   └── web_search.py          # Tavily defensive adapter
-│   ├── ui/helpers.py
-│   ├── evals.py
-│   ├── exceptions.py
-│   ├── health.py
-│   ├── schemas.py
-│   └── uploads.py
-├── evals/
-│   ├── golden_questions.yaml      # KB/web/rewrite/catalog cases
-│   ├── run_evals.py
-│   └── run_kb_evals.py
-├── tests/                          # Regression, graph ingestion/retrieval and opt-in Neo4j tests
-├── docs/
-└── data/
-    ├── documents/                  # Generated; Git-ignored
-    └── uploads/                    # Private; Git-ignored
+│   ├── agent/                      # LangGraph, prompts, routing, grading, state
+│   ├── graph/                      # Neo4j schema, store, extraction, snapshots, reader
+│   ├── ingestion/                  # PDF loaders, chunking and indexing pipeline
+│   ├── retrieval/                  # Vector retrieval and graph/hybrid provider
+│   ├── tools/                      # KB, RFP, project and web tools
+│   └── ui/                         # Streamlit helpers
+├── evals/                          # Frozen cases, deterministic runners, RAGAS,
+│   │                               # matched capture and quota-safe resume/merge
+│   └── retrieval_questions.yaml
+├── tests/                          # Unit/regression and opt-in Neo4j integration tests
+└── docs/                           # Architecture, operations, evaluation and audits
 ```
 
-`.venv/`, `vectorstore/`, caches, uploads, generated PDFs, and local reference notebooks
-are deliberately excluded from Git.
+Local indexes, caches, uploads, generated PDFs, and secrets should not be committed.
 
 ## Quick start
 
 ### Windows PowerShell
 
 ```powershell
-git clone https://github.com/tusharg007/Internal-RFP-Analyst.git
+git clone --branch feature/graphrag-neo4j https://github.com/tusharg007/Internal-RFP-Analyst.git
 cd Internal-RFP-Analyst
 py -3.11 -m venv .venv
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
@@ -442,14 +412,14 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m pip install -e ".[dev]"
 Copy-Item .env.example .env
-# Add GROQ_API_KEY and optionally TAVILY_API_KEY / GOOGLE_API_KEY.
+# Add an application model key; Tavily is optional for web fallback.
 python -m streamlit run app.py
 ```
 
 ### macOS / Linux
 
 ```bash
-git clone https://github.com/tusharg007/Internal-RFP-Analyst.git
+git clone --branch feature/graphrag-neo4j https://github.com/tusharg007/Internal-RFP-Analyst.git
 cd Internal-RFP-Analyst
 python3.11 -m venv .venv
 source .venv/bin/activate
@@ -457,97 +427,161 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m pip install -e ".[dev]"
 cp .env.example .env
-# Add GROQ_API_KEY and optionally TAVILY_API_KEY / GOOGLE_API_KEY.
+# Add an application model key; Tavily is optional for web fallback.
 python -m streamlit run app.py
 ```
 
 ## Configuration
 
-Secrets resolve in this order: Streamlit Secrets, OS environment variables, then `.env`.
+Copy `.env.example` to `.env` and add credentials only on your machine. Secrets resolve
+from Streamlit Secrets, environment variables, then `.env`. Never put real credentials
+in source control or evaluation artifacts.
 
-| Setting | Default | Required | Purpose |
-| --- | --- | --- | --- |
-| `GROQ_API_KEY` | empty | One LLM provider for chat | Primary LLM |
-| `GOOGLE_API_KEY` | empty | Optional | Gemini fallback |
-| `TAVILY_API_KEY` | empty | Optional | Live web fallback |
-| `AGENT_MODE` | `agentic` | No | Compatibility switch |
-| `MIN_RELEVANCE_SCORE` | `0.50` | No | Retrieval pre-filter |
-| `MAX_PROMPT_TOKENS` | `6500` | No | Input prompt budget |
-| `RFP_ANALYSIS_MAX_OUTPUT_TOKENS` | `1200` | No | Analysis output reserve |
-| `MAX_CONTEXT_CHARS_PER_CHUNK` | `1000` | No | Prompt compaction |
-| `MAX_HISTORY_MESSAGES` | `3` | No | Included chat history |
-| `MAX_TARGET_CHUNKS` | `4` | No | Target evidence cap |
-| `MAX_CASE_STUDIES` | `3` | No | Case-study prompt cap |
-| `MAX_CHUNKS_PER_CASE_STUDY` | `2` | No | Chunks per case study |
-| `MAX_UPLOAD_SIZE_MB` | `25` | No | Upload size limit |
-| `MAX_UPLOAD_PAGE_COUNT` | `250` | No | PDF page limit |
-| `RFP_ANALYST_DEBUG` | `0` | No | Local provider details |
-
-Important code defaults:
-
-| Constant | Value |
+| Setting | Purpose |
 | --- | --- |
-| `GROQ_MODEL` | `openai/gpt-oss-120b` |
-| `GEMINI_MODEL` | `gemini-2.0-flash` |
-| `GENERATION_TEMPERATURE` | `0.3` |
-| `GRADING_TEMPERATURE` | `0.0` |
-| `TAVILY_MAX_RESULTS` | `5` |
-| `MAX_QUERY_RETRIES` | `1` |
-| `EMBEDDING_MODEL` | `BAAI/bge-small-en-v1.5` |
-| `CHUNK_SIZE` / `CHUNK_OVERLAP` | `512` / `50` |
-| `RETRIEVAL_K` | `6` before adaptive expansion |
-| `COLLECTION_NAME` | `rfp_kb_v2` |
+| `GROQ_API_KEY`, `GOOGLE_API_KEY` | Application model keys; configured models are Groq `openai/gpt-oss-120b` and Gemini `gemini-3.8-flash`. |
+| `TAVILY_API_KEY` | Optional external web fallback. |
+| `NEO4J_ENABLED` | Optional graph infrastructure switch; default `false`. |
+| `NEO4J_URI`, `NEO4J_DATABASE` | Neo4j endpoint and database. Do not embed credentials in the URI. |
+| `NEO4J_USERNAME`, `NEO4J_PASSWORD` | Runtime graph reader identity. |
+| `NEO4J_INGEST_USERNAME`, `NEO4J_INGEST_PASSWORD` | Separate graph ingestion identity. |
+| `NEO4J_ADMIN_USERNAME`, `NEO4J_ADMIN_PASSWORD` | Explicit schema/migration identity. |
+| `RFP_RETRIEVAL_MODE` | `vector_only` (default), `graph_only`, `hybrid`, or `auto`. |
+| `RFP_GRAPH_CORPUS_ID` | Active graph corpus identifier; defaults to `internal-rfp`. |
+| `RAGAS_JUDGE_PROVIDER`, `RAGAS_JUDGE_MODEL`, `RAGAS_JUDGE_API_KEY` | Optional semantic-evaluation judge configuration. |
 
-## Testing and evaluation
+`NEO4J_ENABLED=true` alone does not publish graph data or select graph retrieval. Neo4j
+must have its schema initialized and a snapshot matching the indexed corpus. Install
+optional packages only when using these features:
 
-### Test suite
+```powershell
+python -m pip install -r requirements-graph.txt
+python -m pip install -r requirements-eval.txt
+```
+
+The first installs the Neo4j driver; the second installs optional RAGAS evaluation
+dependencies. Neither is required for vector-only application use.
+
+## Graph ingestion and rebuild
+
+Graph ingestion reads the **existing indexed Chroma collection**. It does not create a
+new vector collection, re-embed text, or ingest raw PDFs itself. Quiesce vector ingestion
+while publishing a graph snapshot, and use the same corpus ID for schema, rebuild, and
+runtime retrieval.
+
+```powershell
+# Configure NEO4J_ENABLED=true and the separate admin/ingestion credentials first.
+python -m rfp_analyst.graph init-schema
+
+# Validate the current index and extraction without graph writes.
+python -m rfp_analyst.graph rebuild --dry-run --corpus-id internal-rfp
+
+# Publish a new versioned snapshot from the existing configured Chroma index.
+python -m rfp_analyst.graph rebuild --corpus-id internal-rfp
+```
+
+To use another already-indexed store, pass `--persist-dir <index-directory>` and
+`--collection <existing-collection>`. The CLI requires an existing index and collection;
+it will not silently create one. It validates source metadata and extraction before an
+atomic transactional graph publication. See [Graph ingestion](docs/GRAPH_INGESTION.md)
+and [Graph retrieval](docs/GRAPH_RETRIEVAL.md).
+
+The CLI's default extractor is deterministic and parses known case-study/RFP sections
+using the fixed Pydantic schema and curated normalization aliases. Structured LLM
+extraction is an explicitly injected service option, not automatically enabled by an API
+key. Invalid, unsupported, or source-unvalidated facts reject the snapshot rather than
+being silently published.
+
+## Evaluation
+
+Run the regression suite and existing evaluations separately:
 
 ```powershell
 python -m pytest -q
-```
-
-Current verification results and explicit service blockers are recorded in the
-[production-readiness audit](docs/PRODUCTION_READINESS_AUDIT.md). Skipped Neo4j
-tests do not establish real-server correctness or read-only authorization.
-Docker was unavailable for live Neo4j verification. See
-[Graph retrieval verification](docs/GRAPH_RETRIEVAL.md#verification-results-2026-10-05)
-for the full commands, baseline comparisons and known limitations.
-
-Coverage includes configuration, ingestion, deduplication, scope isolation, graph paths,
-structured routing/grading, rewrite bounds, Tavily degradation, adaptive resume retrieval,
-project catalogs, grounding, Streamlit behavior, and runtime errors.
-
-### Offline smoke evaluation
-
-```powershell
 python -m evals.run_evals
-```
-
-Latest result: **3/3**, pass rate **1.0**. This validates deterministic evaluation
-plumbing against a mock corpus; it is not proof of live answer quality.
-
-### Real knowledge-base evaluation
-
-```powershell
 python -m evals.run_kb_evals
 ```
 
-Latest result: **9/9**, pass rate **1.0**.
+The latest recorded full suite for this checkout is **613 passed, 5 skipped, 0 failed**.
+Skipped live Neo4j integration tests do not prove database-level RBAC or live-server
+behavior. Offline and deterministic evaluations check expected sources/tools/routes,
+retrieval mode, provenance coverage, no-answer behavior, and existing grounding controls;
+they do not by themselves prove semantic answer quality.
 
-This generates PDFs, ingests a temporary ChromaDB, and exercises real retrieval and graph
-paths for sample retrieval, uploaded retrieval, cross-corpus analysis, prior citations,
-unsupported queries, comparison, web fallback, bounded rewriting, and a complete 10-project
-timeline inventory.
+### Frozen retrieval comparison
 
-### Additional checks
+The matched public protocol freezes one public Chroma corpus and one question set across
+`vector_only`, `graph_only`, and `hybrid`. The frozen fixture has **11 documents and 54
+chunks**; its extension has **16 cases** across semantic, factual, relationship,
+multi-hop, cross-document, requirement-matching, unsupported, and ambiguous queries.
+That defines **48 planned executions** (each case in each mode), not a completed result.
+Before interpretation, the runner verifies the Chroma corpus manifest against the Neo4j
+snapshot digest and records the same experiment metadata. A mismatch or unavailable graph
+invalidates the comparison rather than counting as a graph retrieval loss or win.
+
+Capture-only and semantic judging are distinct. The current matched comparison is
+**incomplete**: a valid three-way retrieval-quality comparison has not been established.
+Do not interpret partial captures as quality metrics or claim GraphRAG superiority. The
+current status and limitations are recorded in
+[GRAPHRAG_EVALUATION.md](docs/GRAPHRAG_EVALUATION.md).
+
+The matched capture runner (capture only; no RAGAS judge) is:
 
 ```powershell
-python -m py_compile app.py agent.py rag_engine.py config.py document_generator.py
-python -m compileall -f src tests evals
-python -m ruff check .
+$Index = "PATH_TO_EXISTING_FROZEN_CHROMA_INDEX"
+python -m evals.retrieval_benchmark --index $Index --collection rfp_kb_v2 --capture-only
 ```
 
-GitHub Actions compiles the project, runs pytest, and executes the offline smoke eval.
+Use a frozen public corpus and publish that exact manifest into an isolated Neo4j
+evaluation corpus before interpreting graph/hybrid runs. Follow the evaluation document
+for freeze, parity verification, provider quota, and report-merging requirements.
+
+### Deterministic evaluation and RAGAS
+
+The existing deterministic harness remains the fast, non-judge regression layer. The
+optional RAGAS adapter evaluates actual application outputs using the exact contexts
+captured at the generation boundary—there is no second retrieval to recreate contexts.
+It supports Faithfulness, Answer Relevancy, Context Precision, Context Recall, and
+Answer Correctness only where an independent reference exists. Route/tool/mode
+correctness, expected sources, grounding, and no-answer behavior remain deterministic
+checks rather than LLM-judge claims.
+
+RAGAS requires its optional dependencies and an explicitly configured judge provider/model.
+The capture-only option does not run a judge; `--allow-judge` authorizes external judge
+calls and may send captured questions, answers, and evidence to that provider. No usable
+matched semantic baseline is currently established.
+
+```powershell
+$Index = "PATH_TO_EXISTING_FROZEN_CHROMA_INDEX"
+python -m evals.run_ragas --mode vector --questions evals/retrieval_questions.yaml --index $Index --collection rfp_kb_v2 --capture-only
+python -m evals.run_ragas --mode graph --questions evals/retrieval_questions.yaml --index $Index --collection rfp_kb_v2 --capture-only
+python -m evals.run_ragas --mode hybrid --questions evals/retrieval_questions.yaml --index $Index --collection rfp_kb_v2 --capture-only
+```
+
+These RAGAS adapter captures execute the application and require its generation provider;
+they omit only the semantic judge. Replace the placeholder with the same frozen index for
+each run. Use the matched retrieval benchmark above when producing a corpus-parity-locked
+three-mode ablation.
+
+Quota-safe resumable Groq capture is evaluation-only and does not initialize RAGAS.
+It requires checking provider quota and explicit operator confirmation after a daily
+quota reset; it does not retry a failed 429 or classify unexecuted cases as failures.
+See [resumable capture operations](docs/GROQ_RESUMABLE_CAPTURE.md) before using its
+`smoke`, `run-batch`, or `merge` commands.
+
+```powershell
+# Only after verifying the provider's daily quota reset:
+python -m evals.resumable_groq_capture smoke --confirm-tpd-reset
+python -m evals.resumable_groq_capture run-batch --confirm-tpd-reset --batch-size 2
+# Merge only after all frozen case/mode executions have completed under identical metadata.
+$Experiment = "EXPERIMENT_HASH"
+$BatchGlob = "evals/results/resumable-groq/$Experiment/batches/batch-*.json"
+$MergedReport = "evals/results/resumable-groq/$Experiment/merged.json"
+python -m evals.resumable_groq_capture merge --batches $BatchGlob --output $MergedReport
+```
+
+CI runs compile checks, pytest, and the offline smoke evaluation; it does not call live
+LLM judges or establish live Neo4j availability.
 
 ## Reliability and security
 
@@ -565,29 +599,44 @@ GitHub Actions compiles the project, runs pytest, and executes the offline smoke
 
 ## Deployment
 
-For Streamlit Community Cloud, deploy `app.py`, install `requirements.txt`, and add keys
-in Streamlit Secrets:
+For a single-instance Streamlit deployment, install `requirements.txt` and store keys in
+the platform's secret manager/Streamlit Secrets. Do not copy real credentials into docs:
 
 ```toml
-GROQ_API_KEY = "gsk_..."
-TAVILY_API_KEY = "tvly-..."
-# GOOGLE_API_KEY = "..."
+GROQ_API_KEY = "<secret>"
+TAVILY_API_KEY = "<optional-secret>"
+# GOOGLE_API_KEY = "<optional-secret>"
 ```
 
-The current Chroma design assumes one application instance. Multi-instance deployment
-requires managed document/vector storage and tenant isolation.
+Graph deployments also require an externally provisioned Neo4j service, matching corpus
+snapshot, and independently configured reader/ingestion/admin identities. This README
+does not claim Neo4j server-level RBAC has been verified. The application is not a
+production multi-tenant service; deployment behind an appropriate authentication and
+authorization boundary remains an operator responsibility.
 
 ## Known limitations
 
-- Single-user Streamlit and local filesystem model.
-- Local ChromaDB rather than a managed vector service.
-- No authentication, authorization, or tenant isolation.
-- Synthetic internal sample corpus and small eval corpus.
-- Dense retrieval without a production reranker or hybrid BM25 layer.
-- Heuristic grounding is bounded, not formal factual proof.
-- Generation quality depends on the configured provider.
-- Web fallback depends on Tavily and network availability.
-- No background worker queue for large ingestion jobs.
+- The application does not implement production multi-tenancy or an authenticated
+  per-user document ACL. Document scope is a retrieval filter, not authorization.
+- Neo4j database-level RBAC has not been verified by skipped unit/integration tests;
+  configure and independently test least-privilege server identities before deployment.
+- The graph ontology and deterministic extraction support known RFP/case-study fields;
+  arbitrary capabilities, broad contract logic, and generic entity extraction are not
+  represented as graph facts.
+- Graph assertion/path provenance leads to source chunks, not a formal link from each
+  generated answer claim to supporting evidence. The existing grounding checks are
+  heuristic controls, not proof of semantic entailment.
+- Chroma is the original text/evidence store. Neo4j is optional and graph snapshots must
+  be rebuilt when the indexed corpus changes; graph ingestion is not a distributed,
+  multi-transaction background worker.
+- The frozen vector/graph/hybrid comparison is incomplete; no mode has been shown to
+  outperform another. The public frozen fixture is small and cannot establish general
+  production performance.
+- RAGAS is optional evaluation infrastructure. No complete matched semantic baseline
+  is established; judge outputs are not factual proof and provider quota can interrupt
+  runs.
+- Generation quality depends on the configured provider; web fallback depends on Tavily
+  and network availability.
 
 ## Troubleshooting
 
@@ -618,6 +667,12 @@ Restart Streamlit and clear chat history; persisted session messages are not reg
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 - [`docs/AGENTIC_RAG.md`](docs/AGENTIC_RAG.md)
+- [`docs/GRAPH_INGESTION.md`](docs/GRAPH_INGESTION.md)
+- [`docs/GRAPH_RETRIEVAL.md`](docs/GRAPH_RETRIEVAL.md)
+- [`docs/GRAPHRAG_EVALUATION.md`](docs/GRAPHRAG_EVALUATION.md)
+- [`docs/RAGAS_EVALUATION.md`](docs/RAGAS_EVALUATION.md)
+- [`docs/GROQ_RESUMABLE_CAPTURE.md`](docs/GROQ_RESUMABLE_CAPTURE.md)
+- [`docs/PRODUCTION_READINESS_AUDIT.md`](docs/PRODUCTION_READINESS_AUDIT.md)
 - [`docs/FILE_MAP.md`](docs/FILE_MAP.md)
 - [`docs/TESTING_AND_EVALUATION.md`](docs/TESTING_AND_EVALUATION.md)
 - [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md)
