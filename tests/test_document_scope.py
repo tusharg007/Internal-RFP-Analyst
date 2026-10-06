@@ -337,9 +337,9 @@ def test_ingestion_success_clears_in_progress_and_pending_state():
         at.button[7].click().run(timeout=10)
 
     assert seen_flag["value"] is True
-    assert at.session_state.filtered_state["ingestion_in_progress"] is False
-    assert at.session_state.filtered_state["pending_uploads"] is False
-    assert at.session_state.filtered_state["last_ingestion_error"] == ""
+    assert at.session_state["ingestion_in_progress"] is False
+    assert at.session_state["pending_uploads"] is False
+    assert at.session_state["last_ingestion_error"] == ""
 
 
 def test_windows_lock_failure_is_friendly_and_cleans_temp_dirs(monkeypatch, tmp_path: Path):
