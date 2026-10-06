@@ -1,12 +1,13 @@
 <div align="center">
 
-# Internal RFP Analyst
+# Internal RFP Analyst — GraphRAG Edition
 
 ### Provenance-aware GraphRAG for evidence-grounded RFP analysis
 
-The GraphRAG edition of Internal RFP Analyst. It preserves the original Chroma-based
-Agentic RAG workflow and adds optional Neo4j relationship retrieval; source chunks remain
-the evidence supplied to answer generation and grounding.
+A local-first Streamlit application for RFP and consulting-document analysis. This
+GraphRAG edition extends the existing cyclic Agentic RAG workflow with optional Neo4j
+relationship retrieval and Chroma semantic retrieval. Original document chunks remain
+the authoritative evidence supplied to answer generation and grounding.
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
@@ -33,8 +34,8 @@ relationships and multi-hop retrieval.
 
 | Branch | Retrieval implementation |
 | --- | --- |
-| `main` | Original Agentic RAG with Chroma-based semantic retrieval. |
-| `feature/graphrag-neo4j` | Chroma vector retrieval plus optional Neo4j GraphRAG: `vector_only`, `graph_only`, and `hybrid` modes. |
+| [`main`](https://github.com/tusharg007/Internal-RFP-Analyst/tree/main) | Original Agentic RAG with Chroma-based semantic retrieval. |
+| [`feature/graphrag-neo4j`](https://github.com/tusharg007/Internal-RFP-Analyst/tree/feature/graphrag-neo4j) | Chroma vector retrieval plus optional Neo4j GraphRAG: `vector_only`, `graph_only`, and `hybrid` modes. |
 
 Graph support is optional. `vector_only` remains the default and works with Neo4j
 disabled. Graph assertions help select relevant original evidence; they are not
@@ -61,33 +62,50 @@ makes relationship-oriented candidate selection explicit, while Chroma remains
 responsible for semantic passage retrieval and original text. Hybrid retrieval combines
 the two candidate sources; it is not assumed to be better in every case.
 
+Typical relationship questions include:
+
+- Which projects used Microsoft Azure?
+- Which projects share a compliance framework?
+- Which technologies are associated with a specific project?
+- Which case studies are candidates for a combination of target RFP requirements?
+
+Neo4j identifies structural relationships and candidates. Supporting source chunks
+establish what the documents actually say. A candidate match or framework mention alone
+does not establish that contractual requirements were satisfied.
+
 ## Architecture
 
 ### System architecture
 
 ```mermaid
-flowchart LR
-    User["User"] --> UI["Streamlit UI<br/>app.py"]
-    UI --> Adapter["Application adapter<br/>agent.py"]
-    Adapter --> Graph["Cyclic LangGraph runtime<br/>agent/graph.py"]
-    Graph --> Router["Existing KB/direct router"]
-    Router --> Retrieval["Retrieval mode decision"]
+flowchart TD
+    User["User query / Streamlit"] --> Router["LangGraph health check and KB/direct routing"]
+    Router -->|KB| Retrieval["Query-characteristic retrieval decision"]
+    Router -->|direct| Direct["Direct answer"]
     Retrieval -->|vector_only| Chroma["ChromaDB semantic search"]
     Retrieval -->|graph_only| Neo4j["Neo4j fixed-template projection"]
     Retrieval -->|hybrid| Hybrid["Neo4j + Chroma candidates"]
     Neo4j --> Hydrate["Validate graph provenance;<br/>hydrate original Chroma chunks"]
     Hybrid --> Hydrate
-    Chroma --> Evidence["Deduplicate and rank evidence"]
+    Chroma --> Evidence["Evidence selection / deduplication / fusion"]
     Hydrate --> Evidence
-    Evidence --> Graders["Evidence grading"]
-    Evidence --> Tools["Deterministic RFP tools"]
-    Tools --> Generator["Path-specific generation"]
-    Graders --> Generator
-    Graph --> Tavily["Optional Tavily fallback"]
-    Generator --> Verify["Citation/page grounding"]
-    Verify --> Repair["Bounded answer repair"]
-    Repair --> Response["Answer + source traces"]
-    Verify --> Response
+    Evidence --> Grade["KB evidence grading"]
+    Grade -->|good| Tools["Deterministic tools and budgeted source prompt"]
+    Tools --> Generator["KB answer generation"]
+    Grade -->|weak| Web["Tavily web fallback"]
+    Web --> WebGrade["Web evidence grading"]
+    WebGrade -->|good| WebAnswer["Web answer generation / URL citations"]
+    WebGrade -->|weak and retry available| Rewrite["Bounded query rewriting"]
+    Rewrite --> Retrieval
+    WebGrade -->|weak and retries exhausted| Insufficient["Insufficient-evidence answer"]
+    Generator --> Verify["Citation/page grounding verification"]
+    Verify -->|grounded| Response["Final answer + source traces"]
+    Verify -->|unsupported| Repair["One bounded repair"]
+    Repair --> FinalVerify["Final grounding verification"]
+    FinalVerify --> Response
+    Direct --> Response
+    WebAnswer --> Response
+    Insufficient --> Response
 ```
 
 ### Indexing and optional graph publication
@@ -195,6 +213,10 @@ remain attached to the original chunk for citations.
 This provides source/chunk/path traceability, **not** a formal claim-to-evidence graph
 for every sentence in a generated answer or a semantic entailment proof. Final answer
 citations and grounding continue to use the existing document/page verifier.
+
+Execution state carries requested/effective retrieval modes, `graph_paths`,
+`graph_provenance`, `graph_version`, and explicit fallback reasons. Paths retain assertion
+and supporting evidence IDs so graph selections can be traced to the original records.
 
 ## Graph query safety
 
@@ -360,7 +382,12 @@ The source trace distinguishes requested/effective retrieval modes and shows ope
 evidence metadata; it does not expose private chain-of-thought. Streamlit answer source
 labels remain `Private KB`, `Web Search`, and `Direct`.
 
-## Screenshots
+## Historical sample UI screenshots
+
+These existing captures show the original Agentic RAG interface with public synthetic
+documents. Provider labels reflect the version captured. They illustrate the UI and
+source traces; fresh GraphRAG screenshots have not been added from the configured private
+corpus.
 
 ![Application overview](docs/assets/01-application-overview.png)
 
@@ -492,6 +519,11 @@ extraction is an explicitly injected service option, not automatically enabled b
 key. Invalid, unsupported, or source-unvalidated facts reject the snapshot rather than
 being silently published.
 
+Corpus snapshots are idempotent: identical indexed inputs and extraction/normalization
+versions produce the same snapshot version. Publication validates records transactionally
+and updates the corpus head only after success. Historical snapshots remain available,
+while retrieval uses the active snapshot and checks its indexed-corpus digest.
+
 ## Evaluation
 
 Run the regression suite and existing evaluations separately:
@@ -519,11 +551,11 @@ Before interpretation, the runner verifies the Chroma corpus manifest against th
 snapshot digest and records the same experiment metadata. A mismatch or unavailable graph
 invalidates the comparison rather than counting as a graph retrieval loss or win.
 
-Capture-only and semantic judging are distinct. The current matched comparison is
-**incomplete**: a valid three-way retrieval-quality comparison has not been established.
-Do not interpret partial captures as quality metrics or claim GraphRAG superiority. The
-current status and limitations are recorded in
-[GRAPHRAG_EVALUATION.md](docs/GRAPHRAG_EVALUATION.md).
+Final matched comparative quality results are intentionally **not claimed**: provider
+quota prevented completion of the full experiment using the fixed application model.
+Incomplete captures are diagnostic records rather than benchmark quality results. See
+[the evaluation methodology](docs/GRAPHRAG_EVALUATION.md) and
+[matched public corpus verification](docs/FROZEN_PUBLIC_EVALUATION.md).
 
 The matched capture runner (capture only; no RAGAS judge) is:
 
@@ -563,22 +595,11 @@ they omit only the semantic judge. Replace the placeholder with the same frozen 
 each run. Use the matched retrieval benchmark above when producing a corpus-parity-locked
 three-mode ablation.
 
-Quota-safe resumable Groq capture is evaluation-only and does not initialize RAGAS.
-It requires checking provider quota and explicit operator confirmation after a daily
-quota reset; it does not retry a failed 429 or classify unexecuted cases as failures.
-See [resumable capture operations](docs/GROQ_RESUMABLE_CAPTURE.md) before using its
-`smoke`, `run-batch`, or `merge` commands.
-
-```powershell
-# Only after verifying the provider's daily quota reset:
-python -m evals.resumable_groq_capture smoke --confirm-tpd-reset
-python -m evals.resumable_groq_capture run-batch --confirm-tpd-reset --batch-size 2
-# Merge only after all frozen case/mode executions have completed under identical metadata.
-$Experiment = "EXPERIMENT_HASH"
-$BatchGlob = "evals/results/resumable-groq/$Experiment/batches/batch-*.json"
-$MergedReport = "evals/results/resumable-groq/$Experiment/merged.json"
-python -m evals.resumable_groq_capture merge --batches $BatchGlob --output $MergedReport
-```
+The [quota-safe resumable capture runner](docs/GROQ_RESUMABLE_CAPTURE.md) paces evaluation
+calls, checkpoints completed executions, and stops on provider quota exhaustion. Its
+merger requires matching commit, provider/model, settings, prompt/question hashes, and
+vector/graph corpus metadata before combining batches. Unexecuted cases are not scored as
+retrieval failures. This infrastructure does not initialize a RAGAS judge.
 
 CI runs compile checks, pytest, and the offline smoke evaluation; it does not call live
 LLM judges or establish live Neo4j availability.
