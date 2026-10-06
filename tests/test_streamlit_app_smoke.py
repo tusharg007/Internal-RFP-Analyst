@@ -80,6 +80,6 @@ def test_failed_ingestion_does_not_retry_on_next_rerun():
         at.run(timeout=10)
 
     assert ingest_documents.call_count == 1
-    assert at.session_state.filtered_state["ingestion_in_progress"] is False
-    assert "Document ingestion failed" in at.session_state.filtered_state["last_ingestion_error"]
-    assert "boom" not in at.session_state.filtered_state["last_ingestion_error"]
+    assert at.session_state["ingestion_in_progress"] is False
+    assert "Document ingestion failed" in at.session_state["last_ingestion_error"]
+    assert "boom" not in at.session_state["last_ingestion_error"]
