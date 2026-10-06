@@ -111,6 +111,22 @@ To extend the real KB evaluation:
 
 Keep the expected sources tied to files that actually exist in the generated sample corpus or evaluation upload fixture.
 
+## Optional semantic evaluation
+
+Default real-KB retrieval-only evaluation explicitly disables live router/grader/
+rewriter and web calls and forces vector retrieval. Optional LLM-answer mode
+measures one graph execution and checks that run's evidence. No golden questions
+changed; compare timings only within the same recipe.
+
+CI also runs lint, optional RAGAS contracts without live judges, and disposable
+Neo4j tests. The graph job validates templates/transactions, not deployment RBAC.
+See the [production-readiness audit](PRODUCTION_READINESS_AUDIT.md).
+
+RAGAS evaluates single real pipeline executions against the exact evidence supplied
+to generation. It is separate from the existing fast/offline and real-KB harnesses.
+See [RAGAS evaluation](RAGAS_EVALUATION.md) for configurable judges, three-mode
+comparison, reference applicability, private artifacts and measured-baseline gates.
+
 ## How to Interpret Failures
 
 - `py_compile` or `compileall` failures usually indicate syntax or import breakage

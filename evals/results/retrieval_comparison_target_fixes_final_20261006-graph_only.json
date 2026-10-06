@@ -1,0 +1,2247 @@
+{
+  "schema_version": "1.0",
+  "timestamp": "2026-10-05T20:57:22.885672+00:00",
+  "retrieval_mode": "graph_only",
+  "question_set_hash": "ba097a4fed2d707445f0362eb8a26220e41ac1cf571edfb3fde1aee302b56752",
+  "corpus_hash": "641e9d4dad22e33140475ac40b0245dde1edb3ed6e2acc0c5fa8e75919d9d39f",
+  "case_ids": [
+    "semantic_modernization",
+    "semantic_healthcare_security",
+    "factual_banking_duration",
+    "factual_insurance_team",
+    "relationship_rpa",
+    "relationship_regulatory",
+    "multihop_shared_retail_pharma",
+    "multihop_shared_banking_healthcare",
+    "comparison_delivery_budget",
+    "comparison_outcome_modality",
+    "matching_uploaded_controls",
+    "matching_clinical_requirements",
+    "unsupported_private_contact",
+    "unsupported_certification",
+    "ambiguous_missing_referent",
+    "ambiguous_missing_action"
+  ],
+  "judge": {
+    "provider": null,
+    "model": null,
+    "status": "not_run"
+  },
+  "generation": {
+    "class": "ChatGroq",
+    "model": "openai/gpt-oss-120b",
+    "temperature": 0.3,
+    "control_temperature": 0.0,
+    "retrieval_k": 6,
+    "min_relevance_score": 0.5,
+    "max_query_retries": 1,
+    "max_prompt_tokens": 6500,
+    "max_context_chars_per_chunk": 1000,
+    "embedding_model": "BAAI/bge-small-en-v1.5"
+  },
+  "versions": {
+    "git_revision": "a729b48f895f976bb20770187cf37567ad415c8a",
+    "packages": {
+      "ragas": "0.4.3",
+      "instructor": "1.17.0",
+      "langchain-core": "1.6.1",
+      "langchain-community": "0.3.31",
+      "langgraph": "1.2.11",
+      "fastembed": "0.8.0",
+      "chromadb": "1.5.9",
+      "neo4j": "6.3.1",
+      "groq": "0.37.1",
+      "google-genai": "2.21.0"
+    },
+    "source_tree_hash": "2d1e7850865f621900d44db8c020195fdb932d19bd5901efbce5c8d8a9bea0a8"
+  },
+  "comparison_policy": {
+    "web_search": "disabled",
+    "strict_graph_only": true,
+    "hybrid_fallback": "recorded_as_mode_failure"
+  },
+  "baseline_status": "uncalibrated",
+  "cases": [
+    {
+      "id": "semantic_modernization",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "Summarize the modernization priorities identified by the banking digital audit.",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 3.928148,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "Summarize the modernization priorities identified by the banking digital audit.",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope.",
+        "reference": "The banking audit assessed digital maturity and data governance, benchmarked peers, and recommended a prioritized modernization roadmap with ROI projections."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": false,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "graph_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "search",
+        "graph_version": "",
+        "graph_fallback_reason": "unsupported_plan",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": [
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsupported_plan"
+          },
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsupported_plan"
+          }
+        ]
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "semantic_single_hop",
+      "expected_optimal_mode": "vector_only",
+      "execution_order": [
+        "vector_only",
+        "graph_only",
+        "hybrid"
+      ],
+      "benchmark": {
+        "retrieval_success": false,
+        "retrieved_evidence_recall": 0.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": null,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "vector_only",
+        "requested_backend_valid": false,
+        "backend_reason": "unsupported_plan",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    },
+    {
+      "id": "semantic_healthcare_security",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "What does the healthcare migration proposal say about protecting patient data during migration?",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 1.382778,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "What does the healthcare migration proposal say about protecting patient data during migration?",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope.",
+        "reference": "The healthcare proposal calls for zero data loss and HIPAA-compliant encryption at rest and in transit. These are proposed controls, not evidence of completed certification."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": false,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "graph_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "search",
+        "graph_version": "",
+        "graph_fallback_reason": "unsupported_plan",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": [
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsupported_plan"
+          },
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsupported_plan"
+          }
+        ]
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "semantic_single_hop",
+      "expected_optimal_mode": "vector_only",
+      "execution_order": [
+        "graph_only",
+        "hybrid",
+        "vector_only"
+      ],
+      "benchmark": {
+        "retrieval_success": false,
+        "retrieved_evidence_recall": 0.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": null,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "vector_only",
+        "requested_backend_valid": false,
+        "backend_reason": "unsupported_plan",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    },
+    {
+      "id": "factual_banking_duration",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "What is the total timeline for Banking Sector Digital Audit 2024?",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 55.70503,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "What is the total timeline for Banking Sector Digital Audit 2024?",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope.",
+        "reference": "The banking digital audit has a total duration of 16 weeks."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": false,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "graph_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "search",
+        "graph_version": "",
+        "graph_fallback_reason": "unsynchronized_snapshot",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": [
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unavailable"
+          },
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsynchronized_snapshot"
+          }
+        ]
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "exact_factual_document",
+      "expected_optimal_mode": "graph_only",
+      "execution_order": [
+        "hybrid",
+        "vector_only",
+        "graph_only"
+      ],
+      "benchmark": {
+        "retrieval_success": false,
+        "retrieved_evidence_recall": 0.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": 0.0,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "graph_only",
+        "requested_backend_valid": false,
+        "backend_reason": "unsynchronized_snapshot",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    },
+    {
+      "id": "factual_insurance_team",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "How many professionals are on the Insurance Claims Processing Automation team?",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 1.458604,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "How many professionals are on the Insurance Claims Processing Automation team?",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope.",
+        "reference": "The insurance automation team consists of 9 professionals."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": false,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "graph_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "search",
+        "graph_version": "",
+        "graph_fallback_reason": "unsupported_plan",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": [
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsupported_plan"
+          },
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsupported_plan"
+          }
+        ]
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "exact_factual_document",
+      "expected_optimal_mode": "vector_only",
+      "execution_order": [
+        "vector_only",
+        "graph_only",
+        "hybrid"
+      ],
+      "benchmark": {
+        "retrieval_success": false,
+        "retrieved_evidence_recall": 0.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": 0.0,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "vector_only",
+        "requested_backend_valid": false,
+        "backend_reason": "unsupported_plan",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    },
+    {
+      "id": "relationship_rpa",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "Which projects use UiPath for robotic process automation?",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 3.10702,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "Which projects use UiPath for robotic process automation?",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope.",
+        "reference": "Insurance Claims Processing Automation lists UiPath Enterprise with Orchestrator as its RPA platform."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": false,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "graph_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "search",
+        "graph_version": "",
+        "graph_fallback_reason": "unsynchronized_snapshot",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": [
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsynchronized_snapshot"
+          },
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsynchronized_snapshot"
+          }
+        ]
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "relationship",
+      "expected_optimal_mode": "graph_only",
+      "execution_order": [
+        "graph_only",
+        "hybrid",
+        "vector_only"
+      ],
+      "benchmark": {
+        "retrieval_success": false,
+        "retrieved_evidence_recall": 0.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": null,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "graph_only",
+        "requested_backend_valid": false,
+        "backend_reason": "unsynchronized_snapshot",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    },
+    {
+      "id": "relationship_regulatory",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "Which pharmaceutical projects mention GDPR, and what regulatory framework is listed alongside it?",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 3.079958,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "Which pharmaceutical projects mention GDPR, and what regulatory framework is listed alongside it?",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope.",
+        "reference": "Pharma Clinical Trial Data Platform lists GDPR alongside FDA 21 CFR Part 11 and ICH E6(R2) GCP."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": false,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "graph_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "search",
+        "graph_version": "",
+        "graph_fallback_reason": "unsynchronized_snapshot",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": [
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsynchronized_snapshot"
+          },
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsynchronized_snapshot"
+          }
+        ]
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "relationship",
+      "expected_optimal_mode": "hybrid",
+      "execution_order": [
+        "hybrid",
+        "vector_only",
+        "graph_only"
+      ],
+      "benchmark": {
+        "retrieval_success": false,
+        "retrieved_evidence_recall": 0.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": null,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "hybrid",
+        "requested_backend_valid": false,
+        "backend_reason": "unsynchronized_snapshot",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    },
+    {
+      "id": "multihop_shared_retail_pharma",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "Which technologies are shared by Retail Supply Chain Analytics Platform and Pharma Clinical Trial Data Platform?",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 3.086699,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "Which technologies are shared by Retail Supply Chain Analytics Platform and Pharma Clinical Trial Data Platform?",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope.",
+        "reference": "Both projects mention Apache Airflow, Python, and AWS infrastructure including S3 and Lambda. Their warehouses differ (Snowflake versus Amazon Redshift); these are not shared technologies."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": false,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "graph_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "search",
+        "graph_version": "",
+        "graph_fallback_reason": "unsynchronized_snapshot",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": [
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsynchronized_snapshot"
+          },
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsynchronized_snapshot"
+          }
+        ]
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "multi_hop",
+      "expected_optimal_mode": "hybrid",
+      "execution_order": [
+        "vector_only",
+        "graph_only",
+        "hybrid"
+      ],
+      "benchmark": {
+        "retrieval_success": false,
+        "retrieved_evidence_recall": 0.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": null,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "hybrid",
+        "requested_backend_valid": false,
+        "backend_reason": "unsynchronized_snapshot",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    },
+    {
+      "id": "multihop_shared_banking_healthcare",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "Which technologies are shared by Banking Sector Digital Audit 2024 and Healthcare Data Migration to Azure Cloud?",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 3.058806,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "Which technologies are shared by Banking Sector Digital Audit 2024 and Healthcare Data Migration to Azure Cloud?",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope.",
+        "reference": "Both projects mention Microsoft Azure, Azure Data Factory, Azure SQL, and Power BI. The banking stack specifies DirectQuery while the healthcare stack specifies Power BI Premium; shared families do not imply identical editions."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": false,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "graph_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "search",
+        "graph_version": "",
+        "graph_fallback_reason": "unsynchronized_snapshot",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": [
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsynchronized_snapshot"
+          },
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsynchronized_snapshot"
+          }
+        ]
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "multi_hop",
+      "expected_optimal_mode": "hybrid",
+      "execution_order": [
+        "graph_only",
+        "hybrid",
+        "vector_only"
+      ],
+      "benchmark": {
+        "retrieval_success": false,
+        "retrieved_evidence_recall": 0.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": null,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "hybrid",
+        "requested_backend_valid": false,
+        "backend_reason": "unsynchronized_snapshot",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    },
+    {
+      "id": "comparison_delivery_budget",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "Compare the timelines and budget ranges of the healthcare migration and insurance claims automation projects.",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 2.604635,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "Compare the timelines and budget ranges of the healthcare migration and insurance claims automation projects.",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope.",
+        "reference": "Healthcare migration proposes 18 weeks and $1,200,000-$1,500,000 USD. Insurance claims automation specifies 16 weeks and $650,000-$800,000 USD. These are estimated budgets, not actual expenditure."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": false,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": false,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "graph_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "compare",
+        "graph_version": "",
+        "graph_fallback_reason": "unsynchronized_snapshot",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": [
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsynchronized_snapshot"
+          },
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsynchronized_snapshot"
+          }
+        ]
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "cross_document_comparison",
+      "expected_optimal_mode": "hybrid",
+      "execution_order": [
+        "hybrid",
+        "vector_only",
+        "graph_only"
+      ],
+      "benchmark": {
+        "retrieval_success": false,
+        "retrieved_evidence_recall": 0.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": false,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": 0.0,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "hybrid",
+        "requested_backend_valid": false,
+        "backend_reason": "unsynchronized_snapshot",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    },
+    {
+      "id": "comparison_outcome_modality",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "Compare the retail supply-chain stockout reduction with the manufacturing predictive-maintenance downtime reduction, distinguishing achieved from projected results.",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 1.088653,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "Compare the retail supply-chain stockout reduction with the manufacturing predictive-maintenance downtime reduction, distinguishing achieved from projected results.",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope.",
+        "reference": "The retail case study achieved a 34% stockout reduction. The manufacturing proposal projects a 45% reduction in unplanned equipment downtime; it is not a reported completed outcome."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": false,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": false,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "graph_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "compare",
+        "graph_version": "",
+        "graph_fallback_reason": "unsupported_plan",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": [
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsupported_plan"
+          },
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsupported_plan"
+          }
+        ]
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "cross_document_comparison",
+      "expected_optimal_mode": "vector_only",
+      "execution_order": [
+        "vector_only",
+        "graph_only",
+        "hybrid"
+      ],
+      "benchmark": {
+        "retrieval_success": false,
+        "retrieved_evidence_recall": 0.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": false,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": 0.0,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "vector_only",
+        "requested_backend_valid": false,
+        "backend_reason": "unsupported_plan",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    },
+    {
+      "id": "matching_uploaded_controls",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "Find relevant case studies for the uploaded RFP requiring Azure migration, executive dashboards, and HIPAA controls. Distinguish proposals from delivered evidence.",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 2.54798,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "Find relevant case studies for the uploaded RFP requiring Azure migration, executive dashboards, and HIPAA controls. Distinguish proposals from delivered evidence.",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope.",
+        "reference": "The uploaded RFP asks for Azure migration, executive dashboards, HIPAA controls, and phased delivery. Healthcare Data Migration to Azure Cloud is a relevant proposal with Azure, Power BI, and HIPAA controls, not a delivered case study proving all requirements were achieved."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": false,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": false,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "graph_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "rfp_analysis",
+        "graph_version": "",
+        "graph_fallback_reason": "unsynchronized_snapshot",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": [
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsynchronized_snapshot"
+          },
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsynchronized_snapshot"
+          }
+        ]
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "requirement_matching",
+      "expected_optimal_mode": "hybrid",
+      "execution_order": [
+        "graph_only",
+        "hybrid",
+        "vector_only"
+      ],
+      "benchmark": {
+        "retrieval_success": false,
+        "retrieved_evidence_recall": 0.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": false,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": null,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "hybrid",
+        "requested_backend_valid": false,
+        "backend_reason": "unsynchronized_snapshot",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    },
+    {
+      "id": "matching_clinical_requirements",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "Find case studies for an RFP requiring FDA 21 CFR Part 11, automated regulatory submissions, and achieved clinical data reconciliation improvements.",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 2.601425,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "Find case studies for an RFP requiring FDA 21 CFR Part 11, automated regulatory submissions, and achieved clinical data reconciliation improvements.",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope.",
+        "reference": "Pharma Clinical Trial Data Platform is a delivered case study reporting FDA 21 CFR Part 11 compliance certification, 85% automated routine regulatory submissions, and a 75% reduction in clinical data reconciliation time."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": false,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": false,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "graph_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "rfp_analysis",
+        "graph_version": "",
+        "graph_fallback_reason": "unsynchronized_snapshot",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": [
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsynchronized_snapshot"
+          },
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsynchronized_snapshot"
+          }
+        ]
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "requirement_matching",
+      "expected_optimal_mode": "hybrid",
+      "execution_order": [
+        "hybrid",
+        "vector_only",
+        "graph_only"
+      ],
+      "benchmark": {
+        "retrieval_success": false,
+        "retrieved_evidence_recall": 0.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": false,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": 0.0,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "hybrid",
+        "requested_backend_valid": false,
+        "backend_reason": "unsynchronized_snapshot",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    },
+    {
+      "id": "unsupported_private_contact",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "What is the private mobile number of the banking digital audit client's CEO?",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 1.06338,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "What is the private mobile number of the banking digital audit client's CEO?",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope.",
+        "reference": null
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": false,
+        "no_answer_behavior": true,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "graph_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "search",
+        "graph_version": "",
+        "graph_fallback_reason": "unsupported_plan",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": [
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsupported_plan"
+          },
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsupported_plan"
+          }
+        ]
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "unsupported_no_answer",
+      "expected_optimal_mode": "vector_only",
+      "execution_order": [
+        "vector_only",
+        "graph_only",
+        "hybrid"
+      ],
+      "benchmark": {
+        "retrieval_success": null,
+        "retrieved_evidence_recall": null,
+        "generation_evidence_recall": null,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": true,
+        "exact_answer_probe_coverage": null,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "vector_only",
+        "requested_backend_valid": false,
+        "backend_reason": "unsupported_plan",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    },
+    {
+      "id": "unsupported_certification",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "What is the PCI DSS certification ID of the quantum-payments aerospace project?",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 1.068899,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "What is the PCI DSS certification ID of the quantum-payments aerospace project?",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope.",
+        "reference": null
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": false,
+        "no_answer_behavior": true,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "graph_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "search",
+        "graph_version": "",
+        "graph_fallback_reason": "unsupported_plan",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "graph_retrieval",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": [
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsupported_plan"
+          },
+          {
+            "mode": "graph_only",
+            "fallback_reason": "unsupported_plan"
+          }
+        ]
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "unsupported_no_answer",
+      "expected_optimal_mode": "vector_only",
+      "execution_order": [
+        "graph_only",
+        "hybrid",
+        "vector_only"
+      ],
+      "benchmark": {
+        "retrieval_success": null,
+        "retrieved_evidence_recall": null,
+        "generation_evidence_recall": null,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": true,
+        "exact_answer_probe_coverage": null,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "vector_only",
+        "requested_backend_valid": false,
+        "backend_reason": "unsupported_plan",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    },
+    {
+      "id": "ambiguous_missing_referent",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "What about that?",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 0.110246,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "What about that?",
+        "retrieved_contexts": [],
+        "response": "Which previously discussed document or project should I use for this follow-up?",
+        "reference": null
+      },
+      "generation_kind": "direct",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": null,
+        "no_answer_behavior": true,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "vector_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "ambiguous",
+        "graph_version": "",
+        "graph_fallback_reason": "",
+        "graph_paths": [],
+        "retry_count": 0,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": []
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "ambiguous",
+      "expected_optimal_mode": "vector_only",
+      "execution_order": [
+        "hybrid",
+        "vector_only",
+        "graph_only"
+      ],
+      "benchmark": {
+        "retrieval_success": null,
+        "retrieved_evidence_recall": null,
+        "generation_evidence_recall": null,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": true,
+        "exact_answer_probe_coverage": null,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "vector_only",
+        "requested_backend_valid": true,
+        "backend_reason": "bypassed_for_clarification",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    },
+    {
+      "id": "ambiguous_missing_action",
+      "status": "completed",
+      "requested_retrieval_mode": "graph_only",
+      "question": "Do it.",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 0.110675,
+      "retrieval_evidence": [],
+      "sample": {
+        "user_input": "Do it.",
+        "retrieved_contexts": [],
+        "response": "Which previously discussed document or project should I use for this follow-up?",
+        "reference": null
+      },
+      "generation_kind": "direct",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": null,
+        "no_answer_behavior": true,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "graph_only",
+        "retrieval_mode": "vector_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "ambiguous",
+        "graph_version": "",
+        "graph_fallback_reason": "",
+        "graph_paths": [],
+        "retry_count": 0,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "final_response"
+        ],
+        "retrieved_sources": [],
+        "retrieved_origins": [],
+        "retrieval_events": []
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "ambiguous",
+      "expected_optimal_mode": "vector_only",
+      "execution_order": [
+        "vector_only",
+        "graph_only",
+        "hybrid"
+      ],
+      "benchmark": {
+        "retrieval_success": null,
+        "retrieved_evidence_recall": null,
+        "generation_evidence_recall": null,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": true,
+        "exact_answer_probe_coverage": null,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "vector_only",
+        "requested_backend_valid": true,
+        "backend_reason": "bypassed_for_clarification",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "graph_only"
+      }
+    }
+  ],
+  "failures": [
+    {
+      "case_id": "semantic_modernization",
+      "stage": "deterministic",
+      "check": "retrieval_mode_correctness"
+    },
+    {
+      "case_id": "semantic_modernization",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    },
+    {
+      "case_id": "semantic_healthcare_security",
+      "stage": "deterministic",
+      "check": "retrieval_mode_correctness"
+    },
+    {
+      "case_id": "semantic_healthcare_security",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    },
+    {
+      "case_id": "factual_banking_duration",
+      "stage": "deterministic",
+      "check": "retrieval_mode_correctness"
+    },
+    {
+      "case_id": "factual_banking_duration",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    },
+    {
+      "case_id": "factual_insurance_team",
+      "stage": "deterministic",
+      "check": "retrieval_mode_correctness"
+    },
+    {
+      "case_id": "factual_insurance_team",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    },
+    {
+      "case_id": "relationship_rpa",
+      "stage": "deterministic",
+      "check": "retrieval_mode_correctness"
+    },
+    {
+      "case_id": "relationship_rpa",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    },
+    {
+      "case_id": "relationship_regulatory",
+      "stage": "deterministic",
+      "check": "retrieval_mode_correctness"
+    },
+    {
+      "case_id": "relationship_regulatory",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    },
+    {
+      "case_id": "multihop_shared_retail_pharma",
+      "stage": "deterministic",
+      "check": "retrieval_mode_correctness"
+    },
+    {
+      "case_id": "multihop_shared_retail_pharma",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    },
+    {
+      "case_id": "multihop_shared_banking_healthcare",
+      "stage": "deterministic",
+      "check": "retrieval_mode_correctness"
+    },
+    {
+      "case_id": "multihop_shared_banking_healthcare",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    },
+    {
+      "case_id": "comparison_delivery_budget",
+      "stage": "deterministic",
+      "check": "tool_correctness"
+    },
+    {
+      "case_id": "comparison_delivery_budget",
+      "stage": "deterministic",
+      "check": "retrieval_mode_correctness"
+    },
+    {
+      "case_id": "comparison_delivery_budget",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    },
+    {
+      "case_id": "comparison_outcome_modality",
+      "stage": "deterministic",
+      "check": "tool_correctness"
+    },
+    {
+      "case_id": "comparison_outcome_modality",
+      "stage": "deterministic",
+      "check": "retrieval_mode_correctness"
+    },
+    {
+      "case_id": "comparison_outcome_modality",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    },
+    {
+      "case_id": "matching_uploaded_controls",
+      "stage": "deterministic",
+      "check": "tool_correctness"
+    },
+    {
+      "case_id": "matching_uploaded_controls",
+      "stage": "deterministic",
+      "check": "retrieval_mode_correctness"
+    },
+    {
+      "case_id": "matching_uploaded_controls",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    },
+    {
+      "case_id": "matching_clinical_requirements",
+      "stage": "deterministic",
+      "check": "tool_correctness"
+    },
+    {
+      "case_id": "matching_clinical_requirements",
+      "stage": "deterministic",
+      "check": "retrieval_mode_correctness"
+    },
+    {
+      "case_id": "matching_clinical_requirements",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    },
+    {
+      "case_id": "unsupported_private_contact",
+      "stage": "deterministic",
+      "check": "retrieval_mode_correctness"
+    },
+    {
+      "case_id": "unsupported_certification",
+      "stage": "deterministic",
+      "check": "retrieval_mode_correctness"
+    }
+  ],
+  "aggregate": {
+    "metrics": {
+      "faithfulness": {
+        "mean": null,
+        "scored": 0,
+        "total_cases": 16,
+        "errors": 0,
+        "not_applicable": 0,
+        "not_run": 16,
+        "variants": []
+      },
+      "answer_relevancy": {
+        "mean": null,
+        "scored": 0,
+        "total_cases": 16,
+        "errors": 0,
+        "not_applicable": 0,
+        "not_run": 16,
+        "variants": []
+      },
+      "context_precision": {
+        "mean": null,
+        "scored": 0,
+        "total_cases": 16,
+        "errors": 0,
+        "not_applicable": 0,
+        "not_run": 16,
+        "variants": []
+      },
+      "context_recall": {
+        "mean": null,
+        "scored": 0,
+        "total_cases": 16,
+        "errors": 0,
+        "not_applicable": 0,
+        "not_run": 16,
+        "variants": []
+      },
+      "answer_correctness": {
+        "mean": null,
+        "scored": 0,
+        "total_cases": 16,
+        "errors": 0,
+        "not_applicable": 0,
+        "not_run": 16,
+        "variants": []
+      }
+    },
+    "deterministic": {
+      "answer_present": {
+        "mean": 1.0,
+        "evaluated": 16,
+        "total_cases": 16
+      },
+      "citation_identity_coverage": {
+        "mean": null,
+        "evaluated": 0,
+        "total_cases": 16
+      },
+      "graph_path_provenance_correctness": {
+        "mean": null,
+        "evaluated": 0,
+        "total_cases": 16
+      },
+      "grounding_passed": {
+        "mean": null,
+        "evaluated": 0,
+        "total_cases": 16
+      },
+      "no_answer_behavior": {
+        "mean": 0.25,
+        "evaluated": 16,
+        "total_cases": 16
+      },
+      "origin_correctness": {
+        "mean": 1.0,
+        "evaluated": 16,
+        "total_cases": 16
+      },
+      "retrieval_mode_correctness": {
+        "mean": 0.0,
+        "evaluated": 14,
+        "total_cases": 16
+      },
+      "route_correctness": {
+        "mean": 1.0,
+        "evaluated": 16,
+        "total_cases": 16
+      },
+      "source_coverage": {
+        "mean": null,
+        "evaluated": 0,
+        "total_cases": 16
+      },
+      "tool_correctness": {
+        "mean": 0.75,
+        "evaluated": 16,
+        "total_cases": 16
+      }
+    },
+    "total_cases": 16,
+    "pipeline_failures": 0,
+    "pipeline_latency_seconds": 86.002936,
+    "judge_latency_seconds": 0
+  }
+}

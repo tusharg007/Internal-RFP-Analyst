@@ -1,0 +1,386 @@
+{
+  "schema_version": "1.0",
+  "frozen_at": "2026-10-05T01:25:18.360602+00:00",
+  "signature": {
+    "question_file_sha256": "7846cea3aa3eccc3b281d44dd1a3eecff51d65b08265f045ff1e34a896bc6689",
+    "question_set_hash": "ba097a4fed2d707445f0362eb8a26220e41ac1cf571edfb3fde1aee302b56752",
+    "legacy_golden_sha256": "13eb016110e872fa2ddf6f8e47a6c451b1fbb0969ecd570fc1125d3290f6ee2f",
+    "corpus_hash": "641e9d4dad22e33140475ac40b0245dde1edb3ed6e2acc0c5fa8e75919d9d39f",
+    "case_ids": [
+      "semantic_modernization",
+      "semantic_healthcare_security",
+      "factual_banking_duration",
+      "factual_insurance_team",
+      "relationship_rpa",
+      "relationship_regulatory",
+      "multihop_shared_retail_pharma",
+      "multihop_shared_banking_healthcare",
+      "comparison_delivery_budget",
+      "comparison_outcome_modality",
+      "matching_uploaded_controls",
+      "matching_clinical_requirements",
+      "unsupported_private_contact",
+      "unsupported_certification",
+      "ambiguous_missing_referent",
+      "ambiguous_missing_action"
+    ],
+    "protocol": {
+      "version": "1.0",
+      "web_search": "disabled_for_closed_corpus_ablation",
+      "mode_order": "case_index_rotated_vector_graph_hybrid",
+      "repetitions": 1,
+      "cache": "shared_embedding_client_no_answer_cache",
+      "latency": "wall_clock_pipeline_including_routing_grading_generation_repair_not_judge_or_pacing",
+      "winners": "deterministic_pareto_only_when_all_requested_backends_operate; semantic_winners_require_complete_paired_scores",
+      "optimal_mode": "pre_score_hypothesis_not_forced_mode_compliance",
+      "graph_unavailable": "inconclusive_not_vector_win",
+      "thresholds": "none_calibrated"
+    },
+    "source_checked_witnesses": {
+      "semantic_modernization": [
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 2,
+          "anchors": [
+            "transformation maturity",
+            "transformation roadmap with ROI projections"
+          ],
+          "anchor_chunk_ids": {
+            "transformation maturity": [
+              "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf"
+            ],
+            "transformation roadmap with ROI projections": [
+              "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc"
+            ]
+          }
+        }
+      ],
+      "semantic_healthcare_security": [
+        {
+          "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+          "page": 2,
+          "anchors": [
+            "zero data loss",
+            "encryption at rest and in transit"
+          ],
+          "anchor_chunk_ids": {
+            "zero data loss": [
+              "45ae430450a2ac1c5f7b4cd339e12fc833d717b3eb566fea8ad3806dbdc9f69c"
+            ],
+            "encryption at rest and in transit": [
+              "45ae430450a2ac1c5f7b4cd339e12fc833d717b3eb566fea8ad3806dbdc9f69c"
+            ]
+          }
+        }
+      ],
+      "factual_banking_duration": [
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 2,
+          "anchors": [
+            "Total Duration: 16 weeks"
+          ],
+          "anchor_chunk_ids": {
+            "Total Duration: 16 weeks": [
+              "6917833977c6fbbba6b8d624a6a5d4bd52be07de2c178980a5286749fbaa735b"
+            ]
+          }
+        }
+      ],
+      "factual_insurance_team": [
+        {
+          "source": "04_Insurance_Claims_Processing_Automation.pdf",
+          "page": 2,
+          "anchors": [
+            "Total Team Size: 9 professionals"
+          ],
+          "anchor_chunk_ids": {
+            "Total Team Size: 9 professionals": [
+              "782f61a562f3bfaade5d2b17c073f56083f6173741ef45128dbf3ace12ca20e0"
+            ]
+          }
+        }
+      ],
+      "relationship_rpa": [
+        {
+          "source": "04_Insurance_Claims_Processing_Automation.pdf",
+          "page": 2,
+          "anchors": [
+            "UiPath Enterprise with Orchestrator"
+          ],
+          "anchor_chunk_ids": {
+            "UiPath Enterprise with Orchestrator": [
+              "b4c3437f74c098b6b4bd91e4dda766d287a90316a636cfd7b3001b0213c78200"
+            ]
+          }
+        }
+      ],
+      "relationship_regulatory": [
+        {
+          "source": "07_Pharma_Clinical_Trial_Data_Platform.pdf",
+          "page": 2,
+          "anchors": [
+            "FDA 21 CFR Part 11, GDPR, ICH E6(R2) GCP"
+          ],
+          "anchor_chunk_ids": {
+            "FDA 21 CFR Part 11, GDPR, ICH E6(R2) GCP": [
+              "80790b61e07fb7dc3157e57ab760b01ca89e0cbff1e4800f6a2ea402988b5ec4"
+            ]
+          }
+        }
+      ],
+      "multihop_shared_retail_pharma": [
+        {
+          "source": "03_Retail_Supply_Chain_Analytics_Platform.pdf",
+          "page": 2,
+          "anchors": [
+            "Apache Airflow",
+            "Python",
+            "AWS (S3, EC2, Lambda)"
+          ],
+          "anchor_chunk_ids": {
+            "Apache Airflow": [
+              "30ac01cff957f57297d585d5b32a0eac95220de66d13688f8c421b208eec8037"
+            ],
+            "Python": [
+              "30ac01cff957f57297d585d5b32a0eac95220de66d13688f8c421b208eec8037"
+            ],
+            "AWS (S3, EC2, Lambda)": [
+              "30ac01cff957f57297d585d5b32a0eac95220de66d13688f8c421b208eec8037"
+            ]
+          }
+        },
+        {
+          "source": "07_Pharma_Clinical_Trial_Data_Platform.pdf",
+          "page": 2,
+          "anchors": [
+            "Apache Airflow",
+            "Python",
+            "AWS (S3, Glue, Lambda, Step Functions)"
+          ],
+          "anchor_chunk_ids": {
+            "Apache Airflow": [
+              "80790b61e07fb7dc3157e57ab760b01ca89e0cbff1e4800f6a2ea402988b5ec4"
+            ],
+            "Python": [
+              "80790b61e07fb7dc3157e57ab760b01ca89e0cbff1e4800f6a2ea402988b5ec4"
+            ],
+            "AWS (S3, Glue, Lambda, Step Functions)": [
+              "80790b61e07fb7dc3157e57ab760b01ca89e0cbff1e4800f6a2ea402988b5ec4"
+            ]
+          }
+        }
+      ],
+      "multihop_shared_banking_healthcare": [
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 2,
+          "anchors": [
+            "Azure Data Factory",
+            "Azure SQL Database",
+            "Power BI with DirectQuery"
+          ],
+          "anchor_chunk_ids": {
+            "Azure Data Factory": [
+              "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc"
+            ],
+            "Azure SQL Database": [
+              "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc"
+            ],
+            "Power BI with DirectQuery": [
+              "e7739133960793ba808d8e9809df6313a2f3583662c66f575773d83cc4fa9ef1"
+            ]
+          }
+        },
+        {
+          "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+          "page": 2,
+          "anchors": [
+            "Azure Data Factory",
+            "Azure SQL",
+            "Power BI Premium"
+          ],
+          "anchor_chunk_ids": {
+            "Azure Data Factory": [
+              "c95a563cbe263c4e311a3679da9d9667db7fe49a473697c83e33691a1a64c4d3"
+            ],
+            "Azure SQL": [
+              "45ae430450a2ac1c5f7b4cd339e12fc833d717b3eb566fea8ad3806dbdc9f69c",
+              "c95a563cbe263c4e311a3679da9d9667db7fe49a473697c83e33691a1a64c4d3"
+            ],
+            "Power BI Premium": [
+              "c95a563cbe263c4e311a3679da9d9667db7fe49a473697c83e33691a1a64c4d3"
+            ]
+          }
+        }
+      ],
+      "comparison_delivery_budget": [
+        {
+          "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+          "page": 2,
+          "anchors": [
+            "Total Duration: 18 weeks"
+          ],
+          "anchor_chunk_ids": {
+            "Total Duration: 18 weeks": [
+              "d41bace8af896148fdd0e091435c17f2818b249ca3f68e1cafcf1cb322df89ef"
+            ]
+          }
+        },
+        {
+          "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+          "page": 3,
+          "anchors": [
+            "$1,200,000 - $1,500,000 USD"
+          ],
+          "anchor_chunk_ids": {
+            "$1,200,000 - $1,500,000 USD": [
+              "ee3def57b3436102814b960ec66974314b4b0733e7f9d05f16d2eb7214d6724f"
+            ]
+          }
+        },
+        {
+          "source": "04_Insurance_Claims_Processing_Automation.pdf",
+          "page": 2,
+          "anchors": [
+            "Total Duration: 16 weeks"
+          ],
+          "anchor_chunk_ids": {
+            "Total Duration: 16 weeks": [
+              "782f61a562f3bfaade5d2b17c073f56083f6173741ef45128dbf3ace12ca20e0"
+            ]
+          }
+        },
+        {
+          "source": "04_Insurance_Claims_Processing_Automation.pdf",
+          "page": 3,
+          "anchors": [
+            "$650,000 - $800,000 USD"
+          ],
+          "anchor_chunk_ids": {
+            "$650,000 - $800,000 USD": [
+              "29adae992687bb8ada7381cf99c4342eef94691b0a68f4a8f05b2ac256c424d4"
+            ]
+          }
+        }
+      ],
+      "comparison_outcome_modality": [
+        {
+          "source": "03_Retail_Supply_Chain_Analytics_Platform.pdf",
+          "page": 3,
+          "anchors": [
+            "Reduced stockout rates by 34%"
+          ],
+          "anchor_chunk_ids": {
+            "Reduced stockout rates by 34%": [
+              "4921a7ef821c911d41bf17da321df609bbd351d17003c43a00cdeb0c4861a04c"
+            ]
+          }
+        },
+        {
+          "source": "10_Manufacturing_IoT_Predictive_Maintenance_Platform.pdf",
+          "page": 3,
+          "anchors": [
+            "Projected 45% reduction in unplanned equipment downtime"
+          ],
+          "anchor_chunk_ids": {
+            "Projected 45% reduction in unplanned equipment downtime": [
+              "509a2dd2b2a5395db59181a5698605e577de3576ee485479c3a24a71cc295cc7"
+            ]
+          }
+        }
+      ],
+      "matching_uploaded_controls": [
+        {
+          "source": "eval_target_rfp.pdf",
+          "page": 1,
+          "anchors": [
+            "Azure migration",
+            "executive dashboards",
+            "HIPAA controls"
+          ],
+          "anchor_chunk_ids": {
+            "Azure migration": [
+              "3b1017b53f10e94cb3d2d3f3fb55459cac533ece0804cd205bc17767f5a90939"
+            ],
+            "executive dashboards": [
+              "3b1017b53f10e94cb3d2d3f3fb55459cac533ece0804cd205bc17767f5a90939"
+            ],
+            "HIPAA controls": [
+              "3b1017b53f10e94cb3d2d3f3fb55459cac533ece0804cd205bc17767f5a90939"
+            ]
+          }
+        },
+        {
+          "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+          "page": 1,
+          "anchors": [
+            "Document Type: Proposal"
+          ],
+          "anchor_chunk_ids": {
+            "Document Type: Proposal": [
+              "38055e6cf4ee1d1aa9a63b4b17165294ef784d45087b18c97aed2b6ebc909f9e"
+            ]
+          }
+        },
+        {
+          "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+          "page": 2,
+          "anchors": [
+            "Power BI",
+            "HIPAA"
+          ],
+          "anchor_chunk_ids": {
+            "Power BI": [
+              "c95a563cbe263c4e311a3679da9d9667db7fe49a473697c83e33691a1a64c4d3"
+            ],
+            "HIPAA": [
+              "45ae430450a2ac1c5f7b4cd339e12fc833d717b3eb566fea8ad3806dbdc9f69c",
+              "70b1f677a6c1b0bb4917f1f9ac5e349fae8a95bc2fd8e36a9bd4e03bed8ef82e",
+              "c95a563cbe263c4e311a3679da9d9667db7fe49a473697c83e33691a1a64c4d3"
+            ]
+          }
+        }
+      ],
+      "matching_clinical_requirements": [
+        {
+          "source": "07_Pharma_Clinical_Trial_Data_Platform.pdf",
+          "page": 1,
+          "anchors": [
+            "Document Type: Case Study"
+          ],
+          "anchor_chunk_ids": {
+            "Document Type: Case Study": [
+              "05bca3ed793662c64376563aeca59e4719880cd5bd14cbac624783e12a336ccc"
+            ]
+          }
+        },
+        {
+          "source": "07_Pharma_Clinical_Trial_Data_Platform.pdf",
+          "page": 3,
+          "anchors": [
+            "clinical data reconciliation time by 75%",
+            "85% of routine regulatory submissions",
+            "compliance certification"
+          ],
+          "anchor_chunk_ids": {
+            "clinical data reconciliation time by 75%": [
+              "ce102b971f360d3fd07e75f516d602e92d37421f9f7662d51ae0eba053dd42af"
+            ],
+            "85% of routine regulatory submissions": [
+              "ce102b971f360d3fd07e75f516d602e92d37421f9f7662d51ae0eba053dd42af"
+            ],
+            "compliance certification": [
+              "ce102b971f360d3fd07e75f516d602e92d37421f9f7662d51ae0eba053dd42af"
+            ]
+          }
+        }
+      ],
+      "unsupported_private_contact": [],
+      "unsupported_certification": [],
+      "ambiguous_missing_referent": [],
+      "ambiguous_missing_action": []
+    }
+  },
+  "signature_hash": "dbab6df4cae79b001bb2d54fae9adad7109216c601fa404a5f16ecb32096173b"
+}

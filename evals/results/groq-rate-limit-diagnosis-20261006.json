@@ -1,0 +1,98 @@
+{
+  "source_directory": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\evals\\results\\matched-groq-20261006",
+  "failure": {
+    "case_id": "semantic_modernization",
+    "requested_retrieval_mode": "graph_only",
+    "stage": "grade_web_evidence",
+    "provider": "groq",
+    "model": "openai/gpt-oss-120b",
+    "error_type": "RateLimitError",
+    "http_status": 429,
+    "category": "rate_limit",
+    "retrieval_quality_failure": false
+  },
+  "associated_provider_errors": [
+    {
+      "phase": "benchmark",
+      "stage": "grade_web_evidence",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "error",
+      "http_status": 429,
+      "provider_status": "provider_error",
+      "error_type": "RateLimitError",
+      "latency_seconds": 0.131779
+    }
+  ],
+  "http_status": 429,
+  "groq_sdk_error_type": "RateLimitError",
+  "response_body": null,
+  "headers": {
+    "retry-after": null,
+    "x-ratelimit-limit-requests": null,
+    "x-ratelimit-remaining-requests": null,
+    "x-ratelimit-reset-requests": null,
+    "x-ratelimit-limit-tokens": null,
+    "x-ratelimit-remaining-tokens": null,
+    "x-ratelimit-reset-tokens": null
+  },
+  "dimension": "unknown",
+  "missing_data_reason": "Historical recorder omitted SDK response body and HTTP headers.",
+  "header_windows": {
+    "request_headers": "RPD",
+    "token_headers": "TPM"
+  },
+  "provider_documentation": "https://console.groq.com/docs/rate-limits",
+  "historical_manifest_parity": true,
+  "historical_corpus_integrity": {
+    "before": {
+      "internal_rfp": {
+        "corpus_id": "internal-rfp",
+        "nodes": 365,
+        "relationships": 569,
+        "node_sha256": "e610c788846bc9aa625c133104cbf7948f34bbe14cb6499d1313a27fd3df781c",
+        "relationship_sha256": "eb39381b92932696a5eea8bbcffba022d9974d8dd503b3043c7870e16730d6d5",
+        "active_versions": [
+          "eddc57727f1f70adb54c3d4d98d6896e4245daaa6cc896f8bfbafc63b88fdfdc"
+        ]
+      },
+      "evaluation_corpus": {
+        "corpus_id": "rfp-eval-frozen-641e9d4dad22",
+        "nodes": 318,
+        "relationships": 529,
+        "node_sha256": "c838b16fde87e0ac093bf783045ddbd9a17a6195aa76ea797841ead20ea8f795",
+        "relationship_sha256": "a7e808eb42f6a46d39dd75f23285cac60d8d870ff9f5c8c246873de4d8d0b4f5"
+      }
+    },
+    "after": {
+      "internal_rfp": {
+        "corpus_id": "internal-rfp",
+        "nodes": 365,
+        "relationships": 569,
+        "node_sha256": "e610c788846bc9aa625c133104cbf7948f34bbe14cb6499d1313a27fd3df781c",
+        "relationship_sha256": "eb39381b92932696a5eea8bbcffba022d9974d8dd503b3043c7870e16730d6d5",
+        "active_versions": [
+          "eddc57727f1f70adb54c3d4d98d6896e4245daaa6cc896f8bfbafc63b88fdfdc"
+        ]
+      },
+      "evaluation_corpus": {
+        "corpus_id": "rfp-eval-frozen-641e9d4dad22",
+        "nodes": 318,
+        "relationships": 529,
+        "node_sha256": "c838b16fde87e0ac093bf783045ddbd9a17a6195aa76ea797841ead20ea8f795",
+        "relationship_sha256": "a7e808eb42f6a46d39dd75f23285cac60d8d870ff9f5c8c246873de4d8d0b4f5"
+      }
+    },
+    "internal_rfp_unchanged": true,
+    "evaluation_corpus_unchanged": true,
+    "frozen_chroma_unchanged": true
+  },
+  "new_provider_calls": 0,
+  "new_benchmark_started": false,
+  "pacing_added": false,
+  "wait_seconds": 0,
+  "two_case_smoke": "not_run: exact quota dimension not established",
+  "retrieval_quality_failure": false,
+  "historical_reports_unchanged": true
+}

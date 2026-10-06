@@ -3,9 +3,6 @@ Mock Internal Document Generator
 Generates realistic fintech consulting documents as PDFs.
 """
 
-import os
-from pathlib import Path
-
 from fpdf import FPDF
 
 from config import SAMPLE_DOCS_DIR

@@ -69,6 +69,65 @@ def _get_int_setting(name: str, default: int) -> int:
         return default
 
 
+def _get_bool_setting(name: str, default: bool = False) -> bool:
+    raw_value = _resolve_key(name).lower()
+    if raw_value in {"1", "true", "yes", "on"}:
+        return True
+    if raw_value in {"0", "false", "no", "off"}:
+        return False
+    return default
+
+
+def _get_float_setting(name: str, default: float) -> float:
+    try:
+        return float(_resolve_key(name) or default)
+    except ValueError:
+        return default
+
+
+def get_neo4j_settings(role: str = "reader") -> dict:
+    """Resolve optional graph settings without constructing a connection.
+
+    Writer/admin credentials are only resolved when explicitly requested by a
+    worker/migration caller. Neither role falls back to runtime reader secrets.
+    """
+    credential_prefixes = {
+        "reader": "NEO4J",
+        "writer": "NEO4J_INGEST",
+        "admin": "NEO4J_ADMIN",
+    }
+    if role not in credential_prefixes:
+        raise ValueError("Unsupported graph access role")
+    enabled = _get_bool_setting("NEO4J_ENABLED")
+    prefix = credential_prefixes[role]
+    return {
+        "enabled": enabled,
+        "uri": _resolve_key("NEO4J_URI") if enabled else "",
+        "username": _resolve_key(f"{prefix}_USERNAME") if enabled else "",
+        "password": _resolve_key(f"{prefix}_PASSWORD") if enabled else "",
+        "database": _resolve_key("NEO4J_DATABASE") or "neo4j",
+        "role": role,
+        "connection_timeout_seconds": _get_float_setting("NEO4J_CONNECTION_TIMEOUT_SECONDS", 1.0),
+        "acquisition_timeout_seconds": _get_float_setting("NEO4J_ACQUISITION_TIMEOUT_SECONDS", 2.0),
+        "transaction_timeout_seconds": _get_float_setting("NEO4J_TRANSACTION_TIMEOUT_SECONDS", 2.0),
+        "max_connection_pool_size": _get_int_setting("NEO4J_MAX_CONNECTION_POOL_SIZE", 10),
+        "max_batch_size": _get_int_setting("NEO4J_MAX_BATCH_SIZE", 500),
+    }
+
+
+# Persistence/ingestion only: this flag does not enable GraphRAG or change KB retrieval.
+NEO4J_ENABLED = _get_bool_setting("NEO4J_ENABLED")
+
+
+def get_retrieval_settings() -> dict:
+    """Opt-in retrieval policy; invalid settings safely retain vector-only behavior."""
+    policy = (_resolve_key("RFP_RETRIEVAL_MODE") or "vector_only").lower()
+    return {
+        "policy": policy if policy in {"auto", "vector_only", "graph_only", "hybrid"} else "vector_only",
+        "corpus_id": _resolve_key("RFP_GRAPH_CORPUS_ID") or "internal-rfp",
+    }
+
+
 def get_api_keys() -> tuple[str, str]:
     """Resolve API keys dynamically so Streamlit reruns pick up .env changes."""
     return _resolve_key("GROQ_API_KEY"), _resolve_key("GOOGLE_API_KEY")
@@ -76,8 +135,25 @@ def get_api_keys() -> tuple[str, str]:
 
 GROQ_API_KEY, GOOGLE_API_KEY = get_api_keys()
 
+
+def get_ragas_settings() -> dict:
+    """Optional judge settings; no connection or RAGAS import at startup."""
+    provider = _resolve_key("RAGAS_JUDGE_PROVIDER").lower()
+    provider_key = {"groq": "GROQ_API_KEY", "google": "GOOGLE_API_KEY"}.get(provider, "")
+    return {
+        "provider": provider,
+        "model": _resolve_key("RAGAS_JUDGE_MODEL"),
+        "api_key": _resolve_key("RAGAS_JUDGE_API_KEY") or (_resolve_key(provider_key) if provider_key else ""),
+        "timeout_seconds": _get_float_setting("RAGAS_METRIC_TIMEOUT_SECONDS", 90.0),
+        "max_retries": _get_int_setting("RAGAS_JUDGE_MAX_RETRIES", 1),
+        "max_cases": _get_int_setting("RAGAS_MAX_CASES", 30),
+        "embedding_model": _resolve_key("RAGAS_EMBEDDING_MODEL") or EMBEDDING_MODEL,
+        "max_tokens": _get_int_setting("RAGAS_JUDGE_MAX_TOKENS", 4096),
+        "min_call_interval_seconds": _get_float_setting("RAGAS_JUDGE_MIN_CALL_INTERVAL_SECONDS", 0.0),
+    }
+
 GROQ_MODEL = "openai/gpt-oss-120b"
-GEMINI_MODEL = "gemini-2.0-flash"
+GEMINI_MODEL = "gemini-3.8-flash"
 
 GENERATION_TEMPERATURE = 0.3
 # Backward-compatible alias for existing callers; new code should use the name above.

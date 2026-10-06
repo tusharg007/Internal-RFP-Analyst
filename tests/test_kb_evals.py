@@ -62,7 +62,14 @@ def test_real_kb_eval_can_use_llm_mode(monkeypatch, tmp_path):
     monkeypatch.setattr(
         run_kb_evals,
         "run_query",
-        lambda llm, question: {"answer": "Grounded answer with citations."},
+        lambda llm, question, **kwargs: {
+            "answer": "Grounded answer with citations.",
+            "payload": {
+                "retrieved_documents": [],
+                "traces": [],
+                "response_mode": "llm",
+            },
+        },
     )
 
     payload = run_kb_evals.run_real_kb_eval(tmp_path / "real_kb_results.json", use_llm=True)

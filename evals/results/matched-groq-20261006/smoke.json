@@ -1,0 +1,399 @@
+{
+  "case_id": "semantic_modernization",
+  "requested_retrieval_mode": "vector_only",
+  "generation": {
+    "class": "ChatGroq",
+    "model": "openai/gpt-oss-120b",
+    "temperature": 0.3,
+    "control_temperature": 0.0,
+    "retrieval_k": 6,
+    "min_relevance_score": 0.5,
+    "max_query_retries": 1,
+    "max_prompt_tokens": 6500,
+    "max_context_chars_per_chunk": 1000,
+    "embedding_model": "BAAI/bge-small-en-v1.5"
+  },
+  "status": "passed",
+  "judge": "not_run:capture_only",
+  "provider_failures": [],
+  "sample": {
+    "user_input": "Summarize the modernization priorities identified by the banking digital audit.",
+    "retrieved_contexts": [
+      "[Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2]\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nExecutive Summary\nThis project delivered a comprehensive digital audit for a leading multinational bank. The engagement\nfocused on evaluating the client's digital transformation maturity, identifying gaps in data governance, and\nrecommending a modernization roadmap. Our team of 12 consultants worked across three workstreams over\na 16-week engagement.\nObjectives",
+      "[Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2]\na 16-week engagement.\nObjectives\n1. Assess the current state of the client's core banking platform and digital channels.\n2. Evaluate data quality, lineage, and governance across 14 business units.\n3. Benchmark digital maturity against industry peers using proprietary frameworks.\n4. Deliver a prioritized transformation roadmap with ROI projections.\nTechnology Stack\n- Cloud Platform: Microsoft Azure (Azure Data Factory, Azure SQL Database)",
+      "[Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 3]\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBudget Range\nEstimated project cost: $850,000 - $1,100,000 USD\nKey Outcomes\n- Identified 47 critical data governance gaps across the organization.\n- Achieved 23% improvement in data quality scores within the first quarter.\n- Delivered a 3-year digital transformation roadmap adopted by the board.\n- Reduced audit cycle time by 35% through automation of manual checks.\nPage 3/3 | Internal Use Only",
+      "[Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 1]\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBanking Sector Digital Audit 2024\nDocument Type: Project Outline\nIndustry: Banking & Financial Services\nClassification: Internal / Confidential\nPage 1/3 | Internal Use Only",
+      "[Source: 06_Government_Tax_Filing_Modernization.pdf, Page 2]\nCONFIDENTIAL | PROPOSAL | Government & Public Sector\nExecutive Summary\nProposal to modernize a national tax filing system from legacy mainframe to a cloud-native microservices\narchitecture. The solution will improve citizen experience, reduce processing time, and enable real-time tax\ncomputation.\nObjectives\n1. Migrate legacy COBOL-based tax engine to cloud-native microservices.\n2. Build a modern citizen-facing web portal with mobile responsiveness.",
+      "[Source: 09_Financial_Services_Anti-Fraud_Detection_System.pdf, Page 2]\nCONFIDENTIAL | PROJECT OUTLINE | Financial Services & Fintech\nExecutive Summary\nDesigned and deployed an AI-powered fraud detection system for a digital payments fintech processing 5M+\ntransactions daily. The system combines traditional ML models with LLM-powered investigation agents for\ncomprehensive fraud prevention.\nObjectives\n1. Build real-time fraud scoring for card-not-present transactions.\n2. Implement an LLM-powered fraud investigation agent for complex cases."
+    ],
+    "response": "## Modernization Priorities Identified in the Banking Digital Audit\n\n|---|---|\n| Assess and modernize the client’s core banking platform and digital channels | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2] |\n| Evaluate and improve data quality, lineage, and governance across 14 business units | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2] |\n| Benchmark the bank’s digital maturity against industry peers using proprietary frameworks | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2] |\n| Deliver a prioritized transformation roadmap with ROI projections | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2] |\n| Close the 47 critical data‑governance gaps identified across the organization | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 3] |\n| Raise data‑quality scores (23 % improvement reported in the first quarter) | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 3] |\n| Adopt a 3‑year digital transformation roadmap approved by the board | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 3] |\n| Automate manual audit checks to cut audit‑cycle time by 35 % | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 3] |\n| Migrate key data workloads to Microsoft Azure (Azure Data Factory, Azure SQL Database) | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2] |",
+    "reference": "The banking audit assessed digital maturity and data governance, benchmarked peers, and recommended a prioritized modernization roadmap with ROI projections."
+  },
+  "deterministic": {
+    "source_coverage": null,
+    "tool_correctness": true,
+    "origin_correctness": true,
+    "route_correctness": true,
+    "retrieval_mode_correctness": true,
+    "no_answer_behavior": true,
+    "citation_identity_coverage": 1.0,
+    "grounding_passed": true,
+    "graph_path_provenance_correctness": null,
+    "answer_present": true
+  },
+  "provenance": {
+    "requested_retrieval_mode": "vector_only",
+    "retrieval_mode": "vector_only",
+    "generation_prompt_hash": "0e8639e2fab187419290830104f235b4b058e36af3583ed85c7a1e971cd93d48",
+    "generation_auxiliary_context_hash": "",
+    "generation_evidence": [
+      {
+        "chunk_id": "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf",
+        "evidence_id": null,
+        "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+        "page": 1,
+        "document_origin": "sample"
+      },
+      {
+        "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+        "evidence_id": null,
+        "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+        "page": 1,
+        "document_origin": "sample"
+      },
+      {
+        "chunk_id": "ddd884bc9dfad65a4512bc9bcd7aabe909a19109518f0d8adf0586c5b0b5a6d0",
+        "evidence_id": null,
+        "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+        "page": 2,
+        "document_origin": "sample"
+      },
+      {
+        "chunk_id": "03da78acb6bfba67be6cc73a8cd9e64704d55617a23932957f169f1f3365bf05",
+        "evidence_id": null,
+        "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+        "page": 0,
+        "document_origin": "sample"
+      },
+      {
+        "chunk_id": "53bee0aaca16a129483855cc5027682dc86816269c3dd25ea308047fd39c28c9",
+        "evidence_id": null,
+        "source": "06_Government_Tax_Filing_Modernization.pdf",
+        "page": 1,
+        "document_origin": "sample"
+      },
+      {
+        "chunk_id": "64a024c1639e3ccc2cbcb0153b97fca5052d6488567ebe22ffa6bc68cc2dc209",
+        "evidence_id": null,
+        "source": "09_Financial_Services_Anti-Fraud_Detection_System.pdf",
+        "page": 1,
+        "document_origin": "sample"
+      }
+    ],
+    "intent": "search",
+    "graph_version": "",
+    "graph_fallback_reason": "",
+    "graph_paths": [],
+    "retry_count": 1,
+    "executed_tools": [
+      "health_check",
+      "intent_classifier",
+      "tool_planner",
+      "search_knowledge_base",
+      "evidence_availability_check",
+      "web_search",
+      "web_evidence_grader",
+      "query_rewriter",
+      "tool_planner",
+      "search_knowledge_base",
+      "evidence_availability_check",
+      "prompt_synthesizer",
+      "prompt_budget",
+      "generation_prompt_budget",
+      "final_response",
+      "grounding_verifier",
+      "answer_repair",
+      "final_grounding_verifier"
+    ],
+    "retrieved_sources": [
+      "01_Banking_Sector_Digital_Audit_2024.pdf",
+      "06_Government_Tax_Filing_Modernization.pdf",
+      "09_Financial_Services_Anti-Fraud_Detection_System.pdf"
+    ],
+    "retrieved_origins": [
+      "sample"
+    ],
+    "retrieval_events": []
+  },
+  "generation_kind": "llm_kb",
+  "kb_grade": "good",
+  "grounded": true,
+  "traces": [
+    {
+      "step": "health_check",
+      "tool": "health_check",
+      "kb_ready": true,
+      "document_count": 11,
+      "chunk_count": 54
+    },
+    {
+      "step": "classify_intent",
+      "tool": "intent_classifier",
+      "intent": "search",
+      "route": "kb",
+      "input_summary": "Summarize the modernization priorities identified by the banking digital audit.",
+      "resolution_status": "not_needed",
+      "resolved_entities": []
+    },
+    {
+      "step": "plan_tools",
+      "tool": "tool_planner",
+      "planned_tools": [
+        "search_knowledge_base"
+      ],
+      "output_summary": "Selected 1 tool(s): search_knowledge_base"
+    },
+    {
+      "step": "execute_retrieval",
+      "tool": "search_knowledge_base",
+      "status": "completed",
+      "scope": "sample",
+      "requested_scope": "sample",
+      "retrieval_mode": "standard",
+      "input": {
+        "query": "Summarize the modernization priorities identified by the banking digital audit.",
+        "original_query": "Summarize the modernization priorities identified by the banking digital audit.",
+        "k": 6,
+        "scope": "sample"
+      },
+      "input_summary": "Search scope=sample; k=6",
+      "output_summary": "Retrieved 4 relevant chunk(s); filtered 2 below threshold 0.50",
+      "documents": [
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 2,
+          "score": "0.70",
+          "raw_score": "0.70",
+          "chunk_id": "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf",
+          "document_origin": "sample"
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 2,
+          "score": "0.62",
+          "raw_score": "0.62",
+          "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+          "document_origin": "sample"
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 3,
+          "score": "0.59",
+          "raw_score": "0.59",
+          "chunk_id": "ddd884bc9dfad65a4512bc9bcd7aabe909a19109518f0d8adf0586c5b0b5a6d0",
+          "document_origin": "sample"
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 1,
+          "score": "0.58",
+          "raw_score": "0.58",
+          "chunk_id": "03da78acb6bfba67be6cc73a8cd9e64704d55617a23932957f169f1f3365bf05",
+          "document_origin": "sample"
+        }
+      ]
+    },
+    {
+      "step": "grade_kb_evidence",
+      "tool": "evidence_availability_check",
+      "status": "completed",
+      "grade": "weak",
+      "grading_stage": "answer",
+      "input_summary": "Pre-filtered Private KB evidence",
+      "output_summary": "Private KB evidence graded weak."
+    },
+    {
+      "step": "search_web",
+      "tool": "web_search",
+      "status": "unavailable",
+      "input_summary": "Summarize the modernization priorities identified by the banking digital audit.",
+      "output_summary": "No Web Search evidence was available."
+    },
+    {
+      "step": "grade_web_evidence",
+      "tool": "web_evidence_grader",
+      "status": "completed",
+      "grade": "weak",
+      "input_summary": "Web Search evidence",
+      "output_summary": "Web Search evidence graded weak."
+    },
+    {
+      "step": "rewrite_query",
+      "tool": "query_rewriter",
+      "status": "completed",
+      "retry_count": 1,
+      "retry_kind": "semantic_rewrite",
+      "input_summary": "Summarize the modernization priorities identified by the banking digital audit.",
+      "output_summary": "Prepared bounded retrieval retry 1."
+    },
+    {
+      "step": "plan_tools",
+      "tool": "tool_planner",
+      "planned_tools": [
+        "search_knowledge_base"
+      ],
+      "output_summary": "Selected 1 tool(s): search_knowledge_base"
+    },
+    {
+      "step": "execute_retrieval",
+      "tool": "search_knowledge_base",
+      "status": "completed",
+      "scope": "sample",
+      "requested_scope": "sample",
+      "retrieval_mode": "standard",
+      "input": {
+        "query": "summary of modernization priorities identified in the banking digital audit",
+        "original_query": "Summarize the modernization priorities identified by the banking digital audit.",
+        "k": 6,
+        "scope": "sample"
+      },
+      "input_summary": "Search scope=sample; k=6",
+      "output_summary": "Retrieved 6 relevant chunk(s); filtered 0 below threshold 0.50",
+      "documents": [
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 2,
+          "score": "0.75",
+          "raw_score": "0.75",
+          "chunk_id": "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf",
+          "document_origin": "sample"
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 2,
+          "score": "0.67",
+          "raw_score": "0.67",
+          "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+          "document_origin": "sample"
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 3,
+          "score": "0.62",
+          "raw_score": "0.62",
+          "chunk_id": "ddd884bc9dfad65a4512bc9bcd7aabe909a19109518f0d8adf0586c5b0b5a6d0",
+          "document_origin": "sample"
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 1,
+          "score": "0.62",
+          "raw_score": "0.62",
+          "chunk_id": "03da78acb6bfba67be6cc73a8cd9e64704d55617a23932957f169f1f3365bf05",
+          "document_origin": "sample"
+        },
+        {
+          "source": "06_Government_Tax_Filing_Modernization.pdf",
+          "page": 2,
+          "score": "0.56",
+          "raw_score": "0.56",
+          "chunk_id": "53bee0aaca16a129483855cc5027682dc86816269c3dd25ea308047fd39c28c9",
+          "document_origin": "sample"
+        },
+        {
+          "source": "09_Financial_Services_Anti-Fraud_Detection_System.pdf",
+          "page": 2,
+          "score": "0.54",
+          "raw_score": "0.54",
+          "chunk_id": "64a024c1639e3ccc2cbcb0153b97fca5052d6488567ebe22ffa6bc68cc2dc209",
+          "document_origin": "sample"
+        }
+      ]
+    },
+    {
+      "step": "grade_kb_evidence",
+      "tool": "evidence_availability_check",
+      "status": "completed",
+      "grade": "good",
+      "grading_stage": "answer",
+      "input_summary": "Pre-filtered Private KB evidence",
+      "output_summary": "Private KB evidence graded good."
+    },
+    {
+      "step": "synthesize_prompt",
+      "tool": "prompt_synthesizer",
+      "status": "completed",
+      "intent": "search",
+      "scope": "sample",
+      "output_summary": "Built grounded answer prompt from compact retrieved evidence and conversation context."
+    },
+    {
+      "step": "synthesize_prompt",
+      "tool": "prompt_budget",
+      "estimated_input_tokens": 951,
+      "reserved_output_tokens": 1200,
+      "projected_total_tokens": 2151,
+      "budget_limit": 6500,
+      "target_chunks_included": 0,
+      "sample_chunks_included": 4,
+      "chunks_dropped": 0,
+      "history_messages_included": 0,
+      "status": "within_budget"
+    },
+    {
+      "step": "generation_budget",
+      "tool": "generation_prompt_budget",
+      "estimated_input_tokens": 1011,
+      "budget_limit": 6500,
+      "assembler": "actual_generation_prompt",
+      "chunks_dropped": 0,
+      "derived_notes_dropped": false,
+      "status": "within_budget"
+    },
+    {
+      "step": "final_response",
+      "tool": "final_response",
+      "response_mode": "llm",
+      "source_used": "private_kb",
+      "output_summary": "Generated an answer inside the graph."
+    },
+    {
+      "step": "verify_grounding",
+      "tool": "grounding_verifier",
+      "status": "completed",
+      "verification_status": "unsupported",
+      "input_summary": "Complete generated answer and retrieved source metadata",
+      "output_summary": "Verified 10 claim(s); identified 1 unsupported claim(s).",
+      "unsupported_claims": [
+        "| Modernization Priority | Supporting Citation |"
+      ]
+    },
+    {
+      "step": "answer_repair",
+      "tool": "answer_repair",
+      "status": "completed",
+      "input_summary": "Unsupported or vague-cited claims from first grounding pass",
+      "output_summary": "Removed or qualified unsupported claims once.",
+      "claims_repaired": 1
+    },
+    {
+      "step": "verify_grounding",
+      "tool": "final_grounding_verifier",
+      "status": "completed",
+      "verification_status": "grounded",
+      "input_summary": "Final answer after optional bounded repair",
+      "output_summary": "Verified 9 final claim(s); identified 0 unsupported claim(s).",
+      "unsupported_claims": []
+    }
+  ],
+  "checks": {
+    "groq_gpt_oss_only": true,
+    "route_question_completed": true,
+    "grader_succeeded": true,
+    "generation_succeeded": true,
+    "grounding_executed": true,
+    "final_answer_grounded": true,
+    "vector_only_effective": true
+  },
+  "pipeline_latency_seconds": 11.913004
+}

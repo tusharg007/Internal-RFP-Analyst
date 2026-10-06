@@ -339,7 +339,7 @@ def run_manual_ingestion() -> bool:
         if "locked" in error_text.lower() or "winerror 5" in error_text.lower():
             finish_ingestion(False, VECTORSTORE_LOCKED_MESSAGE)
         else:
-            finish_ingestion(False, f"Document ingestion failed: {exc}")
+            finish_ingestion(False, "Document ingestion failed. Check file validity and storage availability.")
         return False
 
     finish_ingestion(True, "Documents ingested successfully.")
@@ -434,7 +434,7 @@ def process_query(user_query: str, show_reasoning: bool, retrieval_scope: str):
                 "Rate limit reached. Please wait a moment and try again. Consider adding a GROQ_API_KEY for faster, more reliable responses."
             )
         else:
-            show_generation_warning(f"Request failed cleanly: {error_text}")
+            show_generation_warning("Request failed. Check provider and knowledge-base availability, then retry.")
 
 
 SAMPLE_DOCS_DIR.mkdir(parents=True, exist_ok=True)

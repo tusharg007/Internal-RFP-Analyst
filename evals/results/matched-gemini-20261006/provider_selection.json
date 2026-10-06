@@ -1,0 +1,23 @@
+{
+  "factories": {
+    "generation": {
+      "class": "ChatGoogleGenerativeAI",
+      "model": "gemini-2.0-flash"
+    },
+    "routing": {
+      "class": "ChatGoogleGenerativeAI",
+      "model": "gemini-2.0-flash"
+    },
+    "grading": {
+      "class": "ChatGoogleGenerativeAI",
+      "model": "gemini-2.0-flash"
+    },
+    "rewriting": {
+      "class": "ChatGoogleGenerativeAI",
+      "model": "gemini-2.0-flash"
+    }
+  },
+  "groq_resolved": false,
+  "google_resolved": true,
+  "judge": "not_run:capture_only"
+}

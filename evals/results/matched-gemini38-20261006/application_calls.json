@@ -1,0 +1,55 @@
+{
+  "events": [
+    {
+      "phase": "smoke",
+      "stage": "route_question",
+      "provider": "google_genai",
+      "class": "ChatGoogleGenerativeAI",
+      "model": "gemini-3.8-flash",
+      "status": "completed"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_kb_evidence",
+      "provider": "google_genai",
+      "class": "ChatGoogleGenerativeAI",
+      "model": "gemini-3.8-flash",
+      "status": "completed"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_web_evidence",
+      "provider": "google_genai",
+      "class": "ChatGoogleGenerativeAI",
+      "model": "gemini-3.8-flash",
+      "status": "completed"
+    },
+    {
+      "phase": "smoke",
+      "stage": "rewrite_query",
+      "provider": "google_genai",
+      "class": "ChatGoogleGenerativeAI",
+      "model": "gemini-3.8-flash",
+      "status": "completed"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_kb_evidence",
+      "provider": "google_genai",
+      "class": "ChatGoogleGenerativeAI",
+      "model": "gemini-3.8-flash",
+      "status": "completed"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_web_evidence",
+      "provider": "google_genai",
+      "class": "ChatGoogleGenerativeAI",
+      "model": "gemini-3.8-flash",
+      "status": "completed"
+    }
+  ],
+  "groq_calls": 0,
+  "judge_calls": 0,
+  "scope": "application_callbacks_only"
+}

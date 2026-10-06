@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "timestamp": "2026-10-05T02:38:28.410425+00:00",
+  "status": "setup_error",
+  "retrieval_mode": "comparison",
+  "judge": {
+    "provider": null,
+    "model": null
+  },
+  "versions": {
+    "git_revision": "a729b48f895f976bb20770187cf37567ad415c8a",
+    "packages": {
+      "ragas": "0.4.3",
+      "instructor": "1.17.0",
+      "langchain-core": "1.6.1",
+      "langchain-community": "0.3.31",
+      "langgraph": "1.2.11",
+      "fastembed": "0.8.0",
+      "chromadb": "1.5.9",
+      "neo4j": "6.3.1",
+      "groq": "0.37.1",
+      "google-genai": "2.21.0"
+    },
+    "source_tree_hash": "c086e850e66f0c1237c7e4cc73884dd6cfa06f8bb3a1e18d6df4e27e569232e0"
+  },
+  "error_type": "ValueError",
+  "failures": [
+    {
+      "stage": "setup",
+      "error_type": "ValueError"
+    }
+  ],
+  "cases": [],
+  "baseline_status": "uncalibrated"
+}

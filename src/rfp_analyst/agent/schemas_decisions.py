@@ -4,6 +4,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from rfp_analyst.retrieval.decisions import RetrievalDecision
+
+__all__ = ["RouteDecision", "EvidenceGrade", "QueryRewrite", "RetrievalDecision"]
+
 
 class RouteDecision(BaseModel):
     """Choose whether a question needs private knowledge-base retrieval."""

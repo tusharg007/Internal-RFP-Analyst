@@ -1,0 +1,32 @@
+{
+  "case_id": "semantic_modernization",
+  "requested_retrieval_mode": "vector_only",
+  "generation": {
+    "class": "ChatGoogleGenerativeAI",
+    "model": "gemini-2.0-flash",
+    "temperature": 0.3,
+    "control_temperature": 0.0,
+    "retrieval_k": 6,
+    "min_relevance_score": 0.5,
+    "max_query_retries": 1,
+    "max_prompt_tokens": 6500,
+    "max_context_chars_per_chunk": 1000,
+    "embedding_model": "BAAI/bge-small-en-v1.5"
+  },
+  "status": "stopped_provider_failure",
+  "judge": "not_run:capture_only",
+  "provider_failures": [
+    {
+      "case_id": "semantic_modernization",
+      "requested_retrieval_mode": "vector_only",
+      "stage": "route_question",
+      "provider": "google_genai",
+      "model": "gemini-2.0-flash",
+      "error_type": "GoogleModelNotFoundError",
+      "http_status": 404,
+      "category": "provider_failure",
+      "retrieval_quality_failure": false
+    }
+  ],
+  "pipeline_latency_seconds": 1.234837
+}

@@ -1,0 +1,16 @@
+{
+  "events": [
+    {
+      "phase": "smoke",
+      "stage": "route_question",
+      "provider": "google_genai",
+      "class": "ChatGoogleGenerativeAI",
+      "model": "gemini-2.0-flash",
+      "status": "error",
+      "http_status": 404
+    }
+  ],
+  "groq_calls": 0,
+  "judge_calls": 0,
+  "scope": "application_callbacks_only"
+}

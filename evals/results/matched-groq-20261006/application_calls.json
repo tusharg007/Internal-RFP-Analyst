@@ -1,0 +1,388 @@
+{
+  "events": [
+    {
+      "phase": "smoke",
+      "stage": "route_question",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 0.845744,
+      "response_model": "openai/gpt-oss-120b"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_kb_evidence",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 0.988477,
+      "response_model": "openai/gpt-oss-120b",
+      "raw_grade": "weak"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_web_evidence",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 0.961648,
+      "response_model": "openai/gpt-oss-120b",
+      "raw_grade": "weak"
+    },
+    {
+      "phase": "smoke",
+      "stage": "rewrite_query",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 0.713252,
+      "response_model": "openai/gpt-oss-120b"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_kb_evidence",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 0.855848,
+      "response_model": "openai/gpt-oss-120b",
+      "raw_grade": "good"
+    },
+    {
+      "phase": "smoke",
+      "stage": "generate_from_kb",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 4.200549,
+      "response_model": "openai/gpt-oss-120b"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "route_question",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 0.713156,
+      "response_model": "openai/gpt-oss-120b"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 0.935265,
+      "response_model": "openai/gpt-oss-120b",
+      "raw_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_web_evidence",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 0.511372,
+      "response_model": "openai/gpt-oss-120b",
+      "raw_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "rewrite_query",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 0.743271,
+      "response_model": "openai/gpt-oss-120b"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 1.109351,
+      "response_model": "openai/gpt-oss-120b",
+      "raw_grade": "good"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "generate_from_kb",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 1.852325,
+      "response_model": "openai/gpt-oss-120b"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "route_question",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 0.673897,
+      "response_model": "openai/gpt-oss-120b"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 0.341273,
+      "response_model": "openai/gpt-oss-120b",
+      "raw_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_web_evidence",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 33.930615,
+      "response_model": "openai/gpt-oss-120b",
+      "raw_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "rewrite_query",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 0.654406,
+      "response_model": "openai/gpt-oss-120b"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "completed",
+      "http_status": null,
+      "provider_status": "success",
+      "latency_seconds": 56.750729,
+      "response_model": "openai/gpt-oss-120b",
+      "raw_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_web_evidence",
+      "provider": "groq",
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b",
+      "status": "error",
+      "http_status": 429,
+      "provider_status": "provider_error",
+      "error_type": "RateLimitError",
+      "latency_seconds": 0.131779
+    }
+  ],
+  "node_outputs": [
+    {
+      "phase": "smoke",
+      "stage": "route_question",
+      "intent": "search",
+      "source_used": "kb"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_kb_evidence",
+      "parsed_grade": "weak"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_kb_evidence",
+      "parsed_grade": "weak"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_kb_evidence",
+      "kb_grade": "weak"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_web_evidence",
+      "parsed_grade": "weak"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_web_evidence",
+      "parsed_grade": "weak"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_web_evidence",
+      "web_grade": "weak"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_kb_evidence",
+      "parsed_grade": "good"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_kb_evidence",
+      "parsed_grade": "good"
+    },
+    {
+      "phase": "smoke",
+      "stage": "grade_kb_evidence",
+      "kb_grade": "good"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "route_question",
+      "intent": "search",
+      "source_used": "kb"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "parsed_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "parsed_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "kb_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_web_evidence",
+      "parsed_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_web_evidence",
+      "parsed_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_web_evidence",
+      "web_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "parsed_grade": "good"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "parsed_grade": "good"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "kb_grade": "good"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "route_question",
+      "intent": "search",
+      "source_used": "kb"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "parsed_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "parsed_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "kb_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_web_evidence",
+      "parsed_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_web_evidence",
+      "parsed_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_web_evidence",
+      "web_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "parsed_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "parsed_grade": "weak"
+    },
+    {
+      "phase": "benchmark",
+      "stage": "grade_kb_evidence",
+      "kb_grade": "weak"
+    }
+  ],
+  "gemini_calls": 0,
+  "judge_calls": 0,
+  "groq_calls": 18,
+  "diagnostic_writer_errors": []
+}

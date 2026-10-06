@@ -12,6 +12,17 @@ requires-python = ">=3.11"
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0,<10",
+    "ruff>=0.15,<1",
+]
+graph = [
+    "neo4j>=6.3.1,<7",
+]
+evaluation = [
+    "ragas==0.4.3",
+    "instructor>=1.11,<2",
+    "langchain-openai>=1.1.9,<1.2",
+    "langchain-community==0.3.31",
+    "tiktoken>=0.7,<1",
 ]
 
 [tool.setuptools]
@@ -24,6 +35,9 @@ include = ["rfp_analyst*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--basetemp=.pytest_tmp"
+markers = [
+    "neo4j_integration: opt-in tests against the isolated local Neo4j Docker service",
+]
 
 [tool.ruff]
 line-length = 100

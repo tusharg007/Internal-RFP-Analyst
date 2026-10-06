@@ -1,0 +1,119 @@
+{
+  "case": {
+    "id": "semantic_modernization",
+    "query_class": "semantic_single_hop",
+    "question": "Summarize the modernization priorities identified by the banking digital audit.",
+    "retrieval_scope": "sample",
+    "expected_optimal_mode": "vector_only",
+    "mode_rationale": "Narrative priorities require original prose, not entity intersections.",
+    "expected_intent": "search",
+    "expected_tools": [
+      "search_knowledge_base"
+    ],
+    "expected_behavior": "answer",
+    "reference": "The banking audit assessed digital maturity and data governance, benchmarked peers, and recommended a prioritized modernization roadmap with ROI projections.",
+    "required_evidence": [
+      {
+        "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+        "page": 2,
+        "anchors": [
+          "transformation maturity",
+          "transformation roadmap with ROI projections"
+        ]
+      }
+    ]
+  },
+  "requested_mode": "vector_only",
+  "graph_corpus_id": "rfp-eval-frozen-641e9d4dad22",
+  "corpus_hash": "641e9d4dad22e33140475ac40b0245dde1edb3ed6e2acc0c5fa8e75919d9d39f",
+  "generation": {
+    "class": "ChatGoogleGenerativeAI",
+    "model": "gemini-3.8-flash",
+    "temperature": 0.3,
+    "control_temperature": 0.0,
+    "retrieval_k": 6,
+    "min_relevance_score": 0.5,
+    "max_query_retries": 1,
+    "max_prompt_tokens": 6500,
+    "max_context_chars_per_chunk": 1000,
+    "embedding_model": "BAAI/bge-small-en-v1.5"
+  },
+  "judge": "not_run",
+  "benchmark_started": false,
+  "provider_failures": [
+    {
+      "stage": "rewrite_query",
+      "provider": "google_genai",
+      "model": "gemini-3.8-flash",
+      "error_type": "GoogleRateLimitError",
+      "http_status": 429,
+      "category": "rate_limit",
+      "retrieval_quality_failure": false
+    }
+  ],
+  "status": "stopped_provider_failure",
+  "attempts": [
+    {
+      "attempt": 1,
+      "evidence_sufficiency": "sufficient",
+      "missing_expected_concepts": [],
+      "raw_grade": "weak",
+      "parsed_grade": "weak",
+      "application_grade": "weak",
+      "rationale": null,
+      "prompt_hash": "b7c357b90735f072cdc27a660f90a11b35d97afb7d1f413feb3a3a0650d6b8a1",
+      "evidence_hash": "abfe0f2e23cb9663c2edabb86bbb98062e56d3c8b4f1700d082be956f1bd534c",
+      "model": "gemini-3.8-flash",
+      "classification": "PROVIDER/GRADER COMPATIBILITY"
+    }
+  ],
+  "exact_grader_evidence_identical": null,
+  "chunk_sets_identical": null,
+  "rewrite_changed_evidence": null,
+  "original_query": "Summarize the modernization priorities identified by the banking digital audit.",
+  "queries_used_for_vector_search": [
+    "Summarize the modernization priorities identified by the banking digital audit."
+  ],
+  "rationale_note": "Only grade is requested by the unchanged schema; no absent rationale was invented.",
+  "corpus_fingerprints": {
+    "before": {
+      "internal_rfp": {
+        "corpus_id": "internal-rfp",
+        "nodes": 365,
+        "relationships": 569,
+        "node_sha256": "e610c788846bc9aa625c133104cbf7948f34bbe14cb6499d1313a27fd3df781c",
+        "relationship_sha256": "eb39381b92932696a5eea8bbcffba022d9974d8dd503b3043c7870e16730d6d5",
+        "active_versions": [
+          "eddc57727f1f70adb54c3d4d98d6896e4245daaa6cc896f8bfbafc63b88fdfdc"
+        ]
+      },
+      "evaluation_corpus": {
+        "corpus_id": "rfp-eval-frozen-641e9d4dad22",
+        "nodes": 318,
+        "relationships": 529,
+        "node_sha256": "c838b16fde87e0ac093bf783045ddbd9a17a6195aa76ea797841ead20ea8f795",
+        "relationship_sha256": "a7e808eb42f6a46d39dd75f23285cac60d8d870ff9f5c8c246873de4d8d0b4f5"
+      }
+    },
+    "after": {
+      "internal_rfp": {
+        "corpus_id": "internal-rfp",
+        "nodes": 365,
+        "relationships": 569,
+        "node_sha256": "e610c788846bc9aa625c133104cbf7948f34bbe14cb6499d1313a27fd3df781c",
+        "relationship_sha256": "eb39381b92932696a5eea8bbcffba022d9974d8dd503b3043c7870e16730d6d5",
+        "active_versions": [
+          "eddc57727f1f70adb54c3d4d98d6896e4245daaa6cc896f8bfbafc63b88fdfdc"
+        ]
+      },
+      "evaluation_corpus": {
+        "corpus_id": "rfp-eval-frozen-641e9d4dad22",
+        "nodes": 318,
+        "relationships": 529,
+        "node_sha256": "c838b16fde87e0ac093bf783045ddbd9a17a6195aa76ea797841ead20ea8f795",
+        "relationship_sha256": "a7e808eb42f6a46d39dd75f23285cac60d8d870ff9f5c8c246873de4d8d0b4f5"
+      }
+    },
+    "unchanged": true
+  }
+}

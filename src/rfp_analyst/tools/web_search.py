@@ -55,6 +55,8 @@ def _format_web_results(result: Any) -> str:
 
 def search_web(state: "QueryState") -> dict:
     """Search Tavily and normalize the response for evidence grading and generation."""
+    if not state.get("allow_web_search", True):
+        return {"web_results": "", "source_used": "web"}
     if not TAVILY_API_KEY:
         LOGGER.warning("TAVILY_API_KEY is not configured; skipping web-search fallback.")
         return {"web_results": "", "source_used": "web"}
@@ -71,8 +73,8 @@ def search_web(state: "QueryState") -> dict:
             include_raw_content=False,
         )
         result = web_search.invoke({"query": state.get("current_query") or state.get("user_query", "")})
-    except Exception as exc:
-        LOGGER.warning("Tavily web-search fallback failed: %s", exc)
+    except Exception:
+        LOGGER.warning("Tavily web-search fallback failed; details redacted")
         return {"web_results": "", "source_used": "web"}
 
     return {"web_results": _format_web_results(result), "source_used": "web"}

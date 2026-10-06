@@ -1,0 +1,931 @@
+{
+  "status": "stopped_provider_failure",
+  "expected_executions": 48,
+  "completed_executions": 1,
+  "capture_valid": false,
+  "graph_corpus_id": "rfp-eval-frozen-641e9d4dad22",
+  "index": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\evals\\ragas_workspace\\20261005-public-pilot\\vectorstore",
+  "freeze": {
+    "schema_version": "1.0",
+    "frozen_at": "2026-10-05T01:25:18.360602+00:00",
+    "signature": {
+      "question_file_sha256": "7846cea3aa3eccc3b281d44dd1a3eecff51d65b08265f045ff1e34a896bc6689",
+      "question_set_hash": "ba097a4fed2d707445f0362eb8a26220e41ac1cf571edfb3fde1aee302b56752",
+      "legacy_golden_sha256": "13eb016110e872fa2ddf6f8e47a6c451b1fbb0969ecd570fc1125d3290f6ee2f",
+      "corpus_hash": "641e9d4dad22e33140475ac40b0245dde1edb3ed6e2acc0c5fa8e75919d9d39f",
+      "case_ids": [
+        "semantic_modernization",
+        "semantic_healthcare_security",
+        "factual_banking_duration",
+        "factual_insurance_team",
+        "relationship_rpa",
+        "relationship_regulatory",
+        "multihop_shared_retail_pharma",
+        "multihop_shared_banking_healthcare",
+        "comparison_delivery_budget",
+        "comparison_outcome_modality",
+        "matching_uploaded_controls",
+        "matching_clinical_requirements",
+        "unsupported_private_contact",
+        "unsupported_certification",
+        "ambiguous_missing_referent",
+        "ambiguous_missing_action"
+      ],
+      "protocol": {
+        "version": "1.0",
+        "web_search": "disabled_for_closed_corpus_ablation",
+        "mode_order": "case_index_rotated_vector_graph_hybrid",
+        "repetitions": 1,
+        "cache": "shared_embedding_client_no_answer_cache",
+        "latency": "wall_clock_pipeline_including_routing_grading_generation_repair_not_judge_or_pacing",
+        "winners": "deterministic_pareto_only_when_all_requested_backends_operate; semantic_winners_require_complete_paired_scores",
+        "optimal_mode": "pre_score_hypothesis_not_forced_mode_compliance",
+        "graph_unavailable": "inconclusive_not_vector_win",
+        "thresholds": "none_calibrated"
+      },
+      "source_checked_witnesses": {
+        "semantic_modernization": [
+          {
+            "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+            "page": 2,
+            "anchors": [
+              "transformation maturity",
+              "transformation roadmap with ROI projections"
+            ],
+            "anchor_chunk_ids": {
+              "transformation maturity": [
+                "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf"
+              ],
+              "transformation roadmap with ROI projections": [
+                "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc"
+              ]
+            }
+          }
+        ],
+        "semantic_healthcare_security": [
+          {
+            "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+            "page": 2,
+            "anchors": [
+              "zero data loss",
+              "encryption at rest and in transit"
+            ],
+            "anchor_chunk_ids": {
+              "zero data loss": [
+                "45ae430450a2ac1c5f7b4cd339e12fc833d717b3eb566fea8ad3806dbdc9f69c"
+              ],
+              "encryption at rest and in transit": [
+                "45ae430450a2ac1c5f7b4cd339e12fc833d717b3eb566fea8ad3806dbdc9f69c"
+              ]
+            }
+          }
+        ],
+        "factual_banking_duration": [
+          {
+            "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+            "page": 2,
+            "anchors": [
+              "Total Duration: 16 weeks"
+            ],
+            "anchor_chunk_ids": {
+              "Total Duration: 16 weeks": [
+                "6917833977c6fbbba6b8d624a6a5d4bd52be07de2c178980a5286749fbaa735b"
+              ]
+            }
+          }
+        ],
+        "factual_insurance_team": [
+          {
+            "source": "04_Insurance_Claims_Processing_Automation.pdf",
+            "page": 2,
+            "anchors": [
+              "Total Team Size: 9 professionals"
+            ],
+            "anchor_chunk_ids": {
+              "Total Team Size: 9 professionals": [
+                "782f61a562f3bfaade5d2b17c073f56083f6173741ef45128dbf3ace12ca20e0"
+              ]
+            }
+          }
+        ],
+        "relationship_rpa": [
+          {
+            "source": "04_Insurance_Claims_Processing_Automation.pdf",
+            "page": 2,
+            "anchors": [
+              "UiPath Enterprise with Orchestrator"
+            ],
+            "anchor_chunk_ids": {
+              "UiPath Enterprise with Orchestrator": [
+                "b4c3437f74c098b6b4bd91e4dda766d287a90316a636cfd7b3001b0213c78200"
+              ]
+            }
+          }
+        ],
+        "relationship_regulatory": [
+          {
+            "source": "07_Pharma_Clinical_Trial_Data_Platform.pdf",
+            "page": 2,
+            "anchors": [
+              "FDA 21 CFR Part 11, GDPR, ICH E6(R2) GCP"
+            ],
+            "anchor_chunk_ids": {
+              "FDA 21 CFR Part 11, GDPR, ICH E6(R2) GCP": [
+                "80790b61e07fb7dc3157e57ab760b01ca89e0cbff1e4800f6a2ea402988b5ec4"
+              ]
+            }
+          }
+        ],
+        "multihop_shared_retail_pharma": [
+          {
+            "source": "03_Retail_Supply_Chain_Analytics_Platform.pdf",
+            "page": 2,
+            "anchors": [
+              "Apache Airflow",
+              "Python",
+              "AWS (S3, EC2, Lambda)"
+            ],
+            "anchor_chunk_ids": {
+              "Apache Airflow": [
+                "30ac01cff957f57297d585d5b32a0eac95220de66d13688f8c421b208eec8037"
+              ],
+              "Python": [
+                "30ac01cff957f57297d585d5b32a0eac95220de66d13688f8c421b208eec8037"
+              ],
+              "AWS (S3, EC2, Lambda)": [
+                "30ac01cff957f57297d585d5b32a0eac95220de66d13688f8c421b208eec8037"
+              ]
+            }
+          },
+          {
+            "source": "07_Pharma_Clinical_Trial_Data_Platform.pdf",
+            "page": 2,
+            "anchors": [
+              "Apache Airflow",
+              "Python",
+              "AWS (S3, Glue, Lambda, Step Functions)"
+            ],
+            "anchor_chunk_ids": {
+              "Apache Airflow": [
+                "80790b61e07fb7dc3157e57ab760b01ca89e0cbff1e4800f6a2ea402988b5ec4"
+              ],
+              "Python": [
+                "80790b61e07fb7dc3157e57ab760b01ca89e0cbff1e4800f6a2ea402988b5ec4"
+              ],
+              "AWS (S3, Glue, Lambda, Step Functions)": [
+                "80790b61e07fb7dc3157e57ab760b01ca89e0cbff1e4800f6a2ea402988b5ec4"
+              ]
+            }
+          }
+        ],
+        "multihop_shared_banking_healthcare": [
+          {
+            "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+            "page": 2,
+            "anchors": [
+              "Azure Data Factory",
+              "Azure SQL Database",
+              "Power BI with DirectQuery"
+            ],
+            "anchor_chunk_ids": {
+              "Azure Data Factory": [
+                "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc"
+              ],
+              "Azure SQL Database": [
+                "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc"
+              ],
+              "Power BI with DirectQuery": [
+                "e7739133960793ba808d8e9809df6313a2f3583662c66f575773d83cc4fa9ef1"
+              ]
+            }
+          },
+          {
+            "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+            "page": 2,
+            "anchors": [
+              "Azure Data Factory",
+              "Azure SQL",
+              "Power BI Premium"
+            ],
+            "anchor_chunk_ids": {
+              "Azure Data Factory": [
+                "c95a563cbe263c4e311a3679da9d9667db7fe49a473697c83e33691a1a64c4d3"
+              ],
+              "Azure SQL": [
+                "45ae430450a2ac1c5f7b4cd339e12fc833d717b3eb566fea8ad3806dbdc9f69c",
+                "c95a563cbe263c4e311a3679da9d9667db7fe49a473697c83e33691a1a64c4d3"
+              ],
+              "Power BI Premium": [
+                "c95a563cbe263c4e311a3679da9d9667db7fe49a473697c83e33691a1a64c4d3"
+              ]
+            }
+          }
+        ],
+        "comparison_delivery_budget": [
+          {
+            "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+            "page": 2,
+            "anchors": [
+              "Total Duration: 18 weeks"
+            ],
+            "anchor_chunk_ids": {
+              "Total Duration: 18 weeks": [
+                "d41bace8af896148fdd0e091435c17f2818b249ca3f68e1cafcf1cb322df89ef"
+              ]
+            }
+          },
+          {
+            "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+            "page": 3,
+            "anchors": [
+              "$1,200,000 - $1,500,000 USD"
+            ],
+            "anchor_chunk_ids": {
+              "$1,200,000 - $1,500,000 USD": [
+                "ee3def57b3436102814b960ec66974314b4b0733e7f9d05f16d2eb7214d6724f"
+              ]
+            }
+          },
+          {
+            "source": "04_Insurance_Claims_Processing_Automation.pdf",
+            "page": 2,
+            "anchors": [
+              "Total Duration: 16 weeks"
+            ],
+            "anchor_chunk_ids": {
+              "Total Duration: 16 weeks": [
+                "782f61a562f3bfaade5d2b17c073f56083f6173741ef45128dbf3ace12ca20e0"
+              ]
+            }
+          },
+          {
+            "source": "04_Insurance_Claims_Processing_Automation.pdf",
+            "page": 3,
+            "anchors": [
+              "$650,000 - $800,000 USD"
+            ],
+            "anchor_chunk_ids": {
+              "$650,000 - $800,000 USD": [
+                "29adae992687bb8ada7381cf99c4342eef94691b0a68f4a8f05b2ac256c424d4"
+              ]
+            }
+          }
+        ],
+        "comparison_outcome_modality": [
+          {
+            "source": "03_Retail_Supply_Chain_Analytics_Platform.pdf",
+            "page": 3,
+            "anchors": [
+              "Reduced stockout rates by 34%"
+            ],
+            "anchor_chunk_ids": {
+              "Reduced stockout rates by 34%": [
+                "4921a7ef821c911d41bf17da321df609bbd351d17003c43a00cdeb0c4861a04c"
+              ]
+            }
+          },
+          {
+            "source": "10_Manufacturing_IoT_Predictive_Maintenance_Platform.pdf",
+            "page": 3,
+            "anchors": [
+              "Projected 45% reduction in unplanned equipment downtime"
+            ],
+            "anchor_chunk_ids": {
+              "Projected 45% reduction in unplanned equipment downtime": [
+                "509a2dd2b2a5395db59181a5698605e577de3576ee485479c3a24a71cc295cc7"
+              ]
+            }
+          }
+        ],
+        "matching_uploaded_controls": [
+          {
+            "source": "eval_target_rfp.pdf",
+            "page": 1,
+            "anchors": [
+              "Azure migration",
+              "executive dashboards",
+              "HIPAA controls"
+            ],
+            "anchor_chunk_ids": {
+              "Azure migration": [
+                "3b1017b53f10e94cb3d2d3f3fb55459cac533ece0804cd205bc17767f5a90939"
+              ],
+              "executive dashboards": [
+                "3b1017b53f10e94cb3d2d3f3fb55459cac533ece0804cd205bc17767f5a90939"
+              ],
+              "HIPAA controls": [
+                "3b1017b53f10e94cb3d2d3f3fb55459cac533ece0804cd205bc17767f5a90939"
+              ]
+            }
+          },
+          {
+            "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+            "page": 1,
+            "anchors": [
+              "Document Type: Proposal"
+            ],
+            "anchor_chunk_ids": {
+              "Document Type: Proposal": [
+                "38055e6cf4ee1d1aa9a63b4b17165294ef784d45087b18c97aed2b6ebc909f9e"
+              ]
+            }
+          },
+          {
+            "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+            "page": 2,
+            "anchors": [
+              "Power BI",
+              "HIPAA"
+            ],
+            "anchor_chunk_ids": {
+              "Power BI": [
+                "c95a563cbe263c4e311a3679da9d9667db7fe49a473697c83e33691a1a64c4d3"
+              ],
+              "HIPAA": [
+                "45ae430450a2ac1c5f7b4cd339e12fc833d717b3eb566fea8ad3806dbdc9f69c",
+                "70b1f677a6c1b0bb4917f1f9ac5e349fae8a95bc2fd8e36a9bd4e03bed8ef82e",
+                "c95a563cbe263c4e311a3679da9d9667db7fe49a473697c83e33691a1a64c4d3"
+              ]
+            }
+          }
+        ],
+        "matching_clinical_requirements": [
+          {
+            "source": "07_Pharma_Clinical_Trial_Data_Platform.pdf",
+            "page": 1,
+            "anchors": [
+              "Document Type: Case Study"
+            ],
+            "anchor_chunk_ids": {
+              "Document Type: Case Study": [
+                "05bca3ed793662c64376563aeca59e4719880cd5bd14cbac624783e12a336ccc"
+              ]
+            }
+          },
+          {
+            "source": "07_Pharma_Clinical_Trial_Data_Platform.pdf",
+            "page": 3,
+            "anchors": [
+              "clinical data reconciliation time by 75%",
+              "85% of routine regulatory submissions",
+              "compliance certification"
+            ],
+            "anchor_chunk_ids": {
+              "clinical data reconciliation time by 75%": [
+                "ce102b971f360d3fd07e75f516d602e92d37421f9f7662d51ae0eba053dd42af"
+              ],
+              "85% of routine regulatory submissions": [
+                "ce102b971f360d3fd07e75f516d602e92d37421f9f7662d51ae0eba053dd42af"
+              ],
+              "compliance certification": [
+                "ce102b971f360d3fd07e75f516d602e92d37421f9f7662d51ae0eba053dd42af"
+              ]
+            }
+          }
+        ],
+        "unsupported_private_contact": [],
+        "unsupported_certification": [],
+        "ambiguous_missing_referent": [],
+        "ambiguous_missing_action": []
+      }
+    },
+    "signature_hash": "dbab6df4cae79b001bb2d54fae9adad7109216c601fa404a5f16ecb32096173b"
+  },
+  "provider_failures": [
+    {
+      "case_id": "semantic_modernization",
+      "requested_retrieval_mode": "graph_only",
+      "stage": "grade_web_evidence",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "error_type": "RateLimitError",
+      "http_status": 429,
+      "category": "rate_limit",
+      "retrieval_quality_failure": false
+    }
+  ],
+  "reports": [
+    {
+      "schema_version": "1.0",
+      "timestamp": "2026-10-05T22:35:40.223547+00:00",
+      "retrieval_mode": "vector_only",
+      "question_set_hash": "ba097a4fed2d707445f0362eb8a26220e41ac1cf571edfb3fde1aee302b56752",
+      "corpus_hash": "641e9d4dad22e33140475ac40b0245dde1edb3ed6e2acc0c5fa8e75919d9d39f",
+      "case_ids": [
+        "semantic_modernization",
+        "semantic_healthcare_security",
+        "factual_banking_duration",
+        "factual_insurance_team",
+        "relationship_rpa",
+        "relationship_regulatory",
+        "multihop_shared_retail_pharma",
+        "multihop_shared_banking_healthcare",
+        "comparison_delivery_budget",
+        "comparison_outcome_modality",
+        "matching_uploaded_controls",
+        "matching_clinical_requirements",
+        "unsupported_private_contact",
+        "unsupported_certification",
+        "ambiguous_missing_referent",
+        "ambiguous_missing_action"
+      ],
+      "judge": {
+        "provider": null,
+        "model": null,
+        "status": "not_run:capture_only"
+      },
+      "generation": {
+        "class": "ChatGroq",
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.3,
+        "control_temperature": 0.0,
+        "retrieval_k": 6,
+        "min_relevance_score": 0.5,
+        "max_query_retries": 1,
+        "max_prompt_tokens": 6500,
+        "max_context_chars_per_chunk": 1000,
+        "embedding_model": "BAAI/bge-small-en-v1.5"
+      },
+      "versions": {
+        "git_revision": "a729b48f895f976bb20770187cf37567ad415c8a",
+        "packages": {
+          "ragas": "0.4.3",
+          "instructor": "1.17.0",
+          "langchain-core": "1.6.1",
+          "langchain-community": "0.3.31",
+          "langgraph": "1.2.11",
+          "fastembed": "0.8.0",
+          "chromadb": "1.5.9",
+          "neo4j": "6.3.1",
+          "groq": "0.37.1",
+          "google-genai": "2.21.0"
+        },
+        "source_tree_hash": "5290c5653258829834fa75281d964db7ac89bbff7802b75fa1faeb7a7fbc885c"
+      },
+      "comparison_policy": {
+        "web_search": "disabled",
+        "strict_graph_only": true,
+        "hybrid_fallback": "recorded_as_mode_failure"
+      },
+      "baseline_status": "uncalibrated",
+      "cases": [
+        {
+          "id": "semantic_modernization",
+          "status": "completed",
+          "requested_retrieval_mode": "vector_only",
+          "question": "Summarize the modernization priorities identified by the banking digital audit.",
+          "category": null,
+          "judge_latency_seconds": 0,
+          "pipeline_latency_seconds": 8.404613,
+          "retrieval_evidence": [
+            {
+              "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+              "page": 1,
+              "chunk_id": "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf",
+              "evidence_id": null,
+              "document_origin": "sample",
+              "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nExecutive Summary\nThis project delivered a comprehensive digital audit for a leading multinational bank. The engagement\nfocused on evaluating the client's digital transformation maturity, identifying gaps in data governance, and\nrecommending a modernization roadmap. Our team of 12 consultants worked across three workstreams over\na 16-week engagement.\nObjectives"
+            },
+            {
+              "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+              "page": 1,
+              "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+              "evidence_id": null,
+              "document_origin": "sample",
+              "content": "a 16-week engagement.\nObjectives\n1. Assess the current state of the client's core banking platform and digital channels.\n2. Evaluate data quality, lineage, and governance across 14 business units.\n3. Benchmark digital maturity against industry peers using proprietary frameworks.\n4. Deliver a prioritized transformation roadmap with ROI projections.\nTechnology Stack\n- Cloud Platform: Microsoft Azure (Azure Data Factory, Azure SQL Database)"
+            },
+            {
+              "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+              "page": 2,
+              "chunk_id": "ddd884bc9dfad65a4512bc9bcd7aabe909a19109518f0d8adf0586c5b0b5a6d0",
+              "evidence_id": null,
+              "document_origin": "sample",
+              "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBudget Range\nEstimated project cost: $850,000 - $1,100,000 USD\nKey Outcomes\n- Identified 47 critical data governance gaps across the organization.\n- Achieved 23% improvement in data quality scores within the first quarter.\n- Delivered a 3-year digital transformation roadmap adopted by the board.\n- Reduced audit cycle time by 35% through automation of manual checks.\nPage 3/3 | Internal Use Only"
+            },
+            {
+              "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+              "page": 0,
+              "chunk_id": "03da78acb6bfba67be6cc73a8cd9e64704d55617a23932957f169f1f3365bf05",
+              "evidence_id": null,
+              "document_origin": "sample",
+              "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBanking Sector Digital Audit 2024\nDocument Type: Project Outline\nIndustry: Banking & Financial Services\nClassification: Internal / Confidential\nPage 1/3 | Internal Use Only"
+            },
+            {
+              "source": "06_Government_Tax_Filing_Modernization.pdf",
+              "page": 1,
+              "chunk_id": "53bee0aaca16a129483855cc5027682dc86816269c3dd25ea308047fd39c28c9",
+              "evidence_id": null,
+              "document_origin": "sample",
+              "content": "CONFIDENTIAL | PROPOSAL | Government & Public Sector\nExecutive Summary\nProposal to modernize a national tax filing system from legacy mainframe to a cloud-native microservices\narchitecture. The solution will improve citizen experience, reduce processing time, and enable real-time tax\ncomputation.\nObjectives\n1. Migrate legacy COBOL-based tax engine to cloud-native microservices.\n2. Build a modern citizen-facing web portal with mobile responsiveness."
+            }
+          ],
+          "sample": {
+            "user_input": "Summarize the modernization priorities identified by the banking digital audit.",
+            "retrieved_contexts": [
+              "[Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2]\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nExecutive Summary\nThis project delivered a comprehensive digital audit for a leading multinational bank. The engagement\nfocused on evaluating the client's digital transformation maturity, identifying gaps in data governance, and\nrecommending a modernization roadmap. Our team of 12 consultants worked across three workstreams over\na 16-week engagement.\nObjectives",
+              "[Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2]\na 16-week engagement.\nObjectives\n1. Assess the current state of the client's core banking platform and digital channels.\n2. Evaluate data quality, lineage, and governance across 14 business units.\n3. Benchmark digital maturity against industry peers using proprietary frameworks.\n4. Deliver a prioritized transformation roadmap with ROI projections.\nTechnology Stack\n- Cloud Platform: Microsoft Azure (Azure Data Factory, Azure SQL Database)",
+              "[Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 3]\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBudget Range\nEstimated project cost: $850,000 - $1,100,000 USD\nKey Outcomes\n- Identified 47 critical data governance gaps across the organization.\n- Achieved 23% improvement in data quality scores within the first quarter.\n- Delivered a 3-year digital transformation roadmap adopted by the board.\n- Reduced audit cycle time by 35% through automation of manual checks.\nPage 3/3 | Internal Use Only",
+              "[Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 1]\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBanking Sector Digital Audit 2024\nDocument Type: Project Outline\nIndustry: Banking & Financial Services\nClassification: Internal / Confidential\nPage 1/3 | Internal Use Only",
+              "[Source: 06_Government_Tax_Filing_Modernization.pdf, Page 2]\nCONFIDENTIAL | PROPOSAL | Government & Public Sector\nExecutive Summary\nProposal to modernize a national tax filing system from legacy mainframe to a cloud-native microservices\narchitecture. The solution will improve citizen experience, reduce processing time, and enable real-time tax\ncomputation.\nObjectives\n1. Migrate legacy COBOL-based tax engine to cloud-native microservices.\n2. Build a modern citizen-facing web portal with mobile responsiveness."
+            ],
+            "response": "## Modernization Priorities Identified by the Banking Digital Audit\n\n|------------------------|---------------------|\n| Modernize the client’s core banking platform and digital channels | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2] |\n| Strengthen data quality, lineage, and governance across 14 business units | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2] |\n| Benchmark and raise digital‑maturity levels against industry peers using proprietary frameworks | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2] |\n| Deliver a prioritized transformation roadmap with ROI projections for a 3‑year horizon | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2] |\n| Close the 47 critical data‑governance gaps identified across the organization | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 3] |\n| Improve data‑quality scores (23 % improvement reported in the first quarter) | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 3] |\n| Automate manual audit checks to reduce audit‑cycle time by 35 % | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 3] |\n\nThese priorities form the basis of the bank’s modernization roadmap, targeting core system upgrades, robust data governance, enhanced digital maturity, measurable ROI, and operational efficiencies through automation.",
+            "reference": "The banking audit assessed digital maturity and data governance, benchmarked peers, and recommended a prioritized modernization roadmap with ROI projections."
+          },
+          "generation_kind": "llm_kb",
+          "deterministic": {
+            "source_coverage": null,
+            "tool_correctness": true,
+            "origin_correctness": true,
+            "route_correctness": true,
+            "retrieval_mode_correctness": true,
+            "no_answer_behavior": true,
+            "citation_identity_coverage": 1.0,
+            "grounding_passed": true,
+            "graph_path_provenance_correctness": null,
+            "answer_present": true
+          },
+          "provenance": {
+            "requested_retrieval_mode": "vector_only",
+            "retrieval_mode": "vector_only",
+            "generation_prompt_hash": "e6c9bd0661acd64a7ef2422ec77ff6c7370a9fb6b291279f060d5554d60c2711",
+            "generation_auxiliary_context_hash": "",
+            "generation_evidence": [
+              {
+                "chunk_id": "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf",
+                "evidence_id": null,
+                "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+                "page": 1,
+                "document_origin": "sample"
+              },
+              {
+                "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+                "evidence_id": null,
+                "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+                "page": 1,
+                "document_origin": "sample"
+              },
+              {
+                "chunk_id": "ddd884bc9dfad65a4512bc9bcd7aabe909a19109518f0d8adf0586c5b0b5a6d0",
+                "evidence_id": null,
+                "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+                "page": 2,
+                "document_origin": "sample"
+              },
+              {
+                "chunk_id": "03da78acb6bfba67be6cc73a8cd9e64704d55617a23932957f169f1f3365bf05",
+                "evidence_id": null,
+                "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+                "page": 0,
+                "document_origin": "sample"
+              },
+              {
+                "chunk_id": "53bee0aaca16a129483855cc5027682dc86816269c3dd25ea308047fd39c28c9",
+                "evidence_id": null,
+                "source": "06_Government_Tax_Filing_Modernization.pdf",
+                "page": 1,
+                "document_origin": "sample"
+              }
+            ],
+            "intent": "search",
+            "graph_version": "",
+            "graph_fallback_reason": "",
+            "graph_paths": [],
+            "retry_count": 1,
+            "executed_tools": [
+              "health_check",
+              "intent_classifier",
+              "tool_planner",
+              "search_knowledge_base",
+              "evidence_availability_check",
+              "web_search",
+              "web_evidence_grader",
+              "query_rewriter",
+              "tool_planner",
+              "search_knowledge_base",
+              "evidence_availability_check",
+              "prompt_synthesizer",
+              "prompt_budget",
+              "generation_prompt_budget",
+              "final_response",
+              "grounding_verifier",
+              "answer_repair",
+              "final_grounding_verifier"
+            ],
+            "retrieved_sources": [
+              "01_Banking_Sector_Digital_Audit_2024.pdf",
+              "06_Government_Tax_Filing_Modernization.pdf"
+            ],
+            "retrieved_origins": [
+              "sample"
+            ],
+            "retrieval_events": []
+          },
+          "scores": {
+            "faithfulness": {
+              "status": "not_run",
+              "score": null,
+              "reason": "capture_only"
+            },
+            "answer_relevancy": {
+              "status": "not_run",
+              "score": null,
+              "reason": "capture_only"
+            },
+            "context_precision": {
+              "status": "not_run",
+              "score": null,
+              "reason": "capture_only"
+            },
+            "context_recall": {
+              "status": "not_run",
+              "score": null,
+              "reason": "capture_only"
+            },
+            "answer_correctness": {
+              "status": "not_run",
+              "score": null,
+              "reason": "capture_only"
+            }
+          },
+          "query_class": "semantic_single_hop",
+          "execution_order": [
+            "vector_only",
+            "graph_only",
+            "hybrid"
+          ],
+          "benchmark": {
+            "retrieval_success": true,
+            "retrieved_evidence_recall": 1.0,
+            "generation_evidence_recall": 1.0,
+            "provenance_coverage": 1.0,
+            "answer_grounding": true,
+            "route_correctness": true,
+            "tool_correctness": true,
+            "expected_behavior": true,
+            "exact_answer_probe_coverage": null,
+            "optimal_auto_route_correctness": true,
+            "auto_mode": "vector_only",
+            "requested_backend_valid": true,
+            "backend_reason": "",
+            "graph_path_correctness": null,
+            "graph_path_count": 0,
+            "requested_mode": "vector_only"
+          }
+        }
+      ],
+      "failures": [],
+      "aggregate": {
+        "metrics": {
+          "faithfulness": {
+            "mean": null,
+            "scored": 0,
+            "total_cases": 1,
+            "errors": 0,
+            "not_applicable": 0,
+            "not_run": 1,
+            "variants": []
+          },
+          "answer_relevancy": {
+            "mean": null,
+            "scored": 0,
+            "total_cases": 1,
+            "errors": 0,
+            "not_applicable": 0,
+            "not_run": 1,
+            "variants": []
+          },
+          "context_precision": {
+            "mean": null,
+            "scored": 0,
+            "total_cases": 1,
+            "errors": 0,
+            "not_applicable": 0,
+            "not_run": 1,
+            "variants": []
+          },
+          "context_recall": {
+            "mean": null,
+            "scored": 0,
+            "total_cases": 1,
+            "errors": 0,
+            "not_applicable": 0,
+            "not_run": 1,
+            "variants": []
+          },
+          "answer_correctness": {
+            "mean": null,
+            "scored": 0,
+            "total_cases": 1,
+            "errors": 0,
+            "not_applicable": 0,
+            "not_run": 1,
+            "variants": []
+          }
+        },
+        "deterministic": {
+          "answer_present": {
+            "mean": 1.0,
+            "evaluated": 1,
+            "total_cases": 1
+          },
+          "citation_identity_coverage": {
+            "mean": 1.0,
+            "evaluated": 1,
+            "total_cases": 1
+          },
+          "graph_path_provenance_correctness": {
+            "mean": null,
+            "evaluated": 0,
+            "total_cases": 1
+          },
+          "grounding_passed": {
+            "mean": 1.0,
+            "evaluated": 1,
+            "total_cases": 1
+          },
+          "no_answer_behavior": {
+            "mean": 1.0,
+            "evaluated": 1,
+            "total_cases": 1
+          },
+          "origin_correctness": {
+            "mean": 1.0,
+            "evaluated": 1,
+            "total_cases": 1
+          },
+          "retrieval_mode_correctness": {
+            "mean": 1.0,
+            "evaluated": 1,
+            "total_cases": 1
+          },
+          "route_correctness": {
+            "mean": 1.0,
+            "evaluated": 1,
+            "total_cases": 1
+          },
+          "source_coverage": {
+            "mean": null,
+            "evaluated": 0,
+            "total_cases": 1
+          },
+          "tool_correctness": {
+            "mean": 1.0,
+            "evaluated": 1,
+            "total_cases": 1
+          }
+        },
+        "total_cases": 1,
+        "pipeline_failures": 0,
+        "pipeline_latency_seconds": 8.404613,
+        "judge_latency_seconds": 0
+      }
+    },
+    {
+      "schema_version": "1.0",
+      "timestamp": "2026-10-05T22:35:40.395760+00:00",
+      "retrieval_mode": "graph_only",
+      "question_set_hash": "ba097a4fed2d707445f0362eb8a26220e41ac1cf571edfb3fde1aee302b56752",
+      "corpus_hash": "641e9d4dad22e33140475ac40b0245dde1edb3ed6e2acc0c5fa8e75919d9d39f",
+      "case_ids": [
+        "semantic_modernization",
+        "semantic_healthcare_security",
+        "factual_banking_duration",
+        "factual_insurance_team",
+        "relationship_rpa",
+        "relationship_regulatory",
+        "multihop_shared_retail_pharma",
+        "multihop_shared_banking_healthcare",
+        "comparison_delivery_budget",
+        "comparison_outcome_modality",
+        "matching_uploaded_controls",
+        "matching_clinical_requirements",
+        "unsupported_private_contact",
+        "unsupported_certification",
+        "ambiguous_missing_referent",
+        "ambiguous_missing_action"
+      ],
+      "judge": {
+        "provider": null,
+        "model": null,
+        "status": "not_run:capture_only"
+      },
+      "generation": {
+        "class": "ChatGroq",
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.3,
+        "control_temperature": 0.0,
+        "retrieval_k": 6,
+        "min_relevance_score": 0.5,
+        "max_query_retries": 1,
+        "max_prompt_tokens": 6500,
+        "max_context_chars_per_chunk": 1000,
+        "embedding_model": "BAAI/bge-small-en-v1.5"
+      },
+      "versions": {
+        "git_revision": "a729b48f895f976bb20770187cf37567ad415c8a",
+        "packages": {
+          "ragas": "0.4.3",
+          "instructor": "1.17.0",
+          "langchain-core": "1.6.1",
+          "langchain-community": "0.3.31",
+          "langgraph": "1.2.11",
+          "fastembed": "0.8.0",
+          "chromadb": "1.5.9",
+          "neo4j": "6.3.1",
+          "groq": "0.37.1",
+          "google-genai": "2.21.0"
+        },
+        "source_tree_hash": "5290c5653258829834fa75281d964db7ac89bbff7802b75fa1faeb7a7fbc885c"
+      },
+      "comparison_policy": {
+        "web_search": "disabled",
+        "strict_graph_only": true,
+        "hybrid_fallback": "recorded_as_mode_failure"
+      },
+      "baseline_status": "uncalibrated",
+      "cases": [],
+      "failures": []
+    },
+    {
+      "schema_version": "1.0",
+      "timestamp": "2026-10-05T22:35:40.620644+00:00",
+      "retrieval_mode": "hybrid",
+      "question_set_hash": "ba097a4fed2d707445f0362eb8a26220e41ac1cf571edfb3fde1aee302b56752",
+      "corpus_hash": "641e9d4dad22e33140475ac40b0245dde1edb3ed6e2acc0c5fa8e75919d9d39f",
+      "case_ids": [
+        "semantic_modernization",
+        "semantic_healthcare_security",
+        "factual_banking_duration",
+        "factual_insurance_team",
+        "relationship_rpa",
+        "relationship_regulatory",
+        "multihop_shared_retail_pharma",
+        "multihop_shared_banking_healthcare",
+        "comparison_delivery_budget",
+        "comparison_outcome_modality",
+        "matching_uploaded_controls",
+        "matching_clinical_requirements",
+        "unsupported_private_contact",
+        "unsupported_certification",
+        "ambiguous_missing_referent",
+        "ambiguous_missing_action"
+      ],
+      "judge": {
+        "provider": null,
+        "model": null,
+        "status": "not_run:capture_only"
+      },
+      "generation": {
+        "class": "ChatGroq",
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.3,
+        "control_temperature": 0.0,
+        "retrieval_k": 6,
+        "min_relevance_score": 0.5,
+        "max_query_retries": 1,
+        "max_prompt_tokens": 6500,
+        "max_context_chars_per_chunk": 1000,
+        "embedding_model": "BAAI/bge-small-en-v1.5"
+      },
+      "versions": {
+        "git_revision": "a729b48f895f976bb20770187cf37567ad415c8a",
+        "packages": {
+          "ragas": "0.4.3",
+          "instructor": "1.17.0",
+          "langchain-core": "1.6.1",
+          "langchain-community": "0.3.31",
+          "langgraph": "1.2.11",
+          "fastembed": "0.8.0",
+          "chromadb": "1.5.9",
+          "neo4j": "6.3.1",
+          "groq": "0.37.1",
+          "google-genai": "2.21.0"
+        },
+        "source_tree_hash": "5290c5653258829834fa75281d964db7ac89bbff7802b75fa1faeb7a7fbc885c"
+      },
+      "comparison_policy": {
+        "web_search": "disabled",
+        "strict_graph_only": true,
+        "hybrid_fallback": "recorded_as_mode_failure"
+      },
+      "baseline_status": "uncalibrated",
+      "cases": [],
+      "failures": []
+    }
+  ],
+  "judge": "not_run:capture_only",
+  "retrieval_quality_conclusions": "not_established",
+  "aborted_execution": {
+    "case_id": "semantic_modernization",
+    "requested_retrieval_mode": "graph_only",
+    "stage": "grade_web_evidence",
+    "provider": "groq",
+    "model": "openai/gpt-oss-120b",
+    "error_type": "RateLimitError",
+    "http_status": 429,
+    "category": "rate_limit",
+    "retrieval_quality_failure": false
+  },
+  "parity_after_capture": true,
+  "internal_rfp_untouched": true
+}

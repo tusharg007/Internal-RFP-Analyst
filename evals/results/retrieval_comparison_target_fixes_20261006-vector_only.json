@@ -1,0 +1,791 @@
+{
+  "schema_version": "1.0",
+  "timestamp": "2026-10-05T20:45:45.107435+00:00",
+  "retrieval_mode": "vector_only",
+  "question_set_hash": "ba097a4fed2d707445f0362eb8a26220e41ac1cf571edfb3fde1aee302b56752",
+  "corpus_hash": "641e9d4dad22e33140475ac40b0245dde1edb3ed6e2acc0c5fa8e75919d9d39f",
+  "case_ids": [
+    "semantic_modernization",
+    "semantic_healthcare_security",
+    "factual_banking_duration",
+    "factual_insurance_team",
+    "relationship_rpa",
+    "relationship_regulatory",
+    "multihop_shared_retail_pharma",
+    "multihop_shared_banking_healthcare",
+    "comparison_delivery_budget",
+    "comparison_outcome_modality",
+    "matching_uploaded_controls",
+    "matching_clinical_requirements",
+    "unsupported_private_contact",
+    "unsupported_certification",
+    "ambiguous_missing_referent",
+    "ambiguous_missing_action"
+  ],
+  "judge": {
+    "provider": null,
+    "model": null,
+    "status": "not_run"
+  },
+  "generation": {
+    "class": "ChatGroq",
+    "model": "openai/gpt-oss-120b",
+    "temperature": 0.3,
+    "control_temperature": 0.0,
+    "retrieval_k": 6,
+    "min_relevance_score": 0.5,
+    "max_query_retries": 1,
+    "max_prompt_tokens": 6500,
+    "max_context_chars_per_chunk": 1000,
+    "embedding_model": "BAAI/bge-small-en-v1.5"
+  },
+  "versions": {
+    "git_revision": "a729b48f895f976bb20770187cf37567ad415c8a",
+    "packages": {
+      "ragas": "0.4.3",
+      "instructor": "1.17.0",
+      "langchain-core": "1.6.1",
+      "langchain-community": "0.3.31",
+      "langgraph": "1.2.11",
+      "fastembed": "0.8.0",
+      "chromadb": "1.5.9",
+      "neo4j": "6.3.1",
+      "groq": "0.37.1",
+      "google-genai": "2.21.0"
+    },
+    "source_tree_hash": "a94ede06d4c52ab11dc52334f8f82d7e362d0edff70c84334abf21c14464b3b5"
+  },
+  "comparison_policy": {
+    "web_search": "disabled",
+    "strict_graph_only": true,
+    "hybrid_fallback": "recorded_as_mode_failure"
+  },
+  "baseline_status": "uncalibrated",
+  "cases": [
+    {
+      "id": "semantic_modernization",
+      "status": "completed",
+      "requested_retrieval_mode": "vector_only",
+      "question": "Summarize the modernization priorities identified by the banking digital audit.",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 4.305173,
+      "retrieval_evidence": [
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 1,
+          "chunk_id": "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nExecutive Summary\nThis project delivered a comprehensive digital audit for a leading multinational bank. The engagement\nfocused on evaluating the client's digital transformation maturity, identifying gaps in data governance, and\nrecommending a modernization roadmap. Our team of 12 consultants worked across three workstreams over\na 16-week engagement.\nObjectives"
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 1,
+          "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "a 16-week engagement.\nObjectives\n1. Assess the current state of the client's core banking platform and digital channels.\n2. Evaluate data quality, lineage, and governance across 14 business units.\n3. Benchmark digital maturity against industry peers using proprietary frameworks.\n4. Deliver a prioritized transformation roadmap with ROI projections.\nTechnology Stack\n- Cloud Platform: Microsoft Azure (Azure Data Factory, Azure SQL Database)"
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 2,
+          "chunk_id": "ddd884bc9dfad65a4512bc9bcd7aabe909a19109518f0d8adf0586c5b0b5a6d0",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBudget Range\nEstimated project cost: $850,000 - $1,100,000 USD\nKey Outcomes\n- Identified 47 critical data governance gaps across the organization.\n- Achieved 23% improvement in data quality scores within the first quarter.\n- Delivered a 3-year digital transformation roadmap adopted by the board.\n- Reduced audit cycle time by 35% through automation of manual checks.\nPage 3/3 | Internal Use Only"
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 0,
+          "chunk_id": "03da78acb6bfba67be6cc73a8cd9e64704d55617a23932957f169f1f3365bf05",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBanking Sector Digital Audit 2024\nDocument Type: Project Outline\nIndustry: Banking & Financial Services\nClassification: Internal / Confidential\nPage 1/3 | Internal Use Only"
+        }
+      ],
+      "sample": {
+        "user_input": "Summarize the modernization priorities identified by the banking digital audit.",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope. I could not find enough reliable evidence in the private knowledge base or web search results to answer confidently.",
+        "reference": "The banking audit assessed digital maturity and data governance, benchmarked peers, and recommended a prioritized modernization roadmap with ROI projections."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": true,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "vector_only",
+        "retrieval_mode": "vector_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "search",
+        "graph_version": "",
+        "graph_fallback_reason": "",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [
+          "01_Banking_Sector_Digital_Audit_2024.pdf"
+        ],
+        "retrieved_origins": [
+          "sample"
+        ],
+        "retrieval_events": []
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "semantic_single_hop",
+      "expected_optimal_mode": "vector_only",
+      "execution_order": [
+        "vector_only",
+        "graph_only",
+        "hybrid"
+      ],
+      "benchmark": {
+        "retrieval_success": true,
+        "retrieved_evidence_recall": 1.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": null,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "vector_only",
+        "requested_backend_valid": true,
+        "backend_reason": "",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "vector_only"
+      }
+    },
+    {
+      "id": "semantic_healthcare_security",
+      "status": "completed",
+      "requested_retrieval_mode": "vector_only",
+      "question": "What does the healthcare migration proposal say about protecting patient data during migration?",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 2.114376,
+      "retrieval_evidence": [
+        {
+          "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+          "page": 1,
+          "chunk_id": "45ae430450a2ac1c5f7b4cd339e12fc833d717b3eb566fea8ad3806dbdc9f69c",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "CONFIDENTIAL | PROPOSAL | Healthcare & Life Sciences\nExecutive Summary\nProposal for migrating a regional hospital network's on-premises data warehouse to Microsoft Azure. The\nproject will ensure full HIPAA compliance, zero data loss, and improved analytics capabilities using Azure\nDatabricks and Azure Synapse Analytics.\nObjectives\n1. Migrate 15TB of patient records and clinical data to Azure SQL Database.\n2. Implement HIPAA-compliant security controls including encryption at rest and in transit."
+        },
+        {
+          "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+          "page": 0,
+          "chunk_id": "38055e6cf4ee1d1aa9a63b4b17165294ef784d45087b18c97aed2b6ebc909f9e",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "CONFIDENTIAL | PROPOSAL | Healthcare & Life Sciences\nHealthcare Data Migration to Azure Cloud\nDocument Type: Proposal\nIndustry: Healthcare & Life Sciences\nClassification: Internal / Confidential\nPage 1/3 | Internal Use Only"
+        },
+        {
+          "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+          "page": 2,
+          "chunk_id": "ee3def57b3436102814b960ec66974314b4b0733e7f9d05f16d2eb7214d6724f",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "CONFIDENTIAL | PROPOSAL | Healthcare & Life Sciences\nBudget Range\nEstimated project cost: $1,200,000 - $1,500,000 USD\nKey Outcomes\n- Projected 40% reduction in infrastructure costs over 3 years.\n- Real-time clinical dashboards reducing report generation from 2 days to 15 minutes.\n- Full HIPAA compliance certification upon project completion.\n- Scalable architecture supporting 5x data growth without re-platforming.\nPage 3/3 | Internal Use Only"
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 1,
+          "chunk_id": "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nExecutive Summary\nThis project delivered a comprehensive digital audit for a leading multinational bank. The engagement\nfocused on evaluating the client's digital transformation maturity, identifying gaps in data governance, and\nrecommending a modernization roadmap. Our team of 12 consultants worked across three workstreams over\na 16-week engagement.\nObjectives"
+        },
+        {
+          "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+          "page": 1,
+          "chunk_id": "70b1f677a6c1b0bb4917f1f9ac5e349fae8a95bc2fd8e36a9bd4e03bed8ef82e",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "- Compliance: HIPAA BAA, SOC 2 Type II controls\n- Monitoring: Azure Monitor, Log Analytics Workspace\nTeam Composition\n- Project Lead: 1\n- Cloud Architects: 2\n- Data Engineers: 3\n- Security Specialist: 1\n- HIPAA Compliance Officer: 1\n- QA Engineers: 2\nTotal Team Size: 10 professionals\nTimeline & Milestones\n- Phase 1 (Weeks 1-3): Architecture design & compliance planning\n- Phase 2 (Weeks 4-10): Data migration & validation\n- Phase 3 (Weeks 11-14): Analytics layer & dashboard development"
+        }
+      ],
+      "sample": {
+        "user_input": "What does the healthcare migration proposal say about protecting patient data during migration?",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope. I could not find enough reliable evidence in the private knowledge base or web search results to answer confidently.",
+        "reference": "The healthcare proposal calls for zero data loss and HIPAA-compliant encryption at rest and in transit. These are proposed controls, not evidence of completed certification."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": true,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "vector_only",
+        "retrieval_mode": "vector_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "search",
+        "graph_version": "",
+        "graph_fallback_reason": "",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [
+          "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf"
+        ],
+        "retrieved_origins": [
+          "sample"
+        ],
+        "retrieval_events": []
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "semantic_single_hop",
+      "expected_optimal_mode": "vector_only",
+      "execution_order": [
+        "graph_only",
+        "hybrid",
+        "vector_only"
+      ],
+      "benchmark": {
+        "retrieval_success": true,
+        "retrieved_evidence_recall": 1.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": null,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "vector_only",
+        "requested_backend_valid": true,
+        "backend_reason": "",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "vector_only"
+      }
+    },
+    {
+      "id": "factual_banking_duration",
+      "status": "completed",
+      "requested_retrieval_mode": "vector_only",
+      "question": "What is the total timeline for Banking Sector Digital Audit 2024?",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 2.189265,
+      "retrieval_evidence": [
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 1,
+          "chunk_id": "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nExecutive Summary\nThis project delivered a comprehensive digital audit for a leading multinational bank. The engagement\nfocused on evaluating the client's digital transformation maturity, identifying gaps in data governance, and\nrecommending a modernization roadmap. Our team of 12 consultants worked across three workstreams over\na 16-week engagement.\nObjectives"
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 0,
+          "chunk_id": "03da78acb6bfba67be6cc73a8cd9e64704d55617a23932957f169f1f3365bf05",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBanking Sector Digital Audit 2024\nDocument Type: Project Outline\nIndustry: Banking & Financial Services\nClassification: Internal / Confidential\nPage 1/3 | Internal Use Only"
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 1,
+          "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "a 16-week engagement.\nObjectives\n1. Assess the current state of the client's core banking platform and digital channels.\n2. Evaluate data quality, lineage, and governance across 14 business units.\n3. Benchmark digital maturity against industry peers using proprietary frameworks.\n4. Deliver a prioritized transformation roadmap with ROI projections.\nTechnology Stack\n- Cloud Platform: Microsoft Azure (Azure Data Factory, Azure SQL Database)"
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 2,
+          "chunk_id": "ddd884bc9dfad65a4512bc9bcd7aabe909a19109518f0d8adf0586c5b0b5a6d0",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBudget Range\nEstimated project cost: $850,000 - $1,100,000 USD\nKey Outcomes\n- Identified 47 critical data governance gaps across the organization.\n- Achieved 23% improvement in data quality scores within the first quarter.\n- Delivered a 3-year digital transformation roadmap adopted by the board.\n- Reduced audit cycle time by 35% through automation of manual checks.\nPage 3/3 | Internal Use Only"
+        },
+        {
+          "source": "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+          "page": 1,
+          "chunk_id": "d41bace8af896148fdd0e091435c17f2818b249ca3f68e1cafcf1cb322df89ef",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "- Phase 4 (Weeks 15-18): UAT, security audit & go-live\nTotal Duration: 18 weeks\nPage 2/3 | Internal Use Only"
+        }
+      ],
+      "sample": {
+        "user_input": "What is the total timeline for Banking Sector Digital Audit 2024?",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope. I could not find enough reliable evidence in the private knowledge base or web search results to answer confidently.",
+        "reference": "The banking digital audit has a total duration of 16 weeks."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": true,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "vector_only",
+        "retrieval_mode": "vector_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "search",
+        "graph_version": "",
+        "graph_fallback_reason": "",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [
+          "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf"
+        ],
+        "retrieved_origins": [
+          "sample"
+        ],
+        "retrieval_events": []
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "exact_factual_document",
+      "expected_optimal_mode": "graph_only",
+      "execution_order": [
+        "hybrid",
+        "vector_only",
+        "graph_only"
+      ],
+      "benchmark": {
+        "retrieval_success": false,
+        "retrieved_evidence_recall": 0.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": 0.0,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "graph_only",
+        "requested_backend_valid": true,
+        "backend_reason": "",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "vector_only"
+      }
+    },
+    {
+      "id": "factual_insurance_team",
+      "status": "completed",
+      "requested_retrieval_mode": "vector_only",
+      "question": "How many professionals are on the Insurance Claims Processing Automation team?",
+      "category": null,
+      "judge_latency_seconds": 0,
+      "pipeline_latency_seconds": 2.099787,
+      "retrieval_evidence": [
+        {
+          "source": "04_Insurance_Claims_Processing_Automation.pdf",
+          "page": 1,
+          "chunk_id": "9e61fa556f7d450ac6ee2d2ef38b5cbc1a0951663cf1280df5a339c421b2479d",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "CONFIDENTIAL | RFP RESPONSE | Insurance\nExecutive Summary\nResponse to RFP for automating the end-to-end claims processing workflow for a mid-tier insurance provider.\nThe solution leverages RPA, AI document extraction, and Azure cloud services to reduce claims processing\ntime by 60%.\nObjectives\n1. Automate document intake and classification for 15 claim types.\n2. Implement intelligent data extraction from unstructured claim forms.\n3. Build automated fraud detection rules engine."
+        },
+        {
+          "source": "04_Insurance_Claims_Processing_Automation.pdf",
+          "page": 1,
+          "chunk_id": "b4c3437f74c098b6b4bd91e4dda766d287a90316a636cfd7b3001b0213c78200",
+          "evidence_id": null,
+          "document_origin": "sample",
+          "content": "3. Build automated fraud detection rules engine.\n4. Reduce average claims processing time from 14 days to 5 days.\nTechnology Stack\n- RPA Platform: UiPath Enterprise with Orchestrator\n- AI/ML: Azure Cognitive Services (Form Recognizer, Custom Vision)\n- Serverless: Azure Functions for event-driven processing\n- Database: Azure Cosmos DB for claims data store\n- Integration: Azure Service Bus for message queuing\n- Monitoring: Application Insights, Power Automate alerts\nTeam Composition\n- Solution Architect: 1"
+        }
+      ],
+      "sample": {
+        "user_input": "How many professionals are on the Insurance Claims Processing Automation team?",
+        "retrieved_contexts": [],
+        "response": "I could not find sufficiently relevant evidence in the selected document scope. I could not find enough reliable evidence in the private knowledge base or web search results to answer confidently.",
+        "reference": "The insurance automation team consists of 9 professionals."
+      },
+      "generation_kind": "insufficient",
+      "deterministic": {
+        "source_coverage": null,
+        "tool_correctness": true,
+        "origin_correctness": true,
+        "route_correctness": true,
+        "retrieval_mode_correctness": true,
+        "no_answer_behavior": false,
+        "citation_identity_coverage": null,
+        "grounding_passed": null,
+        "graph_path_provenance_correctness": null,
+        "answer_present": true
+      },
+      "provenance": {
+        "requested_retrieval_mode": "vector_only",
+        "retrieval_mode": "vector_only",
+        "generation_prompt_hash": "",
+        "generation_auxiliary_context_hash": "",
+        "generation_evidence": [],
+        "intent": "search",
+        "graph_version": "",
+        "graph_fallback_reason": "",
+        "graph_paths": [],
+        "retry_count": 1,
+        "executed_tools": [
+          "health_check",
+          "intent_classifier",
+          "tool_planner",
+          "search_knowledge_base",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "query_rewriter",
+          "tool_planner",
+          "search_knowledge_base",
+          "evidence_availability_check",
+          "web_search",
+          "web_evidence_grader",
+          "final_response"
+        ],
+        "retrieved_sources": [
+          "04_Insurance_Claims_Processing_Automation.pdf"
+        ],
+        "retrieved_origins": [
+          "sample"
+        ],
+        "retrieval_events": []
+      },
+      "scores": {
+        "faithfulness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_relevancy": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_precision": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "context_recall": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        },
+        "answer_correctness": {
+          "status": "not_run",
+          "score": null,
+          "reason": "capture_only"
+        }
+      },
+      "query_class": "exact_factual_document",
+      "expected_optimal_mode": "vector_only",
+      "execution_order": [
+        "vector_only",
+        "graph_only",
+        "hybrid"
+      ],
+      "benchmark": {
+        "retrieval_success": false,
+        "retrieved_evidence_recall": 0.0,
+        "generation_evidence_recall": 0.0,
+        "provenance_coverage": null,
+        "answer_grounding": null,
+        "route_correctness": true,
+        "tool_correctness": true,
+        "expected_behavior": false,
+        "exact_answer_probe_coverage": 0.0,
+        "optimal_auto_route_correctness": true,
+        "auto_mode": "vector_only",
+        "requested_backend_valid": true,
+        "backend_reason": "",
+        "graph_path_correctness": null,
+        "graph_path_count": 0,
+        "requested_mode": "vector_only"
+      }
+    }
+  ],
+  "failures": [
+    {
+      "case_id": "semantic_modernization",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    },
+    {
+      "case_id": "semantic_healthcare_security",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    },
+    {
+      "case_id": "factual_banking_duration",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    },
+    {
+      "case_id": "factual_insurance_team",
+      "stage": "deterministic",
+      "check": "no_answer_behavior"
+    }
+  ],
+  "aggregate": {
+    "metrics": {
+      "faithfulness": {
+        "mean": null,
+        "scored": 0,
+        "total_cases": 4,
+        "errors": 0,
+        "not_applicable": 0,
+        "not_run": 4,
+        "variants": []
+      },
+      "answer_relevancy": {
+        "mean": null,
+        "scored": 0,
+        "total_cases": 4,
+        "errors": 0,
+        "not_applicable": 0,
+        "not_run": 4,
+        "variants": []
+      },
+      "context_precision": {
+        "mean": null,
+        "scored": 0,
+        "total_cases": 4,
+        "errors": 0,
+        "not_applicable": 0,
+        "not_run": 4,
+        "variants": []
+      },
+      "context_recall": {
+        "mean": null,
+        "scored": 0,
+        "total_cases": 4,
+        "errors": 0,
+        "not_applicable": 0,
+        "not_run": 4,
+        "variants": []
+      },
+      "answer_correctness": {
+        "mean": null,
+        "scored": 0,
+        "total_cases": 4,
+        "errors": 0,
+        "not_applicable": 0,
+        "not_run": 4,
+        "variants": []
+      }
+    },
+    "deterministic": {
+      "answer_present": {
+        "mean": 1.0,
+        "evaluated": 4,
+        "total_cases": 4
+      },
+      "citation_identity_coverage": {
+        "mean": null,
+        "evaluated": 0,
+        "total_cases": 4
+      },
+      "graph_path_provenance_correctness": {
+        "mean": null,
+        "evaluated": 0,
+        "total_cases": 4
+      },
+      "grounding_passed": {
+        "mean": null,
+        "evaluated": 0,
+        "total_cases": 4
+      },
+      "no_answer_behavior": {
+        "mean": 0.0,
+        "evaluated": 4,
+        "total_cases": 4
+      },
+      "origin_correctness": {
+        "mean": 1.0,
+        "evaluated": 4,
+        "total_cases": 4
+      },
+      "retrieval_mode_correctness": {
+        "mean": 1.0,
+        "evaluated": 4,
+        "total_cases": 4
+      },
+      "route_correctness": {
+        "mean": 1.0,
+        "evaluated": 4,
+        "total_cases": 4
+      },
+      "source_coverage": {
+        "mean": null,
+        "evaluated": 0,
+        "total_cases": 4
+      },
+      "tool_correctness": {
+        "mean": 1.0,
+        "evaluated": 4,
+        "total_cases": 4
+      }
+    },
+    "total_cases": 4,
+    "pipeline_failures": 0,
+    "pipeline_latency_seconds": 10.708601,
+    "judge_latency_seconds": 0
+  }
+}

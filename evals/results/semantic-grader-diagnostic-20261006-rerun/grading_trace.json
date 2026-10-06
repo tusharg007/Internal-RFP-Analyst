@@ -1,0 +1,410 @@
+{
+  "attempts": [
+    {
+      "attempt": 1,
+      "state_signature": [
+        0,
+        "Summarize the modernization priorities identified by the banking digital audit.",
+        "abfe0f2e23cb9663c2edabb86bbb98062e56d3c8b4f1700d082be956f1bd534c"
+      ],
+      "original_query": "Summarize the modernization priorities identified by the banking digital audit.",
+      "current_query": "Summarize the modernization priorities identified by the banking digital audit.",
+      "resolved_query": "Summarize the modernization priorities identified by the banking digital audit.",
+      "retry_count": 0,
+      "retrieved_chunks": [
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 1,
+          "score": 0.7006540947203764,
+          "raw_score": 0.7006540947203764,
+          "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nExecutive Summary\nThis project delivered a comprehensive digital audit for a leading multinational bank. The engagement\nfocused on evaluating the client's digital transformation maturity, identifying gaps in data governance, and\nrecommending a modernization roadmap. Our team of 12 consultants worked across three workstreams over\na 16-week engagement.\nObjectives",
+          "chunk_id": "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf",
+          "document_origin": "sample",
+          "page_number": 2
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 1,
+          "score": 0.6249543719176265,
+          "raw_score": 0.6249543719176265,
+          "content": "a 16-week engagement.\nObjectives\n1. Assess the current state of the client's core banking platform and digital channels.\n2. Evaluate data quality, lineage, and governance across 14 business units.\n3. Benchmark digital maturity against industry peers using proprietary frameworks.\n4. Deliver a prioritized transformation roadmap with ROI projections.\nTechnology Stack\n- Cloud Platform: Microsoft Azure (Azure Data Factory, Azure SQL Database)",
+          "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+          "document_origin": "sample",
+          "page_number": 2
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 2,
+          "score": 0.5895843573256476,
+          "raw_score": 0.5895843573256476,
+          "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBudget Range\nEstimated project cost: $850,000 - $1,100,000 USD\nKey Outcomes\n- Identified 47 critical data governance gaps across the organization.\n- Achieved 23% improvement in data quality scores within the first quarter.\n- Delivered a 3-year digital transformation roadmap adopted by the board.\n- Reduced audit cycle time by 35% through automation of manual checks.\nPage 3/3 | Internal Use Only",
+          "chunk_id": "ddd884bc9dfad65a4512bc9bcd7aabe909a19109518f0d8adf0586c5b0b5a6d0",
+          "document_origin": "sample",
+          "page_number": 3
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 0,
+          "score": 0.5778832120672651,
+          "raw_score": 0.5778832120672651,
+          "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBanking Sector Digital Audit 2024\nDocument Type: Project Outline\nIndustry: Banking & Financial Services\nClassification: Internal / Confidential\nPage 1/3 | Internal Use Only",
+          "chunk_id": "03da78acb6bfba67be6cc73a8cd9e64704d55617a23932957f169f1f3365bf05",
+          "document_origin": "sample",
+          "page_number": 1
+        }
+      ],
+      "grader_evidence": "Source: 01_Banking_Sector_Digital_Audit_2024.pdf\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nExecutive Summary\nThis project delivered a comprehensive digital audit for a leading multinational bank. The engagement\nfocused on evaluating the client's digital transformation maturity, identifying gaps in data governance, and\nrecommending a modernization roadmap. Our team of 12 consultants worked across three workstreams over\na 16-week engagement.\nObjectives\n\nSource: 01_Banking_Sector_Digital_Audit_2024.pdf\na 16-week engagement.\nObjectives\n1. Assess the current state of the client's core banking platform and digital channels.\n2. Evaluate data quality, lineage, and governance across 14 business units.\n3. Benchmark digital maturity against industry peers using proprietary frameworks.\n4. Deliver a prioritized transformation roadmap with ROI projections.\nTechnology Stack\n- Cloud Platform: Microsoft Azure (Azure Data Factory, Azure SQL Database)\n\nSource: 01_Banking_Sector_Digital_Audit_2024.pdf\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBudget Range\nEstimated project cost: $850,000 - $1,100,000 USD\nKey Outcomes\n- Identified 47 critical data governance gaps across the organization.\n- Achieved 23% improvement in data quality scores within the first quarter.\n- Delivered a 3-year digital transformation roadmap adopted by the board.\n- Reduced audit cycle time by 35% through automation of manual checks.\nPage 3/3 | Internal Use Only\n\nSource: 01_Banking_Sector_Digital_Audit_2024.pdf\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBanking Sector Digital Audit 2024\nDocument Type: Project Outline\nIndustry: Banking & Financial Services\nClassification: Internal / Confidential\nPage 1/3 | Internal Use Only",
+      "evidence_hash": "abfe0f2e23cb9663c2edabb86bbb98062e56d3c8b4f1700d082be956f1bd534c",
+      "concept_check": {
+        "sufficiency": "sufficient",
+        "missing_expected_concepts": [],
+        "witnesses": {
+          "digital maturity": [
+            {
+              "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+              "page_number": 2,
+              "chunk_id": "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf",
+              "quote": "digital transformation maturity"
+            },
+            {
+              "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+              "page_number": 2,
+              "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+              "quote": "digital maturity"
+            }
+          ],
+          "data governance": [
+            {
+              "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+              "page_number": 2,
+              "chunk_id": "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf",
+              "quote": "data governance"
+            },
+            {
+              "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+              "page_number": 2,
+              "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+              "quote": "data quality, lineage, and governance"
+            },
+            {
+              "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+              "page_number": 3,
+              "chunk_id": "ddd884bc9dfad65a4512bc9bcd7aabe909a19109518f0d8adf0586c5b0b5a6d0",
+              "quote": "data governance"
+            }
+          ],
+          "peer benchmarking": [
+            {
+              "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+              "page_number": 2,
+              "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+              "quote": "Benchmark digital maturity against industry peers"
+            }
+          ],
+          "prioritized modernization roadmap": [
+            {
+              "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+              "page_number": 2,
+              "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+              "quote": "prioritized transformation roadmap"
+            }
+          ],
+          "ROI projections": [
+            {
+              "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+              "page_number": 2,
+              "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+              "quote": "ROI projections"
+            }
+          ]
+        }
+      },
+      "raw_model_response": {
+        "text": "{\"grade\": \"weak\"}",
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"grade\": \"weak\"}",
+            "extras": {
+              "signature": "EuoGCucGAWkUfRMPtrTnWDkrfIAPWgD8FajcI/s5edB3/w1hM8NHOiZyHxlb05dxY4NiPOlRRFJK4gVg5y9iF9qavXMUGAHuP5eFWrPaJiUabvU9OPcNZjixh++jNQChYoRayx+CUIWxXU5qfz8wUCtPIHHxT+0MLFurWmaRm2A5COrHYGN6DjcsUmbH3DTTeruYBh4PeAyZcBVNPAOYDOEtKtdkikVrKmIi193t66aQPsSRLJpNWsZ58POUxYmP7cbZWo69pDtGVgdIyNw3zEBsRGZWP80TfGdEIrqwfDtV9ZnaCZrT9IqxsbeV9jJtuCDu9/6PYdsm7j74R7IeZuUeSLctEvjDUvbdrFO/iR9akJ5d9atMFXonuuM/p7nPyEkcLkhICsk/m12qHwLZZir+OjtMPYjstaKaxyva5Ky9bOL86GRj96qQPWbtFKrUKwFMVfB0oQdAHl781s0lOAsG87BGBFUnYNyZRgr/ABx9vjKrs2J+n4UVm31o8Dv+lZduLrsWNxVdqZnX1LIvFfEwwau4cIiQEdws82thrff0WHgKuYnJulhlpbpSExgyCJzbuEaM5Q/U/xXSGvAirZkHPAvHlEq5g3Z2bozMHqc+xSjqTIbsP9/NfbKn6QIvGyhelkd12CRKMcKCrnzJuu3ewEkArxRZloulEkxKNd9bogO3o23A1rIT6cJV9wOnRM3dLbdDjOrcNFLx1nV/81ULHOcgNZLKaIUMubK3/E2Cqn4nVbbxGZpAqLzwOIO5DY4zguoMfGnMlFF4rzWdOxItzBKfhllpXGHhpjbD2SN6t97fv8gTjmE/PWwgKWQEhbLXmvYqhrBF55RC31nBAmgbldTq6vVQpn/yYQ4Grtbziru+8Y9/rKki2CzFv4xScjRngOjHOBLDfZ4hgHWZFFUf/ashT2SKoNBTr3zmkZJXCAfa2qQTT+k+8ccCXyqcmDgYfMfcHBiudON2W1BRmxoQ1qdO151OPBC1jaAG6F6PufR7LoYchmcAurbqm2mDwtM6xk8zYHm4ijvCYsn+FqjNi8mmGakPtKQJneoA8kZj44k2X5UseFnwq4EFtt2nTdjLo/RKLvZPJE7niHBXz7kWqKfxTqdVjZZdqjvTq+4uOLgBJIGQ5CL+lcwCVecyokqnNxZPZfiIkZU0vg=="
+            }
+          }
+        ],
+        "response_metadata": {
+          "finish_reason": "STOP",
+          "model_name": "gemini-3.8-flash",
+          "safety_ratings": [],
+          "model_provider": "google_genai"
+        },
+        "usage_metadata": {
+          "input_tokens": 532,
+          "output_tokens": 142,
+          "total_tokens": 674,
+          "input_token_details": {
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "reasoning": 136
+          }
+        },
+        "generation_info": {
+          "finish_reason": "STOP",
+          "model_name": "gemini-3.8-flash",
+          "safety_ratings": []
+        }
+      },
+      "parsed_grade": "weak",
+      "application_grade": "weak",
+      "rationale": null,
+      "parser_errors": [],
+      "model": "gemini-3.8-flash",
+      "provider": "google_genai",
+      "prompt_hash": "b7c357b90735f072cdc27a660f90a11b35d97afb7d1f413feb3a3a0650d6b8a1",
+      "prompt_chars": 2261,
+      "prompt_matches_captured_evidence": true,
+      "raw_grade": "weak"
+    }
+  ],
+  "raw_retrievals": [
+    {
+      "query": "Summarize the modernization priorities identified by the banking digital audit.",
+      "k": 6,
+      "scope": "sample",
+      "chunks": [
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 1,
+          "page_number": 2,
+          "chunk_id": "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf",
+          "document_origin": "sample",
+          "metadata": {
+            "chunk_index": 1,
+            "file_path": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\01_Banking_Sector_Digital_Audit_2024.pdf",
+            "author": "",
+            "title": "",
+            "chunk_id": "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf",
+            "producer": "",
+            "creationDate": "D:20260902143801Z",
+            "modDate": "",
+            "creationdate": "2026-09-02T14:38:01+00:00",
+            "source": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\01_Banking_Sector_Digital_Audit_2024.pdf",
+            "file_hash": "d712b9d22628c60effd38b19e9283708fa0cb0129269bc40701837d949d595fa",
+            "document_origin": "sample",
+            "subject": "",
+            "source_file": "01_Banking_Sector_Digital_Audit_2024.pdf",
+            "total_pages": 3,
+            "page": 1,
+            "trapped": "",
+            "creator": "",
+            "keywords": "",
+            "source_path": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\01_Banking_Sector_Digital_Audit_2024.pdf",
+            "moddate": "",
+            "format": "PDF 1.3"
+          },
+          "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nExecutive Summary\nThis project delivered a comprehensive digital audit for a leading multinational bank. The engagement\nfocused on evaluating the client's digital transformation maturity, identifying gaps in data governance, and\nrecommending a modernization roadmap. Our team of 12 consultants worked across three workstreams over\na 16-week engagement.\nObjectives",
+          "score": 0.7006540947203764
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 1,
+          "page_number": 2,
+          "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+          "document_origin": "sample",
+          "metadata": {
+            "format": "PDF 1.3",
+            "page": 1,
+            "document_origin": "sample",
+            "file_path": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\01_Banking_Sector_Digital_Audit_2024.pdf",
+            "title": "",
+            "creator": "",
+            "total_pages": 3,
+            "creationDate": "D:20260902143801Z",
+            "creationdate": "2026-09-02T14:38:01+00:00",
+            "moddate": "",
+            "source": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\01_Banking_Sector_Digital_Audit_2024.pdf",
+            "file_hash": "d712b9d22628c60effd38b19e9283708fa0cb0129269bc40701837d949d595fa",
+            "modDate": "",
+            "source_file": "01_Banking_Sector_Digital_Audit_2024.pdf",
+            "producer": "",
+            "trapped": "",
+            "chunk_index": 2,
+            "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+            "subject": "",
+            "author": "",
+            "source_path": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\01_Banking_Sector_Digital_Audit_2024.pdf",
+            "keywords": ""
+          },
+          "content": "a 16-week engagement.\nObjectives\n1. Assess the current state of the client's core banking platform and digital channels.\n2. Evaluate data quality, lineage, and governance across 14 business units.\n3. Benchmark digital maturity against industry peers using proprietary frameworks.\n4. Deliver a prioritized transformation roadmap with ROI projections.\nTechnology Stack\n- Cloud Platform: Microsoft Azure (Azure Data Factory, Azure SQL Database)",
+          "score": 0.6249543719176265
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 2,
+          "page_number": 3,
+          "chunk_id": "ddd884bc9dfad65a4512bc9bcd7aabe909a19109518f0d8adf0586c5b0b5a6d0",
+          "document_origin": "sample",
+          "metadata": {
+            "page": 2,
+            "author": "",
+            "total_pages": 3,
+            "subject": "",
+            "creationdate": "2026-09-02T14:38:01+00:00",
+            "chunk_id": "ddd884bc9dfad65a4512bc9bcd7aabe909a19109518f0d8adf0586c5b0b5a6d0",
+            "trapped": "",
+            "creationDate": "D:20260902143801Z",
+            "source_path": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\01_Banking_Sector_Digital_Audit_2024.pdf",
+            "document_origin": "sample",
+            "title": "",
+            "keywords": "",
+            "creator": "",
+            "chunk_index": 5,
+            "file_hash": "d712b9d22628c60effd38b19e9283708fa0cb0129269bc40701837d949d595fa",
+            "modDate": "",
+            "moddate": "",
+            "source": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\01_Banking_Sector_Digital_Audit_2024.pdf",
+            "format": "PDF 1.3",
+            "file_path": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\01_Banking_Sector_Digital_Audit_2024.pdf",
+            "producer": "",
+            "source_file": "01_Banking_Sector_Digital_Audit_2024.pdf"
+          },
+          "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBudget Range\nEstimated project cost: $850,000 - $1,100,000 USD\nKey Outcomes\n- Identified 47 critical data governance gaps across the organization.\n- Achieved 23% improvement in data quality scores within the first quarter.\n- Delivered a 3-year digital transformation roadmap adopted by the board.\n- Reduced audit cycle time by 35% through automation of manual checks.\nPage 3/3 | Internal Use Only",
+          "score": 0.5895843573256476
+        },
+        {
+          "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+          "page": 0,
+          "page_number": 1,
+          "chunk_id": "03da78acb6bfba67be6cc73a8cd9e64704d55617a23932957f169f1f3365bf05",
+          "document_origin": "sample",
+          "metadata": {
+            "creationdate": "2026-09-02T14:38:01+00:00",
+            "file_hash": "d712b9d22628c60effd38b19e9283708fa0cb0129269bc40701837d949d595fa",
+            "keywords": "",
+            "chunk_index": 0,
+            "subject": "",
+            "modDate": "",
+            "author": "",
+            "trapped": "",
+            "file_path": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\01_Banking_Sector_Digital_Audit_2024.pdf",
+            "source_file": "01_Banking_Sector_Digital_Audit_2024.pdf",
+            "producer": "",
+            "chunk_id": "03da78acb6bfba67be6cc73a8cd9e64704d55617a23932957f169f1f3365bf05",
+            "moddate": "",
+            "format": "PDF 1.3",
+            "creationDate": "D:20260902143801Z",
+            "title": "",
+            "source": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\01_Banking_Sector_Digital_Audit_2024.pdf",
+            "document_origin": "sample",
+            "total_pages": 3,
+            "page": 0,
+            "creator": "",
+            "source_path": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\01_Banking_Sector_Digital_Audit_2024.pdf"
+          },
+          "content": "CONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBanking Sector Digital Audit 2024\nDocument Type: Project Outline\nIndustry: Banking & Financial Services\nClassification: Internal / Confidential\nPage 1/3 | Internal Use Only",
+          "score": 0.5778832120672651
+        },
+        {
+          "source": "06_Government_Tax_Filing_Modernization.pdf",
+          "page": 1,
+          "page_number": 2,
+          "chunk_id": "53bee0aaca16a129483855cc5027682dc86816269c3dd25ea308047fd39c28c9",
+          "document_origin": "sample",
+          "metadata": {
+            "source": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\06_Government_Tax_Filing_Modernization.pdf",
+            "creationDate": "D:20260902143801Z",
+            "document_origin": "sample",
+            "page": 1,
+            "title": "",
+            "total_pages": 3,
+            "keywords": "",
+            "author": "",
+            "moddate": "",
+            "source_path": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\06_Government_Tax_Filing_Modernization.pdf",
+            "producer": "",
+            "chunk_index": 1,
+            "file_hash": "d94258a1e9bdb24b9d52077ca01341b16544e807fe5979bd0613c55ca9b6c099",
+            "chunk_id": "53bee0aaca16a129483855cc5027682dc86816269c3dd25ea308047fd39c28c9",
+            "subject": "",
+            "trapped": "",
+            "modDate": "",
+            "format": "PDF 1.3",
+            "source_file": "06_Government_Tax_Filing_Modernization.pdf",
+            "creator": "",
+            "creationdate": "2026-09-02T14:38:01+00:00",
+            "file_path": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\06_Government_Tax_Filing_Modernization.pdf"
+          },
+          "content": "CONFIDENTIAL | PROPOSAL | Government & Public Sector\nExecutive Summary\nProposal to modernize a national tax filing system from legacy mainframe to a cloud-native microservices\narchitecture. The solution will improve citizen experience, reduce processing time, and enable real-time tax\ncomputation.\nObjectives\n1. Migrate legacy COBOL-based tax engine to cloud-native microservices.\n2. Build a modern citizen-facing web portal with mobile responsiveness.",
+          "score": 0.47616630289901307
+        },
+        {
+          "source": "06_Government_Tax_Filing_Modernization.pdf",
+          "page": 0,
+          "page_number": 1,
+          "chunk_id": "d18a49a9848c3db2c92f65dacaca71b3551fc772a8f5827a5cb8e68644d214fd",
+          "document_origin": "sample",
+          "metadata": {
+            "trapped": "",
+            "source_file": "06_Government_Tax_Filing_Modernization.pdf",
+            "file_path": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\06_Government_Tax_Filing_Modernization.pdf",
+            "subject": "",
+            "source_path": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\06_Government_Tax_Filing_Modernization.pdf",
+            "source": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\data\\documents\\06_Government_Tax_Filing_Modernization.pdf",
+            "total_pages": 3,
+            "keywords": "",
+            "format": "PDF 1.3",
+            "author": "",
+            "chunk_index": 0,
+            "document_origin": "sample",
+            "producer": "",
+            "page": 0,
+            "moddate": "",
+            "creationDate": "D:20260902143801Z",
+            "modDate": "",
+            "chunk_id": "d18a49a9848c3db2c92f65dacaca71b3551fc772a8f5827a5cb8e68644d214fd",
+            "creationdate": "2026-09-02T14:38:01+00:00",
+            "title": "",
+            "creator": "",
+            "file_hash": "d94258a1e9bdb24b9d52077ca01341b16544e807fe5979bd0613c55ca9b6c099"
+          },
+          "content": "CONFIDENTIAL | PROPOSAL | Government & Public Sector\nGovernment Tax Filing Modernization\nDocument Type: Proposal\nIndustry: Government & Public Sector\nClassification: Internal / Confidential\nPage 1/3 | Internal Use Only",
+          "score": 0.45619278494915483
+        }
+      ]
+    }
+  ],
+  "rewrites": [],
+  "application_calls": [
+    {
+      "stage": "route_question",
+      "provider": "google_genai",
+      "model": "gemini-3.8-flash",
+      "class": "ChatGoogleGenerativeAI",
+      "status": "completed"
+    },
+    {
+      "stage": "grade_kb_evidence",
+      "provider": "google_genai",
+      "model": "gemini-3.8-flash",
+      "class": "ChatGoogleGenerativeAI",
+      "status": "completed",
+      "attempt": 1
+    },
+    {
+      "stage": "grade_web_evidence",
+      "provider": "google_genai",
+      "model": "gemini-3.8-flash",
+      "class": "ChatGoogleGenerativeAI",
+      "status": "completed"
+    },
+    {
+      "stage": "rewrite_query",
+      "provider": "google_genai",
+      "model": "gemini-3.8-flash",
+      "class": "ChatGoogleGenerativeAI",
+      "status": "started"
+    }
+  ],
+  "diagnostic_writer_errors": [],
+  "page_convention": "page is zero-based; page_number is one-based",
+  "rationale_note": "The unchanged schema/prompt requests grade only; absent rationales remain unknown."
+}

@@ -41,7 +41,7 @@ def search_knowledge_base(query: str, k: int = RETRIEVAL_K, search_fn: SearchFn 
             {
                 "source": source,
                 "page": page,
-                "score": f"{score:.2f}",
+                "score": f"{score:.2f}" if score is not None else "n/a (graph witness)",
                 "snippet": snippet[:220],
             }
         )

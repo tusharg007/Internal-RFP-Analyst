@@ -92,6 +92,9 @@ Answer using only the private knowledge-base context provided.
   underscores inside citations.
 - In a Markdown table, put the supporting citation in the same row as the claim; do
   not move table citations to a separate section.
+- For numeric comparisons across different documents or pages, use separate cited
+  claims on separate lines for each field. Do not combine unrelated numbers into
+  one table row or sentence. Preserve reported/proposed/projected outcome wording.
 - Never invent facts, citations, project details, metrics, dates, or client outcomes.
 - If the context does not support a claim, say: "The retrieved evidence does not support this claim."
 - Use clear, concise Markdown with headings, bullets, and tables where useful.

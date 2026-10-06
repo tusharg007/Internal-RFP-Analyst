@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING, Literal
 
 from config import (
@@ -78,7 +79,13 @@ def _refine_kb_intent(query: str) -> str:
     )
     if any(signal in lowered for signal in analysis_signals):
         return "rfp_analysis"
-    if any(token in lowered for token in ("proposal", "draft", "write", "respond to rfp", "rfp response")):
+    if re.search(r"\b(?:find|identify|match|select|recommend)\b.*\bcase studies\b", lowered):
+        return "rfp_analysis"
+    if re.search(
+        r"\b(?:write|draft|create|generate|prepare)\b.*\b(?:proposal|rfp response)\b"
+        r"|\brespond to (?:the |an? )?rfp\b",
+        lowered,
+    ):
         return "proposal"
     if any(token in lowered for token in ("compare", "difference", "versus", " vs ", "contrast")):
         return "compare"
@@ -90,8 +97,11 @@ def route_question(state: "QueryState") -> dict:
     query = state.get("user_query", "")
     allow_llm_routing = state.get("allow_llm_routing", True)
     llm = state.get("router_llm") if allow_llm_routing else None
-    if llm is None and allow_llm_routing:
-        llm = _create_router_llm()
+    try:
+        if llm is None and allow_llm_routing:
+            llm = _create_router_llm()
+    except Exception:
+        llm = None
 
     route = _fallback_route(query)
     if llm is not None:

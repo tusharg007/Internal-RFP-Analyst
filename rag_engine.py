@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import gc
+import logging
 import shutil
 import tempfile
 from pathlib import Path
@@ -28,6 +29,8 @@ from rfp_analyst.retrieval.vector_store import (
     deduplicate_documents_by_chunk_id,
 )
 from rfp_analyst.schemas import LoadedSource
+
+logger = logging.getLogger(__name__)
 
 VALID_RETRIEVAL_SCOPES = {"all", "sample", "upload"}
 NO_SCOPE_DOCUMENTS_MESSAGE = "No indexed documents found for this scope."
@@ -398,7 +401,7 @@ def get_vectorstore_stats(
             "status": "not_initialized",
             "error": str(exc),
         }
-    except Exception as exc:
+    except Exception:
         available_sample_files = [path.name for path in available_files["sample"]]
         available_upload_files = [path.name for path in available_files["upload"]]
         return {
@@ -415,7 +418,7 @@ def get_vectorstore_stats(
             "pending_upload_files": available_upload_files,
             "scope_chunk_counts": {"sample": 0, "upload": 0, "all": 0},
             "status": "error",
-            "error": str(exc),
+            "error": "Knowledge base inspection failed; details redacted.",
         }
     finally:
         _release_chroma_resources(vectorstore)
@@ -495,6 +498,14 @@ def ingest_documents(
             del manager
             gc.collect()
             _swap_vectorstore(temp_persist_dir, persist_dir)
+            # Graph synchronization is additive and never rolls back Chroma.
+            # The worker/CLI reconciles the actual index even if this job is lost.
+            try:
+                from rfp_analyst.graph.ingestion import enqueue_graph_sync
+
+                enqueue_graph_sync(unique_chunks, persist_dir)
+            except Exception:
+                logger.warning("Graph sync job could not be recorded; rebuild can reconcile it")
         finally:
             _safe_rmtree(temp_root)
             _cleanup_temp_build_dirs(persist_dir.parent)
@@ -515,11 +526,11 @@ def ingest_documents(
     except PermissionError as exc:
         if _is_windows_lock_error(exc):
             raise IngestionError(VECTORSTORE_LOCKED_MESSAGE) from exc
-        raise IngestionError(f"Document ingestion failed: {exc}") from exc
+        raise IngestionError("Document ingestion failed. Check file validity and storage availability.") from None
     except Exception as exc:
         if _is_windows_lock_error(exc):
             raise IngestionError(VECTORSTORE_LOCKED_MESSAGE) from exc
-        raise IngestionError(f"Document ingestion failed: {exc}") from exc
+        raise IngestionError("Document ingestion failed. Check file validity and storage availability.") from None
     finally:
         _cleanup_temp_build_dirs(persist_dir.parent)
 

@@ -7,7 +7,7 @@ from .graph import (
     run_query,
     stream_query_response,
 )
-from .schemas_decisions import EvidenceGrade, QueryRewrite, RouteDecision
+from .schemas_decisions import EvidenceGrade, QueryRewrite, RouteDecision, RetrievalDecision
 from .prompts import (
     DIRECT_ANSWER_PROMPT,
     KB_GENERATION_PROMPT,
@@ -25,6 +25,7 @@ __all__ = [
     "run_query",
     "stream_query_response",
     "RouteDecision",
+    "RetrievalDecision",
     "EvidenceGrade",
     "QueryRewrite",
     "KB_GENERATION_PROMPT",

@@ -27,6 +27,7 @@ from rag_engine import (
     similarity_search,
 )
 from rfp_analyst.agent.grader import grade_kb_evidence, grade_web_evidence
+from rfp_analyst.agent.generation_evidence import capture_generation, empty_capture
 from rfp_analyst.agent.query_rewriter import rewrite_query
 from rfp_analyst.agent.router import route_after_router, route_question
 from rfp_analyst.agent.prompts import (
@@ -54,18 +55,18 @@ UNSUPPORTED_CLAIM_MESSAGE = "The retrieved evidence does not support this claim.
 INSUFFICIENT_EVIDENCE_MESSAGE = (
     "I could not find sufficiently relevant evidence in the selected document scope."
 )
-MISSING_UPLOAD_CONTEXT_MESSAGE = (
-    "No indexed uploaded documents were found. Upload and ingest the target RFP before running cross-corpus analysis."
-)
+MISSING_UPLOAD_CONTEXT_MESSAGE = "No indexed uploaded documents were found. Upload and ingest the target RFP before running cross-corpus analysis."
 NO_RELEVANT_UPLOAD_TARGET_MESSAGE = (
     "Uploaded documents are indexed, but no sufficiently relevant target evidence matched this analysis request. "
     "Select a specific uploaded document or make the target requirements more explicit."
 )
 VAGUE_REFERENCE_PATTERN = re.compile(
-    r"\b(here|this|that|it|those|these|above|the above project|the project|same one)\b",
+    r"\b(here|this|that|it|its|they|them|their|those|these|above|the above project|the project|same one)\b",
     re.IGNORECASE,
 )
-PLURAL_REFERENCE_PATTERN = re.compile(r"\b(those|these|projects|documents|the above)\b", re.IGNORECASE)
+PLURAL_REFERENCE_PATTERN = re.compile(
+    r"\b(those|these|projects|documents|the above)\b", re.IGNORECASE
+)
 RFP_ANALYSIS_ORCHESTRATION_PHRASES = (
     "find case studies",
     "compare fit",
@@ -141,6 +142,23 @@ class QueryState(TypedDict, total=False):
     rewriter_llm: Any
     allow_llm_rewriting: bool
     llm: Any
+    retrieval_provider: Any
+    retrieval_mode: str
+    requested_retrieval_mode: str
+    retrieval_decision: dict[str, Any]
+    graph_entities: list[dict[str, Any]]
+    graph_paths: list[dict[str, Any]]
+    graph_query_type: str
+    graph_provenance: list[dict[str, Any]]
+    graph_version: str
+    graph_fallback_reason: str
+    generation_contexts: list[str]
+    generation_kind: str
+    generation_prompt_hash: str
+    generation_evidence: list[dict[str, Any]]
+    generation_auxiliary_context_hash: str
+    allow_web_search: bool
+    kb_grading_stage: str
 
 
 class DeterministicCompiledGraph:
@@ -264,7 +282,32 @@ def _is_ambiguous_query(query: str) -> bool:
 
 
 def _is_vague_followup(query: str) -> bool:
-    return bool(VAGUE_REFERENCE_PATTERN.search(query or ""))
+    return bool(_followup_references(query))
+
+
+def _followup_references(query: str) -> list[re.Match]:
+    """Exclude relative 'that' attached to an explicit document/project noun.
+
+    'Projects in the knowledge base that used Azure' selects a local set;
+    'that project' and 'projects that used it' still contain unresolved deixis.
+    """
+    text = query or ""
+    relative_offsets = {
+        match.start("relative")
+        for match in re.finditer(
+            r"\b(?:projects?|documents?|case studies|rfps?|proposals?)\b"
+            r"(?:\s+(?:in|from|within)\s+(?:(?:the|our|my)\s+)?"
+            r"(?:knowledge base|kb|corpus|selected scope))?\s+(?P<relative>that)\b"
+            r"(?=\s+(?:use[sd]?|mention(?:s|ed)?|support(?:s|ed)?|have|has|had|delivered)\b)",
+            text,
+            re.IGNORECASE,
+        )
+    }
+    return [
+        match
+        for match in VAGUE_REFERENCE_PATTERN.finditer(text)
+        if match.start() not in relative_offsets
+    ]
 
 
 def _dedupe_entities(entities: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -320,7 +363,7 @@ def _resolve_conversational_query(
     scope: str,
 ) -> tuple[str, list[dict[str, Any]], str]:
     """Resolve vague follow-up references using recent retrieved entities."""
-    if not _is_vague_followup(query):
+    if not _is_vague_followup(query) or _has_local_relationship_referent(query):
         return query, [], "not_needed"
 
     entities = _extract_recent_entities(chat_history, scope)
@@ -333,6 +376,48 @@ def _resolve_conversational_query(
     entity_names = ", ".join(entity["source"] for entity in entities[:4])
     resolved_query = f"{query}\n\nResolved follow-up target document(s): {entity_names}"
     return resolved_query, entities, "resolved"
+
+
+def _has_local_relationship_referent(query: str) -> bool:
+    """A locally named entity is not a previous-conversation document reference.
+
+    Deliberately narrow: leading/other deictic references still need history.
+    In particular, naming Azure after 'Does it use Azure?' does not resolve 'it'.
+    """
+    from rfp_analyst.graph.extraction import FRAMEWORKS, TECHNOLOGIES, alias_spans
+
+    references = _followup_references(query)
+    # A later plural reference can bind to an explicitly selected local set.
+    # Merely mentioning Azure does not resolve a leading 'those projects',
+    # or a singular 'it' used as the object of the selection itself.
+    if references and all(
+        match.group().lower() in {"those", "these", "they", "their"}
+        for match in references
+    ):
+        preceding = (query or "")[: references[0].start()]
+        selection = re.search(
+            r"\b(?:which|list|show|find|identify|select)\b[^.!?;]*"
+            r"\b(?:projects|case studies|documents)\b",
+            preceding,
+            re.IGNORECASE,
+        )
+        from rfp_analyst.retrieval.decisions import plan_retrieval
+
+        if selection and (
+            plan_retrieval(preceding).plan.query_type == "project_constraints"
+            or re.match(r"(?:list|show|find|identify|select)\b", selection.group(), re.I)
+            or re.search(r"\b(?:all|every)\s+(?:projects|case studies|documents)\b", preceding, re.I)
+        ):
+            return True
+    local = re.search(
+        r"\b(?:alongside|associated with|related to|linked to)\s+(it|that|this)\b",
+        query or "",
+        re.IGNORECASE,
+    )
+    if not local or len(references) != 1 or references[0].start() != local.start(1):
+        return False
+    preceding = (query or "")[: local.start()]
+    return bool(alias_spans(preceding, FRAMEWORKS) or alias_spans(preceding, TECHNOLOGIES))
 
 
 def _build_rfp_target_query(query: str) -> str:
@@ -352,7 +437,9 @@ def _is_project_catalog_query(query: str) -> bool:
     broad_request = bool(re.search(r"\b(list|show|all|every|inventory|catalog)\b", normalized))
     project_request = bool(re.search(r"\b(projects?|case studies)\b", normalized))
     repeated_field = bool(
-        re.search(r"\b(timelines?|milestones?|durations?|budgets?|tech(?:nology)? stacks?)\b", normalized)
+        re.search(
+            r"\b(timelines?|milestones?|durations?|budgets?|tech(?:nology)? stacks?)\b", normalized
+        )
     )
     return broad_request and project_request and repeated_field
 
@@ -361,7 +448,9 @@ def _is_personal_document_query(query: str) -> bool:
     normalized = " ".join(str(query or "").lower().split())
     return bool(
         re.search(r"\b(resume|curriculum vitae|cv|professional profile)\b", normalized)
-        and re.search(r"\b(my|mine|uploaded|document|profile|skills?|stack|experience)\b", normalized)
+        and re.search(
+            r"\b(my|mine|uploaded|document|profile|skills?|stack|experience)\b", normalized
+        )
     )
 
 
@@ -426,7 +515,11 @@ def _select_catalog_documents(documents: list[dict[str, Any]]) -> list[dict[str,
     ]
     candidates.sort(
         key=lambda item: (
-            not bool(re.search(r"Timeline\s*&\s*Milestones|Total\s+Duration", item.get("content", ""), re.I)),
+            not bool(
+                re.search(
+                    r"Timeline\s*&\s*Milestones|Total\s+Duration", item.get("content", ""), re.I
+                )
+            ),
             -float(item.get("score", 0.0) or 0.0),
             item.get("source", ""),
             item.get("page", 0),
@@ -443,7 +536,9 @@ def _select_catalog_documents(documents: list[dict[str, Any]]) -> list[dict[str,
     return selected
 
 
-def _dedupe_documents_by_source_page(documents: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+def _dedupe_documents_by_source_page(
+    documents: list[dict[str, Any]], limit: int
+) -> list[dict[str, Any]]:
     unique: list[dict[str, Any]] = []
     seen: set[tuple[str, int]] = set()
     for item in documents:
@@ -497,9 +592,7 @@ def _format_sources(results: list[dict[str, Any]]) -> str:
     parts = []
     for item in results:
         page_number = item["page"] + 1 if isinstance(item["page"], int) else item["page"]
-        parts.append(
-            f"[Source: {item['source']}, Page {page_number}]\n{item['content']}"
-        )
+        parts.append(f"[Source: {item['source']}, Page {page_number}]\n{item['content']}")
     return "\n\n---\n\n".join(parts) if parts else "No relevant documents found."
 
 
@@ -507,9 +600,7 @@ def _build_history_text(chat_history: list[dict[str, Any]] | None) -> str:
     if not chat_history:
         return ""
     recent = [
-        message
-        for message in chat_history[-6:]
-        if message.get("role") in {"user", "assistant"}
+        message for message in chat_history[-6:] if message.get("role") in {"user", "assistant"}
     ]
     lines = []
     for message in recent:
@@ -565,7 +656,11 @@ def _group_case_study_documents(documents: list[dict[str, Any]]) -> list[dict[st
     for source, group in grouped.items():
         docs = sorted(
             group["documents"],
-            key=lambda item: (-float(item.get("score", 0.0) or 0.0), item.get("page", 0), item.get("chunk_id", "")),
+            key=lambda item: (
+                -float(item.get("score", 0.0) or 0.0),
+                item.get("page", 0),
+                item.get("chunk_id", ""),
+            ),
         )
         docs = _dedupe_documents_by_source_page(docs, MAX_CHUNKS_PER_CASE_STUDY)
         normalized.append({"source": source, "score": group["score"], "documents": docs})
@@ -573,7 +668,9 @@ def _group_case_study_documents(documents: list[dict[str, Any]]) -> list[dict[st
     return normalized[:MAX_CASE_STUDIES]
 
 
-def _dedupe_documents_by_content_signature(documents: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+def _dedupe_documents_by_content_signature(
+    documents: list[dict[str, Any]], limit: int
+) -> list[dict[str, Any]]:
     unique: list[dict[str, Any]] = []
     seen: set[str] = set()
     for item in documents:
@@ -589,7 +686,9 @@ def _dedupe_documents_by_content_signature(documents: list[dict[str, Any]], limi
 
 def compact_tool_outputs_for_prompt(tool_outputs: dict[str, Any]) -> dict[str, Any]:
     requirements = []
-    for item in (tool_outputs.get("extract_rfp_requirements", {}) or {}).get("requirements", [])[:8]:
+    for item in (tool_outputs.get("extract_rfp_requirements", {}) or {}).get("requirements", [])[
+        :8
+    ]:
         requirements.append(
             {
                 "id": item.get("id", ""),
@@ -611,7 +710,9 @@ def compact_tool_outputs_for_prompt(tool_outputs: dict[str, Any]) -> dict[str, A
         )
 
     case_matches = []
-    for match in (tool_outputs.get("find_relevant_case_studies", {}) or {}).get("matches", [])[:MAX_CASE_STUDIES]:
+    for match in (tool_outputs.get("find_relevant_case_studies", {}) or {}).get("matches", [])[
+        :MAX_CASE_STUDIES
+    ]:
         pages = [int(page) + 1 for page in match.get("pages", [])[:2]]
         case_matches.append(
             {
@@ -686,10 +787,20 @@ def _render_compact_tool_outputs(tool_outputs: dict[str, Any], verbose: bool = T
             citations = ", ".join(item.get("citations", [])[:2])
             fit_score = item.get("fit_score")
             score_text = f" fit={fit_score}" if fit_score is not None else ""
-            matched = f"; matched={', '.join(item.get('matched_requirements', []))}" if item.get("matched_requirements") else ""
-            missing = f"; missing={', '.join(item.get('missing_coverage', []))}" if item.get("missing_coverage") else ""
+            matched = (
+                f"; matched={', '.join(item.get('matched_requirements', []))}"
+                if item.get("matched_requirements")
+                else ""
+            )
+            missing = (
+                f"; missing={', '.join(item.get('missing_coverage', []))}"
+                if item.get("missing_coverage")
+                else ""
+            )
             citation_text = f" [{citations}]" if citations else ""
-            lines.append(f"- {item.get('source', 'Unknown')}{score_text}{matched}{missing}{citation_text}{detail}")
+            lines.append(
+                f"- {item.get('source', 'Unknown')}{score_text}{matched}{missing}{citation_text}{detail}"
+            )
 
     comparison_rows = compact.get("comparison", [])
     if comparison_rows:
@@ -701,7 +812,9 @@ def _render_compact_tool_outputs(tool_outputs: dict[str, Any], verbose: bool = T
                     f"stack={row['tech_stack']}; outcomes={row['outcomes']}"
                 )
             else:
-                lines.append(f"- {row['source']}: stack={row['tech_stack']}; outcomes={row['outcomes']}")
+                lines.append(
+                    f"- {row['source']}: stack={row['tech_stack']}; outcomes={row['outcomes']}"
+                )
 
     proposal = compact.get("proposal", [])
     if proposal:
@@ -722,8 +835,13 @@ def _build_compact_prompt_sections(
 ) -> dict[str, str]:
     stats = state.get("vectorstore_stats", {})
     scope_label = state.get("retrieval_scope", "all")
-    project_list = "\n".join(f"  - {name}" for name in stats.get("document_names", [])[:12]) or "  No documents ingested yet."
-    tool_block = _render_compact_tool_outputs(state.get("tool_outputs", {}), verbose=include_verbose_tools)
+    project_list = (
+        "\n".join(f"  - {name}" for name in stats.get("document_names", [])[:12])
+        or "  No documents ingested yet."
+    )
+    tool_block = _render_compact_tool_outputs(
+        state.get("tool_outputs", {}), verbose=include_verbose_tools
+    )
 
     target_lines = []
     for document in target_documents:
@@ -731,16 +849,18 @@ def _build_compact_prompt_sections(
             f"- {_format_compact_citation(document['source'], document['page'], document['document_origin'])}: "
             f"{document['content']}"
         )
-    target_block = "\n".join(target_lines) if target_lines else "- No uploaded target evidence selected."
+    target_block = (
+        "\n".join(target_lines) if target_lines else "- No uploaded target evidence selected."
+    )
 
     sample_lines = []
     for group in sample_case_groups:
         sample_lines.append(f"- {group['source']}")
         for document in group.get("documents", []):
-            sample_lines.append(
-                f"  * Page {int(document['page']) + 1}: {document['content']}"
-            )
-    sample_block = "\n".join(sample_lines) if sample_lines else "- No sample case-study evidence selected."
+            sample_lines.append(f"  * Page {int(document['page']) + 1}: {document['content']}")
+    sample_block = (
+        "\n".join(sample_lines) if sample_lines else "- No sample case-study evidence selected."
+    )
 
     history_lines = []
     for message in history_messages:
@@ -888,7 +1008,9 @@ def plan_tools(state: QueryState) -> QueryState:
     planned_tools: list[str] = []
     if intent == "search":
         planned_tools = ["search_knowledge_base"]
-        query = state.get("resolved_query") or state.get("current_query") or state.get("user_query", "")
+        query = (
+            state.get("resolved_query") or state.get("current_query") or state.get("user_query", "")
+        )
         if _is_project_catalog_query(query):
             planned_tools.append("project_catalog")
     elif intent == "compare":
@@ -932,9 +1054,19 @@ def retrieve_kb(state: QueryState) -> QueryState:
     return result
 
 
+def _has_inline_rfp_requirements(state: QueryState) -> bool:
+    """Distinguish user-supplied constraints from a request to inspect an upload."""
+    query = state.get("user_query", "")
+    return state.get("intent") == "rfp_analysis" and bool(re.search(
+        r"\b(?:an?|the)\s+rfp\s+(?:requiring|that requires|with requirements)\b", query, re.I
+    )) and not re.search(r"\buploaded\b|\btarget rfp\b", query, re.I)
+
+
 def grade_kb_evidence_node(state: QueryState) -> QueryState:
     """Grade KB evidence and retain the legacy visible availability trace."""
-    result = grade_kb_evidence(state)
+    stage = "tool_input" if state.get("intent") in {"compare", "rfp_analysis"} else "answer"
+    result = grade_kb_evidence(dict(state, kb_grading_stage=stage))
+    result["kb_grading_stage"] = stage
     grade = result.get("kb_grade", "weak")
     result["traces"] = _append_trace(
         state,
@@ -943,6 +1075,7 @@ def grade_kb_evidence_node(state: QueryState) -> QueryState:
             "tool": "evidence_availability_check",
             "status": "completed",
             "grade": grade,
+            "grading_stage": stage,
             "input_summary": "Pre-filtered Private KB evidence",
             "output_summary": f"Private KB evidence graded {grade}.",
         },
@@ -991,7 +1124,21 @@ def search_web_node(state: QueryState) -> QueryState:
 
 def rewrite_query_node(state: QueryState) -> QueryState:
     """Rewrite a query and record the bounded retry without hidden reasoning."""
-    result = rewrite_query(state)
+    provider = state.get("retrieval_provider")
+    query = state.get("current_query") or state.get("user_query", "")
+    transport_retry = (
+        provider is not None
+        and state.get("graph_fallback_reason") in {"timeout", "unavailable"}
+        and int(state.get("retry_count", 0) or 0) < MAX_QUERY_RETRIES
+        and provider.decision(query, target=(
+            state.get("intent") == "rfp_analysis" and not _has_inline_rfp_requirements(state)
+        )).plan.query_type != "unsupported"
+    )
+    if transport_retry:
+        provider.reset_transient_failure()
+        result = {"current_query": query, "retry_count": int(state.get("retry_count", 0) or 0) + 1}
+    else:
+        result = rewrite_query(state)
     result["traces"] = _append_trace(
         state,
         "rewrite_query",
@@ -999,6 +1146,7 @@ def rewrite_query_node(state: QueryState) -> QueryState:
             "tool": "query_rewriter",
             "status": "completed",
             "retry_count": result.get("retry_count", 0),
+            "retry_kind": "transport_same_query" if transport_retry else "semantic_rewrite",
             "input_summary": state.get("current_query") or state.get("user_query", ""),
             "output_summary": f"Prepared bounded retrieval retry {result.get('retry_count', 0)}.",
         },
@@ -1006,9 +1154,9 @@ def rewrite_query_node(state: QueryState) -> QueryState:
     return result
 
 
-def execute_retrieval(state: QueryState) -> QueryState:
+def _execute_vector_retrieval(state: QueryState) -> QueryState:
     planned_tools = state.get("planned_tools", [])
-    is_rfp_analysis = state.get("intent") == "rfp_analysis"
+    is_rfp_analysis = state.get("intent") == "rfp_analysis" and not _has_inline_rfp_requirements(state)
     requested_scope = state.get("retrieval_scope", "all")
     retrieval_scope = "upload" if is_rfp_analysis else requested_scope
     if "search_knowledge_base" not in planned_tools:
@@ -1038,7 +1186,9 @@ def execute_retrieval(state: QueryState) -> QueryState:
 
     retrieval_fn = state.get("retrieval_fn") or similarity_search
     retrieval_k = int(state.get("retrieval_k", RETRIEVAL_K))
-    base_query = state.get("current_query") or state.get("resolved_query") or state.get("user_query", "")
+    base_query = (
+        state.get("current_query") or state.get("resolved_query") or state.get("user_query", "")
+    )
     if is_rfp_analysis:
         retrieval_query = _build_rfp_target_query(base_query)
         retrieval_mode = "rfp_analysis"
@@ -1084,8 +1234,12 @@ def execute_retrieval(state: QueryState) -> QueryState:
 
     scope_chunk_counts = state.get("vectorstore_stats", {}).get("scope_chunk_counts", {})
     indexed_upload_chunk_count = int(scope_chunk_counts.get("upload", 0) or 0)
-    indexed_upload_document_count = int(state.get("vectorstore_stats", {}).get("indexed_upload_document_count", 0) or 0)
-    indexed_upload_files = list(state.get("vectorstore_stats", {}).get("indexed_upload_files", []) or [])
+    indexed_upload_document_count = int(
+        state.get("vectorstore_stats", {}).get("indexed_upload_document_count", 0) or 0
+    )
+    indexed_upload_files = list(
+        state.get("vectorstore_stats", {}).get("indexed_upload_files", []) or []
+    )
     relevant_documents = [item for item in documents if item["score"] >= MIN_RELEVANCE_SCORE]
     below_threshold_count = len(documents) - len(relevant_documents)
     selected_documents = relevant_documents
@@ -1103,14 +1257,20 @@ def execute_retrieval(state: QueryState) -> QueryState:
         selected_documents = _dedupe_documents_by_source_page(near_threshold, PERSONAL_DOCUMENT_K)
 
     if is_rfp_analysis:
-        selected_documents = _dedupe_documents_by_source_page(selected_documents, RFP_TARGET_MAX_CHUNKS)
+        selected_documents = _dedupe_documents_by_source_page(
+            selected_documents, RFP_TARGET_MAX_CHUNKS
+        )
         if not selected_documents and indexed_upload_chunk_count > 0:
             near_threshold = [
-                item for item in documents if item["score"] >= max(MIN_RELEVANCE_SCORE - RFP_TARGET_FALLBACK_MARGIN, 0.0)
+                item
+                for item in documents
+                if item["score"] >= max(MIN_RELEVANCE_SCORE - RFP_TARGET_FALLBACK_MARGIN, 0.0)
             ]
             if near_threshold:
                 target_fallback_used = True
-                selected_documents = _dedupe_documents_by_source_page(near_threshold, RFP_TARGET_MAX_CHUNKS)
+                selected_documents = _dedupe_documents_by_source_page(
+                    near_threshold, RFP_TARGET_MAX_CHUNKS
+                )
 
     documents = selected_documents
 
@@ -1191,7 +1351,11 @@ def execute_retrieval(state: QueryState) -> QueryState:
             "answer": NO_RELEVANT_UPLOAD_TARGET_MESSAGE,
             "traces": traces,
         }
-    if not documents and retrieval_scope in {"sample", "upload"} and int(scope_chunk_counts.get(retrieval_scope, 0) or 0) == 0:
+    if (
+        not documents
+        and retrieval_scope in {"sample", "upload"}
+        and int(scope_chunk_counts.get(retrieval_scope, 0) or 0) == 0
+    ):
         return {
             "retrieved_documents": [],
             "retrieval_context": "",
@@ -1218,14 +1382,157 @@ def execute_retrieval(state: QueryState) -> QueryState:
     }
 
 
+def _retrieval_metadata(result) -> dict:
+    return {
+        "retrieval_mode": result.effective_mode,
+        "requested_retrieval_mode": result.decision.mode,
+        "retrieval_decision": result.decision.model_dump(),
+        "graph_query_type": result.decision.plan.query_type,
+        "graph_entities": list(result.entities),
+        "graph_paths": list(result.paths),
+        "graph_provenance": list(result.provenance),
+        "graph_version": result.version,
+        "graph_fallback_reason": result.fallback_reason,
+    }
+
+
+def execute_retrieval(state: QueryState) -> QueryState:
+    """Keep the legacy vector branch intact; fuse only opt-in graph evidence."""
+    provider = state.get("retrieval_provider")
+    query = state.get("current_query") or state.get("resolved_query") or state.get("user_query", "")
+    if (
+        provider is None
+        or not state.get("kb_ready")
+        or "search_knowledge_base" not in state.get("planned_tools", [])
+    ):
+        return _execute_vector_retrieval(state)
+    target = state.get("intent") == "rfp_analysis" and not _has_inline_rfp_requirements(state)
+    decision = provider.decision(query, target=target)
+    if decision.mode == "vector_only":
+        output = _execute_vector_retrieval(state)
+        if provider.policy == "vector_only":
+            return output
+        return output | {
+            "retrieval_decision": decision.model_dump(),
+            "requested_retrieval_mode": "vector_only",
+            "retrieval_mode": "vector_only",
+        }
+    vector_result = None
+
+    def vectors():
+        nonlocal vector_result
+        if vector_result is None:
+            vector_result = _execute_vector_retrieval(state)
+        return vector_result.get("retrieved_documents", [])
+
+    scope = "upload" if target else state.get("retrieval_scope", "all")
+    result = provider.retrieve(
+        query,
+        k=int(state.get("retrieval_k", RETRIEVAL_K)),
+        scope=scope,
+        vector_supplier=vectors,
+        target=target,
+    )
+    metadata = _retrieval_metadata(result)
+    if result.effective_mode == "vector_only":
+        output = dict(vector_result or _execute_vector_retrieval(state))
+    else:
+        documents = result.documents
+        output = {
+            "retrieved_documents": documents,
+            "retrieval_context": _format_sources(documents),
+            "response_mode": "llm" if documents else "fallback",
+            "answer": "" if documents else INSUFFICIENT_EVIDENCE_MESSAGE,
+            "traces": list((vector_result or state).get("traces", [])),
+        }
+        output["traces"] = _append_trace(
+            output,
+            "execute_retrieval",
+            {
+                "tool": "search_knowledge_base",
+                "scope": scope,
+                "retrieval_mode": result.effective_mode,
+                "input_summary": f"Original Private KB evidence; scope={scope}; mode={result.effective_mode}",
+                "output_summary": f"Selected {len(documents)} chunk(s), retaining complete graph witnesses.",
+                "documents": [
+                    {
+                        "source": d["source"],
+                        "page": d["page"] + 1,
+                        "chunk_id": d["chunk_id"],
+                        "document_origin": d["document_origin"],
+                        "score": "" if d.get("score") is None else f"{d['score']:.2f}",
+                        "score_type": "graph_witness"
+                        if d.get("score") is None
+                        else "vector_relevance",
+                    }
+                    for d in documents
+                ],
+            },
+        )
+    output["traces"] = [*output.get("traces", []), result.trace()]
+    return output | metadata
+
+
 def _scoped_search(state: QueryState, scope: str) -> Callable[[str, int], list]:
     retrieval_fn = state.get("retrieval_fn") or similarity_search
 
     def search(query: str, k: int = RETRIEVAL_K):
-        try:
-            return retrieval_fn(query, k, scope)
-        except TypeError:
-            return retrieval_fn(query, k)
+        def raw():
+            try:
+                return retrieval_fn(query, k, scope)
+            except TypeError:
+                return retrieval_fn(query, k)
+
+        provider = state.get("retrieval_provider")
+        if provider is None or provider.decision(query).mode == "vector_only":
+            return raw()
+
+        def vectors():
+            return [
+                {
+                    "source": d.metadata.get("source_file", "Unknown"),
+                    "page": int(d.metadata.get("page", 0)),
+                    "content": d.page_content,
+                    "chunk_id": d.metadata.get("chunk_id", ""),
+                    "document_origin": d.metadata.get("document_origin", "sample"),
+                    "score": float(score),
+                    "raw_score": float(score),
+                }
+                for d, score in raw()
+                if float(score) >= MIN_RELEVANCE_SCORE
+            ]
+
+        result = provider.retrieve(query, k=k, scope=scope, vector_supplier=vectors)
+        from langchain_core.documents import Document
+
+        return [
+            (
+                Document(
+                    page_content=row["content"],
+                    metadata={
+                        "source_file": row["source"],
+                        "page": row["page"],
+                        "chunk_id": row["chunk_id"],
+                        "document_origin": row["document_origin"],
+                        **{
+                            key: row[key]
+                            for key in (
+                                "retrieval_channel",
+                                "evidence_id",
+                                "graph_assertion_ids",
+                                "file_hash",
+                                "document_id",
+                                "fusion_score",
+                            )
+                            if key in row
+                        },
+                        "retrieval_score": row.get("score"),
+                    },
+                ),
+                row.get("score"),
+            )
+            for row in result.documents
+        ]
 
     return search
 
@@ -1242,22 +1549,44 @@ def _normalize_tool_documents(documents: list[object]) -> list[dict[str, Any]]:
             {
                 "source": metadata.get("source_file", "Unknown"),
                 "page": int(metadata.get("page", 0) or 0),
-                "score": 1.0,
+                "score": metadata.get("retrieval_score")
+                if metadata.get("retrieval_channel")
+                else 1.0,
                 "content": getattr(document, "page_content", ""),
                 "chunk_id": metadata.get("chunk_id", ""),
                 "document_origin": metadata.get("document_origin", "sample"),
+                **{
+                    key: metadata[key]
+                    for key in (
+                        "retrieval_channel",
+                        "evidence_id",
+                        "graph_assertion_ids",
+                        "file_hash",
+                        "document_id",
+                        "fusion_score",
+                    )
+                    if key in metadata
+                },
             }
         )
     return normalized
 
 
-def _attach_requirement_source_metadata(requirements: list[dict[str, Any]], documents: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    target_documents = [document for document in documents if document.get("document_origin") == "upload"]
+def _attach_requirement_source_metadata(
+    requirements: list[dict[str, Any]], documents: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    target_documents = [
+        document for document in documents if document.get("document_origin") == "upload"
+    ]
     if not target_documents:
         return requirements
     fallback = sorted(
         target_documents,
-        key=lambda item: (-float(item.get("score", 0.0) or 0.0), item.get("source", ""), item.get("page", 0)),
+        key=lambda item: (
+            -float(item.get("score", 0.0) or 0.0),
+            item.get("source", ""),
+            item.get("page", 0),
+        ),
     )[0]
     enriched = []
     for requirement in requirements:
@@ -1303,8 +1632,12 @@ def execute_specialized_tool(state: QueryState) -> QueryState:
             k=int(state.get("retrieval_k", RETRIEVAL_K)),
         )
         outputs["compare_projects"] = result
+        additional = _normalize_tool_documents(result.get("documents", []))
+        known = {d.get("chunk_id") for d in state.get("retrieved_documents", [])}
+        additional = [d for d in additional if d.get("chunk_id") not in known]
+        state = dict(state, retrieved_documents=[*state.get("retrieved_documents", []), *additional])
         summary = f"Compared {len(result.get('rows', []))} projects across 4 dimensions"
-        notes.append(result.get("comparison_markdown", ""))
+        notes.append(result.get("comparison_evidence") or result.get("comparison_markdown", ""))
         traces.append(
             {
                 "step": "execute_specialized_tool",
@@ -1316,10 +1649,11 @@ def execute_specialized_tool(state: QueryState) -> QueryState:
         )
 
     if intent in {"proposal", "rfp_analysis"}:
+        inline = _has_inline_rfp_requirements(state)
         requirements_result = extract_rfp_requirements(
-            _documents_to_text(state.get("retrieved_documents", []))
+            query if inline else _documents_to_text(state.get("retrieved_documents", []))
         )
-        requirements = _attach_requirement_source_metadata(
+        requirements = requirements_result.get("requirements", []) if inline else _attach_requirement_source_metadata(
             requirements_result.get("requirements", []),
             state.get("retrieved_documents", []),
         )
@@ -1330,7 +1664,10 @@ def execute_specialized_tool(state: QueryState) -> QueryState:
                 "step": "execute_specialized_tool",
                 "tool": "extract_rfp_requirements",
                 "status": "completed",
-                "input_summary": "Uploaded target evidence" if intent == "rfp_analysis" else "Retrieved target evidence",
+                "input_summary": "Uploaded target evidence"
+                if intent == "rfp_analysis" and not inline
+                else "User-provided requirements" if inline
+                else "Retrieved target evidence",
                 "output_summary": requirements_result.get("summary", "Extracted requirements."),
             }
         )
@@ -1342,7 +1679,9 @@ def execute_specialized_tool(state: QueryState) -> QueryState:
             k=int(state.get("retrieval_k", RETRIEVAL_K)),
         )
         outputs["find_relevant_case_studies"] = case_studies
-        selected_names = [item.get("source", "Unknown") for item in case_studies.get("matches", [])[:5]]
+        selected_names = [
+            item.get("source", "Unknown") for item in case_studies.get("matches", [])[:5]
+        ]
         traces.append(
             {
                 "step": "execute_specialized_tool",
@@ -1391,25 +1730,80 @@ def execute_specialized_tool(state: QueryState) -> QueryState:
 
         supporting = _normalize_tool_documents(case_studies.get("documents", []))
         existing_ids = {item.get("chunk_id") for item in state.get("retrieved_documents", [])}
-        supporting = [item for item in supporting if not item.get("chunk_id") or item.get("chunk_id") not in existing_ids]
+        supporting = [
+            item
+            for item in supporting
+            if not item.get("chunk_id") or item.get("chunk_id") not in existing_ids
+        ]
         return {
             "specialized_notes": "\n\n".join(item for item in notes if item),
             "tool_outputs": outputs,
             "retrieved_documents": [*state.get("retrieved_documents", []), *supporting],
-            "retrieval_context": _format_sources([*state.get("retrieved_documents", []), *supporting]),
+            "retrieval_context": _format_sources(
+                [*state.get("retrieved_documents", []), *supporting]
+            ),
             "traces": traces,
         }
 
     return {
         "specialized_notes": "\n\n".join(item for item in notes if item),
         "tool_outputs": outputs,
+        "retrieved_documents": state.get("retrieved_documents", []),
+        "retrieval_context": _format_sources(state.get("retrieved_documents", [])),
         "traces": traces,
     }
 
 
 def execute_tools(state: QueryState) -> QueryState:
     """Run the specialized tools selected by the existing intent planner."""
-    return execute_specialized_tool(state)
+    provider = state.get("retrieval_provider")
+    previous = len(provider.events) if provider else 0
+    result = execute_specialized_tool(state)
+    events = provider.events[previous:] if provider else []
+    events = [e for e in events if e.decision.mode != "vector_only"]
+    if not events:
+        return result
+    documents = list(result.get("retrieved_documents", state.get("retrieved_documents", [])))
+    seen = {d.get("chunk_id") for d in documents}
+    for event in events:
+        for doc in event.documents:
+            if doc["chunk_id"] not in seen:
+                documents.append(doc)
+                seen.add(doc["chunk_id"])
+    updates = {
+        "retrieved_documents": documents,
+        "retrieval_context": _format_sources(documents),
+        "traces": [*result.get("traces", state.get("traces", [])), *(e.trace() for e in events)],
+    }
+    for key, attribute, identity in (
+        ("graph_paths", "paths", "path_id"),
+        ("graph_provenance", "provenance", "evidence_id"),
+        ("graph_entities", "entities", "entity_id"),
+    ):
+        records = {r[identity]: r for r in state.get(key, [])}
+        for event in events:
+            for row in getattr(event, attribute):
+                old = records.get(row[identity], {})
+                merged = dict(row)
+                if key == "graph_provenance":
+                    merged["assertion_ids"] = sorted(
+                        set(old.get("assertion_ids", [])) | set(row["assertion_ids"])
+                    )
+                records[row[identity]] = merged
+        updates[key] = list(records.values())
+    if updates["graph_paths"]:
+        updates["graph_version"] = next(
+            (e.version for e in events if e.version), state.get("graph_version", "")
+        )
+        # Record mixed stages honestly: a vector target plus graph case lookup is hybrid.
+        updates["retrieval_mode"] = (
+            "graph_only"
+            if state.get("retrieval_mode") == "graph_only"
+            and all(e.effective_mode == "graph_only" for e in events)
+            else "hybrid"
+        )
+        updates["graph_query_type"] = events[-1].decision.plan.query_type
+    return result | updates
 
 
 def synthesize_prompt(state: QueryState) -> QueryState:
@@ -1430,17 +1824,25 @@ def synthesize_prompt(state: QueryState) -> QueryState:
         }
 
     intent = state.get("intent", "search")
-    retrieved_documents = [_compact_document_entry(item) for item in state.get("retrieved_documents", [])]
+    retrieved_documents = [
+        _compact_document_entry(item) for item in state.get("retrieved_documents", [])
+    ]
     target_documents = [
         item for item in retrieved_documents if item.get("document_origin") == "upload"
     ]
     target_documents = sorted(
         target_documents,
-        key=lambda item: (-float(item.get("score", 0.0) or 0.0), item.get("source", ""), item.get("page", 0)),
+        key=lambda item: (
+            -float(item.get("score", 0.0) or 0.0),
+            item.get("source", ""),
+            item.get("page", 0),
+        ),
     )
     target_documents = _dedupe_documents_by_source_page(target_documents, MAX_TARGET_CHUNKS)
     if intent == "rfp_analysis":
-        target_documents = _dedupe_documents_by_content_signature(target_documents, MAX_TARGET_CHUNKS)
+        target_documents = _dedupe_documents_by_content_signature(
+            target_documents, MAX_TARGET_CHUNKS
+        )
 
     sample_groups = _group_case_study_documents(retrieved_documents)
     history_messages = [
@@ -1512,7 +1914,9 @@ def synthesize_prompt(state: QueryState) -> QueryState:
         "projected_total_tokens": projected_total_tokens,
         "budget_limit": MAX_PROMPT_TOKENS,
         "target_chunks_included": len(target_documents),
-        "sample_chunks_included": sum(len(group.get("documents", [])) for group in sample_case_groups),
+        "sample_chunks_included": sum(
+            len(group.get("documents", [])) for group in sample_case_groups
+        ),
         "chunks_dropped": chunks_dropped,
         "history_messages_included": len(history_messages),
         "status": "within_budget" if estimated_input_tokens <= MAX_PROMPT_TOKENS else "over_budget",
@@ -1521,17 +1925,19 @@ def synthesize_prompt(state: QueryState) -> QueryState:
         "prompt": prompt,
         "prompt_budget": prompt_budget,
         "traces": _append_trace(
-            {"traces": _append_trace(
-                state,
-                "synthesize_prompt",
-                {
-                    "tool": "prompt_synthesizer",
-                    "status": "completed",
-                    "intent": intent,
-                    "scope": state.get("retrieval_scope", "all"),
-                    "output_summary": "Built grounded answer prompt from compact retrieved evidence and conversation context.",
-                },
-            )},
+            {
+                "traces": _append_trace(
+                    state,
+                    "synthesize_prompt",
+                    {
+                        "tool": "prompt_synthesizer",
+                        "status": "completed",
+                        "intent": intent,
+                        "scope": state.get("retrieval_scope", "all"),
+                        "output_summary": "Built grounded answer prompt from compact retrieved evidence and conversation context.",
+                    },
+                )
+            },
             "synthesize_prompt",
             {"tool": "prompt_budget", **prompt_budget},
         ),
@@ -1545,7 +1951,9 @@ def evidence_availability_check(state: QueryState) -> QueryState:
     answer = state.get("answer", "")
     if response_mode == "llm" and not documents:
         grounded = False
-        answer = "I could not find grounded evidence for that request in the current knowledge base."
+        answer = (
+            "I could not find grounded evidence for that request in the current knowledge base."
+        )
         response_mode = "fallback"
     if "[Source: None]" in answer:
         answer = answer.replace("[Source: None]", UNSUPPORTED_CLAIM_MESSAGE)
@@ -1588,11 +1996,14 @@ def final_response(state: QueryState) -> QueryState:
     }
 
 
-def _invoke_generation(state: QueryState, prompt: str, source_used: str, verify_kb: bool) -> QueryState:
+def _invoke_generation(
+    state: QueryState, prompt: str, source_used: str, verify_kb: bool
+) -> QueryState:
     """Invoke the supplied LLM inside the graph and preserve visible grounding traces."""
     llm = state.get("llm")
     if llm is None:
         return {
+            **empty_capture(),
             "answer": state.get("answer", ""),
             "response_mode": state.get("response_mode", "llm"),
             "source_used": source_used,
@@ -1607,6 +2018,7 @@ def _invoke_generation(state: QueryState, prompt: str, source_used: str, verify_
             ),
         }
 
+    capture = capture_generation(state, prompt, web=not verify_kb)
     response = llm.invoke([_human_message(prompt)])
     answer = str(getattr(response, "content", response) or "")
     traces = _append_trace(
@@ -1621,6 +2033,7 @@ def _invoke_generation(state: QueryState, prompt: str, source_used: str, verify_
     )
     if not verify_kb:
         return {
+            **capture,
             "answer": _sanitize_answer_text(answer),
             "response_mode": "llm",
             "source_used": source_used,
@@ -1633,9 +2046,11 @@ def _invoke_generation(state: QueryState, prompt: str, source_used: str, verify_
     }
     answer, verification = _verify_generated_answer(verification_payload, answer)
     return {
+        **capture,
+        "generation_kind": capture["generation_kind"] if verification["is_grounded"] else "insufficient",
         "answer": answer,
-        "response_mode": "llm",
-        "source_used": source_used,
+        "response_mode": "llm" if verification["is_grounded"] else "fallback",
+        "source_used": source_used if verification["is_grounded"] else "insufficient_evidence",
         "grounded": verification["is_grounded"],
         "traces": verification_payload["traces"],
     }
@@ -1643,6 +2058,8 @@ def _invoke_generation(state: QueryState, prompt: str, source_used: str, verify_
 
 def generate_from_kb(state: QueryState) -> QueryState:
     """Generate and ground a private-KB answer within the graph."""
+    if state.get("graph_paths"):
+        return _generate_graph_grounded(state)
     catalog = (state.get("tool_outputs", {}) or {}).get("project_catalog", {}) or {}
     catalog_answer = str(catalog.get("answer_markdown", "") or "").strip()
     if catalog_answer:
@@ -1662,40 +2079,224 @@ def generate_from_kb(state: QueryState) -> QueryState:
         }
         answer, verification = _verify_generated_answer(verification_payload, catalog_answer)
         return {
+            **empty_capture("deterministic" if verification["is_grounded"] else "insufficient"),
             "answer": answer,
-            "response_mode": "llm",
-            "source_used": "private_kb",
+            "response_mode": "llm" if verification["is_grounded"] else "fallback",
+            "source_used": "private_kb" if verification["is_grounded"] else "insufficient_evidence",
             "grounded": verification["is_grounded"],
             "traces": verification_payload["traces"],
         }
 
-    prompt = KB_GENERATION_PROMPT.format(
-        question=state.get("user_query", ""),
-        context=state.get("retrieval_context", ""),
+    return _generate_bounded_evidence(state)
+
+
+def _generate_bounded_evidence(state: QueryState, *, web: bool = False) -> QueryState:
+    """Budget the actual invocation; capture and verify only submitted evidence.
+
+    Preserve whole private chunks (and whole derived notes when they fit). Web
+    context may be clipped, but the exact clipped string is graded and captured.
+    Never silently truncate the user's question or pass an oversized prompt.
+    """
+    if state.get("llm") is None:
+        # Preparation-only API retains the legacy compact planning prompt/budget.
+        # No invocation or evidence capture occurs on this path.
+        return _invoke_generation(
+            state, state.get("prompt", ""), "web_search" if web else "private_kb", verify_kb=not web
+        )
+    selected = dict(state)
+    question = state.get("user_query", "")
+    template = WEB_GENERATION_PROMPT if web else KB_GENERATION_PROMPT
+
+    def assemble(context):
+        return template.format(question=question, web_context=context) if web else template.format(
+            question=question, context=context
+        )
+
+    available = max(0, MAX_PROMPT_TOKENS * 4 - len(assemble("")))
+    dropped = 0
+    if web:
+        original = str(state.get("web_results", "") or "")
+        selected["web_results"] = original[:available]
+        context = selected["web_results"]
+        dropped = int(context != original)
+    else:
+        documents = []
+        for doc in state.get("retrieved_documents", []):
+            trial = _format_sources([*documents, doc])
+            if len(trial) <= available:
+                documents.append(doc)
+            else:
+                dropped += 1
+        selected["retrieved_documents"] = documents
+        context = _format_sources(documents) if documents else ""
+        selected["retrieval_context"] = context
+    prompt = assemble(context)
+    notes = "" if web else str(state.get("specialized_notes", "") or "")
+    auxiliary = "\n\nSpecialized analysis (derived, not original evidence):\n" + notes
+    notes_dropped = bool(notes and _estimate_tokens(prompt + auxiliary) > MAX_PROMPT_TOKENS)
+    selected["specialized_notes"] = "" if notes_dropped else notes
+    if notes and not notes_dropped:
+        prompt += auxiliary
+    selected["prompt"] = prompt
+    selected["prompt_budget"] = {
+        "estimated_input_tokens": _estimate_tokens(prompt),
+        "budget_limit": MAX_PROMPT_TOKENS,
+        "assembler": "actual_generation_prompt",
+        "chunks_dropped": dropped,
+        "derived_notes_dropped": notes_dropped,
+        "status": "within_budget" if _estimate_tokens(prompt) <= MAX_PROMPT_TOKENS else "over_budget",
+    }
+    selected["traces"] = _append_trace(
+        state, "generation_budget", {"tool": "generation_prompt_budget", **selected["prompt_budget"]}
     )
-    if state.get("specialized_notes"):
-        prompt += "\n\nSpecialized analysis:\n" + state["specialized_notes"]
-    return _invoke_generation(state, prompt, "private_kb", verify_kb=True)
+    if not context or _estimate_tokens(prompt) > MAX_PROMPT_TOKENS:
+        selected["answer"] = ""
+        return selected | answer_insufficient(selected)
+    if dropped or (not web and state.get("kb_grading_stage") == "tool_input"):
+        selected["kb_grading_stage"] = "answer"
+        grading = grade_web_evidence(selected) if web else grade_kb_evidence(selected)
+        selected.update(grading)
+        if grading["web_grade" if web else "kb_grade"] != "good":
+            selected["answer"] = ""
+            return selected | answer_insufficient(selected)
+    return selected | _invoke_generation(
+        selected, prompt, "web_search" if web else "private_kb", verify_kb=not web
+    )
+
+
+def _discard_stale_graph(state: QueryState) -> QueryState:
+    """Discard rather than reuse a graph answer, prompt or derived tool note."""
+    provider = state.get("retrieval_provider")
+    failed = dict(state)
+    failed.update(
+        {
+            **empty_capture(),
+            "graph_paths": [],
+            "graph_provenance": [],
+            "graph_entities": [],
+            "graph_version": "",
+            "graph_fallback_reason": "snapshot_changed_during_workflow",
+            "specialized_notes": "",
+            "tool_outputs": {},
+            "prompt": "",
+            "prompt_budget": {},
+            "answer": "",
+            "grounded": False,
+        }
+    )
+    failed["traces"] = _append_trace(
+        state,
+        "graph_integrity_check",
+        {
+            "tool": "graph_integrity_check",
+            "status": "rejected",
+            "output_summary": "Graph/index currentness changed; discarded all graph-derived context and answer.",
+        },
+    )
+    if provider is not None and provider.strict and provider.policy == "graph_only":
+        failed.update({"retrieved_documents": [], "retrieval_context": ""})
+        return failed | answer_insufficient(failed)
+    failed["retrieval_provider"] = None
+    failed["retrieval_mode"] = "vector_only"
+    failed.update(_execute_vector_retrieval(failed))
+    if failed.get("response_mode") == "fallback":
+        return failed
+    failed.update(execute_specialized_tool(failed))
+    failed.update(synthesize_prompt(failed))
+    return failed | generate_from_kb(failed)
+
+
+def _generate_graph_grounded(state: QueryState) -> QueryState:
+    """One authoritative opt-in prompt/context, with currentness guards."""
+    provider = state.get("retrieval_provider")
+    if provider is None or not provider.validate_current():
+        return _discard_stale_graph(state)
+    from rfp_analyst.retrieval.hybrid import MAX_CONTEXT_CHARS, select_generation_evidence
+
+    note = (
+        "\n\nRelationship index: bounded candidate evidence only. Coverage is partial. "
+        "Shared technologies, industry or framework mentions do not establish contractual SATISFIES, "
+        "certification, compliance or successful delivery. Preserve achieved/projected/estimated wording. "
+        "Cite only the original document/page evidence above. Do not invent claim-to-chunk provenance."
+    )
+    question = state.get("user_query", "")
+    overhead = len(KB_GENERATION_PROMPT.format(question=question, context="")) + len(note)
+    documents, paths = select_generation_evidence(
+        state.get("retrieved_documents", []),
+        state["graph_paths"],
+        max_chars=max(0, min(MAX_CONTEXT_CHARS, MAX_PROMPT_TOKENS * 4 - overhead)),
+    )
+    selected = dict(state)
+    selected["retrieved_documents"] = documents
+    selected["retrieval_context"] = _format_sources(documents)
+    selected["graph_paths"] = paths
+    evidence_ids = {d.get("evidence_id") for d in documents}
+    assertions = {a for p in paths for a in p["assertion_ids"]}
+    selected["graph_provenance"] = [
+        dict(p, assertion_ids=sorted(set(p["assertion_ids"]) & assertions))
+        for p in state.get("graph_provenance", [])
+        if p["evidence_id"] in evidence_ids
+    ]
+    entity_ids = {identifier for p in paths for identifier in [*p["subject_ids"], *p["entity_ids"]]}
+    selected["graph_entities"] = [
+        e for e in state.get("graph_entities", []) if e["entity_id"] in entity_ids
+    ]
+    prompt = (
+        KB_GENERATION_PROMPT.format(question=question, context=selected["retrieval_context"]) + note
+    )
+    selected["prompt"] = prompt
+    selected["prompt_budget"] = {
+        "estimated_tokens": _estimate_tokens(prompt),
+        "max_tokens": MAX_PROMPT_TOKENS,
+        "assembler": "graph_original_evidence",
+        "selected_chunks": len(documents),
+        "retained_paths": len(paths),
+        "dropped_paths": len(state["graph_paths"]) - len(paths),
+    }
+    selected["traces"] = _append_trace(
+        state,
+        "graph_integrity_check",
+        {
+            "tool": "graph_integrity_check",
+            "status": "validated",
+            "retained_paths": len(paths),
+            "output_summary": f"Current source witnesses validated; retained {len(paths)} complete path(s), {len(documents)} chunks.",
+        },
+    )
+    if not documents or not paths or _estimate_tokens(prompt) > MAX_PROMPT_TOKENS:
+        return selected | answer_insufficient(selected)
+    # Re-grade the actual final original-text context, not omitted tool candidates.
+    selected["kb_grading_stage"] = "answer"
+    selected.update(grade_kb_evidence(selected))
+    if not provider.validate_current():
+        return _discard_stale_graph(selected)
+    if selected["kb_grade"] != "good":
+        return selected | answer_insufficient(selected)
+    result = selected | _invoke_generation(selected, prompt, "private_kb", verify_kb=True)
+    if not provider.validate_current():
+        return _discard_stale_graph(result)
+    return result
 
 
 def generate_from_web(state: QueryState) -> QueryState:
     """Generate an answer from web evidence after successful web grading."""
-    prompt = WEB_GENERATION_PROMPT.format(
-        question=state.get("user_query", ""),
-        web_context=state.get("web_results", ""),
-    )
-    return _invoke_generation(state, prompt, "web_search", verify_kb=False)
+    return _generate_bounded_evidence(state, web=True)
 
 
 def direct_answer(state: QueryState) -> QueryState:
     """Answer a conversational message without retrieval."""
     if state.get("intent") == "previous_sources" or state.get("response_mode") == "clarification":
         return {
+            **empty_capture("direct"),
             "source_used": "direct",
             "traces": _append_trace(
                 state,
                 "final_response",
-                {"tool": "final_response", "response_mode": "direct", "output_summary": "Returned prior source citations."},
+                {
+                    "tool": "final_response",
+                    "response_mode": "direct",
+                    "output_summary": "Returned prior source citations.",
+                },
             ),
         }
     llm = state.get("llm")
@@ -1707,12 +2308,17 @@ def direct_answer(state: QueryState) -> QueryState:
         answer = str(getattr(response, "content", response) or answer)
     return {
         "answer": _sanitize_answer_text(answer),
+        **empty_capture("direct"),
         "response_mode": "direct",
         "source_used": "direct",
         "traces": _append_trace(
             state,
             "final_response",
-            {"tool": "final_response", "response_mode": "direct", "output_summary": "Generated a direct response without retrieval."},
+            {
+                "tool": "final_response",
+                "response_mode": "direct",
+                "output_summary": "Generated a direct response without retrieval.",
+            },
         ),
     }
 
@@ -1725,12 +2331,17 @@ def answer_insufficient(state: QueryState) -> QueryState:
     )
     return {
         "answer": answer,
+        **empty_capture("insufficient"),
         "response_mode": "fallback",
         "source_used": "insufficient_evidence",
         "traces": _append_trace(
             state,
             "final_response",
-            {"tool": "final_response", "response_mode": "fallback", "output_summary": "Returned insufficient-evidence response after bounded retries."},
+            {
+                "tool": "final_response",
+                "response_mode": "fallback",
+                "output_summary": "Returned insufficient-evidence response after bounded retries.",
+            },
         ),
     }
 
@@ -1754,10 +2365,42 @@ def prepare_query_payload(
     retrieval_k: int = RETRIEVAL_K,
     retrieval_scope: str = "all",
     llm: Any | None = None,
+    *,
+    retrieval_mode: str | None = None,
+    retrieval_provider: Any | None = None,
+    strict_retrieval_mode: bool = False,
+    allow_web_search: bool = True,
+    allow_llm_routing: bool = True,
+    allow_llm_grading: bool = True,
+    allow_llm_rewriting: bool = True,
 ) -> dict[str, Any]:
     """Run the orchestration graph and return the full query payload."""
     graph = compile_query_graph()
+    from config import get_retrieval_settings
+    from rfp_analyst.retrieval.decisions import RetrievalDecision
+
+    policy = retrieval_mode or (
+        retrieval_provider.policy if retrieval_provider else get_retrieval_settings()["policy"]
+    )
+    if policy not in {"auto", "vector_only", "graph_only", "hybrid"}:
+        raise ValueError("Unsupported retrieval mode")
+    owns_provider = False
+    if policy == "vector_only":
+        retrieval_provider = None
+    elif retrieval_provider is None:
+        from rfp_analyst.retrieval.hybrid import create_retrieval_provider
+
+        retrieval_provider = create_retrieval_provider(policy=policy)
+        retrieval_provider.strict = strict_retrieval_mode
+        owns_provider = True
+    elif policy != retrieval_provider.policy:
+        raise ValueError("Injected retrieval provider policy must match requested mode")
     initial_state: QueryState = {
+        **empty_capture(),
+        "allow_web_search": allow_web_search,
+        "allow_llm_routing": allow_llm_routing,
+        "allow_llm_grading": allow_llm_grading,
+        "allow_llm_rewriting": allow_llm_rewriting,
         "user_query": user_query,
         "chat_history": chat_history or [],
         "vectorstore_stats": vectorstore_stats or {},
@@ -1774,9 +2417,26 @@ def prepare_query_payload(
         "resolved_entities": [],
         "tool_outputs": {},
         "graph_backend": "langgraph" if LANGGRAPH_AVAILABLE else "deterministic-fallback",
+        "retrieval_provider": retrieval_provider,
+        "retrieval_mode": "vector_only",
+        "requested_retrieval_mode": policy,
+        "retrieval_decision": RetrievalDecision(
+            mode="vector_only", reason="policy_override"
+        ).model_dump(),
+        "graph_entities": [],
+        "graph_paths": [],
+        "graph_provenance": [],
+        "graph_query_type": "unsupported",
+        "graph_version": "",
+        "graph_fallback_reason": "",
     }
-    final_state = graph.invoke(initial_state)
-    return dict(final_state)
+    try:
+        final_state = dict(graph.invoke(initial_state))
+        final_state.pop("retrieval_provider", None)  # Never export connection/provider objects.
+        return final_state
+    finally:
+        if owns_provider:
+            retrieval_provider.close()
 
 
 def run_agent_graph(state, search_fn=None, stats_fn=None):
@@ -1801,7 +2461,10 @@ def run_agent_graph(state, search_fn=None, stats_fn=None):
     state.stats = payload.get("vectorstore_stats", {})
     state.prompt = payload.get("prompt", "")
     state.final_answer = payload.get("answer", "")
-    if payload.get("response_mode") == "fallback" and "Please ingest documents first" not in state.final_answer:
+    if (
+        payload.get("response_mode") == "fallback"
+        and "Please ingest documents first" not in state.final_answer
+    ):
         state.final_answer = build_no_documents_message(state.query)
 
     state.tool_trace = payload.get("traces", [])
@@ -1903,9 +2566,13 @@ def _verify_generated_answer(payload: dict[str, Any], answer: str) -> tuple[str,
 
     final_answer = sanitized_answer
     final_verification = verification
-    repair_needed = (not verification["is_grounded"]) or _has_vague_or_invalid_citations(sanitized_answer)
+    repair_needed = (not verification["is_grounded"]) or _has_vague_or_invalid_citations(
+        sanitized_answer
+    )
     if repair_needed:
-        repaired_answer = _repair_unsupported_answer(sanitized_answer, verification["unsupported_claims"])
+        repaired_answer = _repair_unsupported_answer(
+            sanitized_answer, verification["unsupported_claims"]
+        )
         payload.setdefault("traces", []).append(
             {
                 "step": "answer_repair",
@@ -1917,14 +2584,18 @@ def _verify_generated_answer(payload: dict[str, Any], answer: str) -> tuple[str,
             }
         )
         final_answer = repaired_answer
-        final_verification = verify_answer_grounding(final_answer, payload.get("retrieved_documents", []))
+        final_verification = verify_answer_grounding(
+            final_answer, payload.get("retrieved_documents", [])
+        )
 
     payload.setdefault("traces", []).append(
         {
             "step": "verify_grounding",
             "tool": "final_grounding_verifier",
             "status": "completed",
-            "verification_status": "grounded" if final_verification["is_grounded"] else "unsupported",
+            "verification_status": "grounded"
+            if final_verification["is_grounded"]
+            else "unsupported",
             "input_summary": "Final answer after optional bounded repair",
             "output_summary": (
                 f"Verified {len(final_verification['checked_claims'])} final claim(s); "
@@ -1958,6 +2629,14 @@ def _verify_generated_answer(payload: dict[str, Any], answer: str) -> tuple[str,
                 "output_summary": "Completed final grounding check.",
             }
         )
+    if not final_verification["is_grounded"]:
+        payload.setdefault("traces", []).append({
+            "step": "grounding_gate",
+            "tool": "grounding_gate",
+            "status": "rejected",
+            "output_summary": "Final verification failed after bounded repair; answer withheld.",
+        })
+        return INSUFFICIENT_EVIDENCE_MESSAGE, final_verification
     return final_answer, final_verification
 
 
@@ -1992,6 +2671,10 @@ def run_query(
     vectorstore_stats: dict[str, Any] | None = None,
     retrieval_fn: Callable[[str, int, str], list] | None = None,
     retrieval_scope: str = "all",
+    *,
+    retrieval_mode: str | None = None,
+    retrieval_provider: Any | None = None,
+    strict_retrieval_mode: bool = False,
 ) -> dict[str, Any]:
     """Execute the graph and optionally call the LLM when grounding is ready."""
     del thread_id
@@ -2002,6 +2685,9 @@ def run_query(
         vectorstore_stats=vectorstore_stats,
         retrieval_fn=retrieval_fn,
         retrieval_scope=retrieval_scope,
+        retrieval_mode=retrieval_mode,
+        retrieval_provider=retrieval_provider,
+        strict_retrieval_mode=strict_retrieval_mode,
     )
 
     answer = _sanitize_answer_text(payload.get("answer", ""))

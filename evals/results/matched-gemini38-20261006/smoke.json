@@ -1,0 +1,117 @@
+{
+  "case_id": "semantic_modernization",
+  "requested_retrieval_mode": "vector_only",
+  "generation": {
+    "class": "ChatGoogleGenerativeAI",
+    "model": "gemini-3.8-flash",
+    "temperature": 0.3,
+    "control_temperature": 0.0,
+    "retrieval_k": 6,
+    "min_relevance_score": 0.5,
+    "max_query_retries": 1,
+    "max_prompt_tokens": 6500,
+    "max_context_chars_per_chunk": 1000,
+    "embedding_model": "BAAI/bge-small-en-v1.5"
+  },
+  "status": "failed_smoke_gate",
+  "judge": "not_run:capture_only",
+  "provider_failures": [],
+  "sample": {
+    "user_input": "Summarize the modernization priorities identified by the banking digital audit.",
+    "retrieved_contexts": [],
+    "response": "I could not find sufficiently relevant evidence in the selected document scope. I could not find enough reliable evidence in the private knowledge base or web search results to answer confidently.",
+    "reference": "The banking audit assessed digital maturity and data governance, benchmarked peers, and recommended a prioritized modernization roadmap with ROI projections."
+  },
+  "deterministic": {
+    "source_coverage": null,
+    "tool_correctness": true,
+    "origin_correctness": true,
+    "route_correctness": true,
+    "retrieval_mode_correctness": true,
+    "no_answer_behavior": false,
+    "citation_identity_coverage": null,
+    "grounding_passed": null,
+    "graph_path_provenance_correctness": null,
+    "answer_present": true
+  },
+  "generation_kind": "insufficient",
+  "kb_grade": "weak",
+  "traces": [
+    {
+      "tool": "health_check",
+      "step": "health_check"
+    },
+    {
+      "tool": "intent_classifier",
+      "step": "classify_intent"
+    },
+    {
+      "tool": "tool_planner",
+      "step": "plan_tools"
+    },
+    {
+      "tool": "search_knowledge_base",
+      "step": "execute_retrieval",
+      "status": "completed"
+    },
+    {
+      "tool": "evidence_availability_check",
+      "step": "grade_kb_evidence",
+      "status": "completed",
+      "grade": "weak"
+    },
+    {
+      "tool": "web_search",
+      "step": "search_web",
+      "status": "unavailable"
+    },
+    {
+      "tool": "web_evidence_grader",
+      "step": "grade_web_evidence",
+      "status": "completed",
+      "grade": "weak"
+    },
+    {
+      "tool": "query_rewriter",
+      "step": "rewrite_query",
+      "status": "completed"
+    },
+    {
+      "tool": "tool_planner",
+      "step": "plan_tools"
+    },
+    {
+      "tool": "search_knowledge_base",
+      "step": "execute_retrieval",
+      "status": "completed"
+    },
+    {
+      "tool": "evidence_availability_check",
+      "step": "grade_kb_evidence",
+      "status": "completed",
+      "grade": "weak"
+    },
+    {
+      "tool": "web_search",
+      "step": "search_web",
+      "status": "unavailable"
+    },
+    {
+      "tool": "web_evidence_grader",
+      "step": "grade_web_evidence",
+      "status": "completed",
+      "grade": "weak"
+    },
+    {
+      "tool": "final_response",
+      "step": "final_response"
+    }
+  ],
+  "checks": {
+    "google_only": true,
+    "grader_succeeded": false,
+    "generation_succeeded": false,
+    "grounding_executed": false
+  },
+  "pipeline_latency_seconds": 105.494822
+}

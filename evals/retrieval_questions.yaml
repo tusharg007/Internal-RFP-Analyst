@@ -1,0 +1,259 @@
+# Independent, source-checked extension; the original golden_questions.yaml is unchanged.
+# Optimal modes are hypotheses, not measured winners. Pages are ONE-BASED.
+id: semantic_modernization
+query_class: semantic_single_hop
+question: Summarize the modernization priorities identified by the banking digital audit.
+retrieval_scope: sample
+expected_optimal_mode: vector_only
+mode_rationale: Narrative priorities require original prose, not entity intersections.
+expected_intent: search
+expected_tools: [search_knowledge_base]
+expected_behavior: answer
+reference: The banking audit assessed digital maturity and data governance, benchmarked peers, and recommended a prioritized modernization roadmap with ROI projections.
+required_evidence:
+  - source: 01_Banking_Sector_Digital_Audit_2024.pdf
+    page: 2
+    anchors: [transformation maturity, transformation roadmap with ROI projections]
+---
+id: semantic_healthcare_security
+query_class: semantic_single_hop
+question: What does the healthcare migration proposal say about protecting patient data during migration?
+retrieval_scope: sample
+expected_optimal_mode: vector_only
+mode_rationale: Security measures and proposed status require passage-level interpretation.
+expected_intent: search
+expected_tools: [search_knowledge_base]
+expected_behavior: answer
+reference: The healthcare proposal calls for zero data loss and HIPAA-compliant encryption at rest and in transit. These are proposed controls, not evidence of completed certification.
+required_evidence:
+  - source: 02_Healthcare_Data_Migration_to_Azure_Cloud.pdf
+    page: 2
+    anchors: [zero data loss, encryption at rest and in transit]
+---
+id: factual_banking_duration
+query_class: exact_factual_document
+question: What is the total timeline for Banking Sector Digital Audit 2024?
+retrieval_scope: sample
+expected_optimal_mode: graph_only
+mode_rationale: A named project's explicitly represented duration is a structured field lookup.
+expected_intent: search
+expected_tools: [search_knowledge_base]
+expected_behavior: answer
+reference: The banking digital audit has a total duration of 16 weeks.
+answer_anchors: [16 weeks]
+required_evidence:
+  - source: 01_Banking_Sector_Digital_Audit_2024.pdf
+    page: 2
+    anchors: ['Total Duration: 16 weeks']
+---
+id: factual_insurance_team
+query_class: exact_factual_document
+question: How many professionals are on the Insurance Claims Processing Automation team?
+retrieval_scope: sample
+expected_optimal_mode: vector_only
+mode_rationale: Team size is not represented as a typed field in the current minimum graph ontology.
+expected_intent: search
+expected_tools: [search_knowledge_base]
+expected_behavior: answer
+reference: The insurance automation team consists of 9 professionals.
+answer_anchors: [9]
+required_evidence:
+  - source: 04_Insurance_Claims_Processing_Automation.pdf
+    page: 2
+    anchors: ['Total Team Size: 9 professionals']
+---
+id: relationship_rpa
+query_class: relationship
+question: Which projects use UiPath for robotic process automation?
+retrieval_scope: sample
+expected_optimal_mode: graph_only
+mode_rationale: Project-to-technology membership is an explicit graph relationship.
+expected_intent: search
+expected_tools: [search_knowledge_base]
+expected_behavior: answer
+reference: Insurance Claims Processing Automation lists UiPath Enterprise with Orchestrator as its RPA platform.
+required_evidence:
+  - source: 04_Insurance_Claims_Processing_Automation.pdf
+    page: 2
+    anchors: [UiPath Enterprise with Orchestrator]
+---
+id: relationship_regulatory
+query_class: relationship
+question: Which pharmaceutical projects mention GDPR, and what regulatory framework is listed alongside it?
+retrieval_scope: sample
+expected_optimal_mode: hybrid
+mode_rationale: Industry/framework filtering benefits from graph constraints; the adjacent regulatory detail requires source text.
+expected_intent: search
+expected_tools: [search_knowledge_base]
+expected_behavior: answer
+reference: Pharma Clinical Trial Data Platform lists GDPR alongside FDA 21 CFR Part 11 and ICH E6(R2) GCP.
+required_evidence:
+  - source: 07_Pharma_Clinical_Trial_Data_Platform.pdf
+    page: 2
+    anchors: ['FDA 21 CFR Part 11, GDPR, ICH E6(R2) GCP']
+---
+id: multihop_shared_retail_pharma
+query_class: multi_hop
+question: Which technologies are shared by Retail Supply Chain Analytics Platform and Pharma Clinical Trial Data Platform?
+retrieval_scope: sample
+expected_optimal_mode: hybrid
+mode_rationale: Project-to-technology-to-project join needs both original technology-stack witnesses.
+expected_intent: search
+expected_tools: [search_knowledge_base]
+expected_behavior: answer
+reference: Both projects mention Apache Airflow, Python, and AWS infrastructure including S3 and Lambda. Their warehouses differ (Snowflake versus Amazon Redshift); these are not shared technologies.
+required_evidence:
+  - source: 03_Retail_Supply_Chain_Analytics_Platform.pdf
+    page: 2
+    anchors: [Apache Airflow, Python, 'AWS (S3, EC2, Lambda)']
+  - source: 07_Pharma_Clinical_Trial_Data_Platform.pdf
+    page: 2
+    anchors: [Apache Airflow, Python, 'AWS (S3, Glue, Lambda, Step Functions)']
+---
+id: multihop_shared_banking_healthcare
+query_class: multi_hop
+question: Which technologies are shared by Banking Sector Digital Audit 2024 and Healthcare Data Migration to Azure Cloud?
+retrieval_scope: sample
+expected_optimal_mode: hybrid
+mode_rationale: Two-project technology join with original passages to distinguish product editions from technology families.
+expected_intent: search
+expected_tools: [search_knowledge_base]
+expected_behavior: answer
+reference: Both projects mention Microsoft Azure, Azure Data Factory, Azure SQL, and Power BI. The banking stack specifies DirectQuery while the healthcare stack specifies Power BI Premium; shared families do not imply identical editions.
+required_evidence:
+  - source: 01_Banking_Sector_Digital_Audit_2024.pdf
+    page: 2
+    anchors: [Azure Data Factory, Azure SQL Database, Power BI with DirectQuery]
+  - source: 02_Healthcare_Data_Migration_to_Azure_Cloud.pdf
+    page: 2
+    anchors: [Azure Data Factory, Azure SQL, Power BI Premium]
+---
+id: comparison_delivery_budget
+query_class: cross_document_comparison
+question: Compare the timelines and budget ranges of the healthcare migration and insurance claims automation projects.
+retrieval_scope: sample
+expected_optimal_mode: hybrid
+mode_rationale: Structured fields span two projects and two source pages per project.
+expected_intent: compare
+expected_tools: [search_knowledge_base, compare_projects]
+expected_behavior: answer
+reference: Healthcare migration proposes 18 weeks and $1,200,000-$1,500,000 USD. Insurance claims automation specifies 16 weeks and $650,000-$800,000 USD. These are estimated budgets, not actual expenditure.
+answer_anchors: [18 weeks, 16 weeks]
+required_evidence:
+  - source: 02_Healthcare_Data_Migration_to_Azure_Cloud.pdf
+    page: 2
+    anchors: ['Total Duration: 18 weeks']
+  - source: 02_Healthcare_Data_Migration_to_Azure_Cloud.pdf
+    page: 3
+    anchors: ['$1,200,000 - $1,500,000 USD']
+  - source: 04_Insurance_Claims_Processing_Automation.pdf
+    page: 2
+    anchors: ['Total Duration: 16 weeks']
+  - source: 04_Insurance_Claims_Processing_Automation.pdf
+    page: 3
+    anchors: ['$650,000 - $800,000 USD']
+---
+id: comparison_outcome_modality
+query_class: cross_document_comparison
+question: Compare the retail supply-chain stockout reduction with the manufacturing predictive-maintenance downtime reduction, distinguishing achieved from projected results.
+retrieval_scope: sample
+expected_optimal_mode: vector_only
+mode_rationale: Outcome modality in prose matters more than an entity join; a graph join alone must not promote a projection to an achievement.
+expected_intent: compare
+expected_tools: [search_knowledge_base, compare_projects]
+expected_behavior: answer
+reference: The retail case study achieved a 34% stockout reduction. The manufacturing proposal projects a 45% reduction in unplanned equipment downtime; it is not a reported completed outcome.
+answer_anchors: [34%, 45%]
+required_evidence:
+  - source: 03_Retail_Supply_Chain_Analytics_Platform.pdf
+    page: 3
+    anchors: [Reduced stockout rates by 34%]
+  - source: 10_Manufacturing_IoT_Predictive_Maintenance_Platform.pdf
+    page: 3
+    anchors: [Projected 45% reduction in unplanned equipment downtime]
+---
+id: matching_uploaded_controls
+query_class: requirement_matching
+question: Find relevant case studies for the uploaded RFP requiring Azure migration, executive dashboards, and HIPAA controls. Distinguish proposals from delivered evidence.
+retrieval_scope: all
+expected_optimal_mode: hybrid
+mode_rationale: Uploaded requirement-to-technology/framework-to-project matching needs target and candidate witnesses, with proposal qualifications preserved.
+expected_intent: rfp_analysis
+expected_tools: [search_knowledge_base, extract_rfp_requirements, find_relevant_case_studies]
+expected_behavior: answer
+reference: The uploaded RFP asks for Azure migration, executive dashboards, HIPAA controls, and phased delivery. Healthcare Data Migration to Azure Cloud is a relevant proposal with Azure, Power BI, and HIPAA controls, not a delivered case study proving all requirements were achieved.
+required_evidence:
+  - source: eval_target_rfp.pdf
+    page: 1
+    anchors: [Azure migration, executive dashboards, HIPAA controls]
+  - source: 02_Healthcare_Data_Migration_to_Azure_Cloud.pdf
+    page: 1
+    anchors: ['Document Type: Proposal']
+  - source: 02_Healthcare_Data_Migration_to_Azure_Cloud.pdf
+    page: 2
+    anchors: [Power BI, HIPAA]
+---
+id: matching_clinical_requirements
+query_class: requirement_matching
+question: Find case studies for an RFP requiring FDA 21 CFR Part 11, automated regulatory submissions, and achieved clinical data reconciliation improvements.
+retrieval_scope: sample
+expected_optimal_mode: hybrid
+mode_rationale: Framework membership narrows candidates; achieved outcome and regulatory-submission evidence must be verified in the original passages.
+expected_intent: rfp_analysis
+expected_tools: [search_knowledge_base, find_relevant_case_studies]
+expected_behavior: answer
+reference: Pharma Clinical Trial Data Platform is a delivered case study reporting FDA 21 CFR Part 11 compliance certification, 85% automated routine regulatory submissions, and a 75% reduction in clinical data reconciliation time.
+answer_anchors: [75%, 85%]
+required_evidence:
+  - source: 07_Pharma_Clinical_Trial_Data_Platform.pdf
+    page: 1
+    anchors: ['Document Type: Case Study']
+  - source: 07_Pharma_Clinical_Trial_Data_Platform.pdf
+    page: 3
+    anchors: [clinical data reconciliation time by 75%, 85% of routine regulatory submissions, compliance certification]
+---
+id: unsupported_private_contact
+query_class: unsupported_no_answer
+question: What is the private mobile number of the banking digital audit client's CEO?
+retrieval_scope: sample
+expected_optimal_mode: vector_only
+mode_rationale: No public sample contains this private fact; graph support provides no benefit and must not invent it.
+expected_intent: search
+expected_tools: [search_knowledge_base]
+expected_behavior: abstain
+expects_no_answer: true
+required_evidence: []
+---
+id: unsupported_certification
+query_class: unsupported_no_answer
+question: What is the PCI DSS certification ID of the quantum-payments aerospace project?
+retrieval_scope: sample
+expected_optimal_mode: vector_only
+mode_rationale: Neither the named project nor the certification identifier exists in the frozen corpus.
+expected_intent: search
+expected_tools: [search_knowledge_base]
+expected_behavior: abstain
+expects_no_answer: true
+required_evidence: []
+---
+id: ambiguous_missing_referent
+query_class: ambiguous
+question: What about that?
+retrieval_scope: all
+expected_optimal_mode: vector_only
+mode_rationale: Clarification must bypass retrieval; vector_only is the safe default label, not a claim of retrieval benefit.
+expected_intent: ambiguous
+expected_tools: []
+expected_behavior: clarify
+required_evidence: []
+---
+id: ambiguous_missing_action
+query_class: ambiguous
+question: Do it.
+retrieval_scope: all
+expected_optimal_mode: vector_only
+mode_rationale: No antecedent or requested action exists; clarification should bypass all retrieval modes.
+expected_intent: ambiguous
+expected_tools: []
+expected_behavior: clarify
+required_evidence: []

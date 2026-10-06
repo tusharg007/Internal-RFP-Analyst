@@ -22,3 +22,6 @@ streamlit>=1.38.0
 # Utilities
 python-dotenv>=1.0.0
 PyYAML>=6.0
+
+# Optional Neo4j foundation: install requirements-graph.txt or the [graph] extra.
+# Kept separate so existing vector-only environments need no graph dependency.

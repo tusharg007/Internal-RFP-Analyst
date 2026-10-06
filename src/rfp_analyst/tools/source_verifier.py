@@ -60,7 +60,12 @@ def verify_answer_grounding(answer: str, supporting_documents: list[object]) -> 
             content = document.page_content
         source_index.setdefault((_normalize_source_name(source_name), page), []).append(content)
 
-    unsupported_claims = []
+    invalid_citations = [
+        match.group()
+        for match in _CITATION_PATTERN.finditer(answer)
+        if (_normalize_source_name(match.group("source")), int(match.group("page"))) not in source_index
+    ]
+    unsupported_claims = list(dict.fromkeys(invalid_citations))
     checked_claims = []
     for raw_line in answer.splitlines():
         line = raw_line.strip()
@@ -73,6 +78,8 @@ def verify_answer_grounding(answer: str, supporting_documents: list[object]) -> 
             (_normalize_source_name(match.group("source")), int(match.group("page")))
             for match in _CITATION_PATTERN.finditer(line)
         ]
+        invalid_citation = any(key not in source_index for key in line_citations)
+        invalid_citation = any(key not in source_index for key in line_citations)
         line_without_citations = _CITATION_PATTERN.sub("", line)
         sentence_candidates = [segment.strip() for segment in re.split(r"(?<=[.!?])\s+", line_without_citations) if segment.strip()]
 
@@ -80,6 +87,12 @@ def verify_answer_grounding(answer: str, supporting_documents: list[object]) -> 
             if len(claim) <= 20:
                 continue
             checked_claims.append(claim)
+            if invalid_citation:
+                unsupported_claims.append(claim)
+                continue
+            if invalid_citation:
+                unsupported_claims.append(claim)
+                continue
             claim_tokens = _tokenize(claim)
             if not claim_tokens:
                 continue
@@ -87,6 +100,10 @@ def verify_answer_grounding(answer: str, supporting_documents: list[object]) -> 
             candidate_sources = line_citations or list(source_index)
             supported = False
             for source_key in candidate_sources:
+                if source_key not in source_index:
+                    continue
+                if source_key not in source_index:
+                    continue
                 # The exact cited filename is evidence for document/project
                 # identity (including years or identifiers embedded in it).
                 source_identity = re.sub(r"[_-]+", " ", source_key[0])
@@ -106,4 +123,5 @@ def verify_answer_grounding(answer: str, supporting_documents: list[object]) -> 
         "is_grounded": not unsupported_claims,
         "checked_claims": checked_claims,
         "unsupported_claims": unsupported_claims,
+        "invalid_citations": list(dict.fromkeys(invalid_citations)),
     }

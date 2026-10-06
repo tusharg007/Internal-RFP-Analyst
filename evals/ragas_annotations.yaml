@@ -1,0 +1,29 @@
+# Source-checked references for the existing PUBLIC generated PDF corpus only.
+# These are reference answers, not fake pipeline responses or retrieved contexts.
+sample_retrieval:
+  expected_intent: search
+  reference_source: document_generator.py / Banking Sector Digital Audit 2024 / Technology Stack
+  reference: >-
+    The banking digital audit used Microsoft Azure (Azure Data Factory and Azure SQL Database),
+    Power BI with DirectQuery, Python (Pandas and PySpark), ACL Analytics and IDEA Data Analysis,
+    Microsoft Teams and SharePoint Online, and Azure DevOps with Git repositories.
+upload_retrieval:
+  expected_intent: search
+  reference_source: evals/run_kb_evals.py / _ensure_eval_upload / eval_target_rfp.pdf
+  reference: >-
+    The client RFP requires Azure migration, executive dashboards, HIPAA controls and a phased
+    delivery plan. The proposal should include relevant case studies and measurable outcomes.
+cross_corpus_analysis:
+  expected_intent: rfp_analysis
+previous_sources:
+  expected_intent: previous_sources
+unsupported_query:
+  expected_intent: search
+specialized_comparison:
+  expected_intent: compare
+web_fallback:
+  expected_intent: search
+bounded_query_rewrite:
+  expected_intent: search
+project_timeline_catalog:
+  expected_intent: search

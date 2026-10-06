@@ -1,0 +1,2 @@
+# Optional persistence driver. No LangChain graph/LLM query wrapper is needed.
+neo4j>=6.3.1,<7

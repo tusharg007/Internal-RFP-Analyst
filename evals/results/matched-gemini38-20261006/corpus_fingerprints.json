@@ -1,0 +1,43 @@
+{
+  "before": {
+    "internal_rfp": {
+      "corpus_id": "internal-rfp",
+      "nodes": 365,
+      "relationships": 569,
+      "node_sha256": "e610c788846bc9aa625c133104cbf7948f34bbe14cb6499d1313a27fd3df781c",
+      "relationship_sha256": "eb39381b92932696a5eea8bbcffba022d9974d8dd503b3043c7870e16730d6d5",
+      "active_versions": [
+        "eddc57727f1f70adb54c3d4d98d6896e4245daaa6cc896f8bfbafc63b88fdfdc"
+      ]
+    },
+    "evaluation_corpus": {
+      "corpus_id": "rfp-eval-frozen-641e9d4dad22",
+      "nodes": 318,
+      "relationships": 529,
+      "node_sha256": "c838b16fde87e0ac093bf783045ddbd9a17a6195aa76ea797841ead20ea8f795",
+      "relationship_sha256": "a7e808eb42f6a46d39dd75f23285cac60d8d870ff9f5c8c246873de4d8d0b4f5"
+    }
+  },
+  "after": {
+    "internal_rfp": {
+      "corpus_id": "internal-rfp",
+      "nodes": 365,
+      "relationships": 569,
+      "node_sha256": "e610c788846bc9aa625c133104cbf7948f34bbe14cb6499d1313a27fd3df781c",
+      "relationship_sha256": "eb39381b92932696a5eea8bbcffba022d9974d8dd503b3043c7870e16730d6d5",
+      "active_versions": [
+        "eddc57727f1f70adb54c3d4d98d6896e4245daaa6cc896f8bfbafc63b88fdfdc"
+      ]
+    },
+    "evaluation_corpus": {
+      "corpus_id": "rfp-eval-frozen-641e9d4dad22",
+      "nodes": 318,
+      "relationships": 529,
+      "node_sha256": "c838b16fde87e0ac093bf783045ddbd9a17a6195aa76ea797841ead20ea8f795",
+      "relationship_sha256": "a7e808eb42f6a46d39dd75f23285cac60d8d870ff9f5c8c246873de4d8d0b4f5"
+    }
+  },
+  "internal_rfp_unchanged": true,
+  "evaluation_corpus_unchanged": true,
+  "frozen_chroma_unchanged": true
+}

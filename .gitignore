@@ -20,12 +20,15 @@ __pycache__/
 # Generated runtime artifacts
 vectorstore/
 vectorstore_build_*/
+graph_sync/
 data/documents/*.pdf
 data/uploads/
 evals/results.json
 evals/offline_smoke_results.json
 evals/kb_eval_results.json
 evals/real_kb_results.json
+evals/ragas_results/
+evals/ragas_workspace/
 
 # IDE
 .vscode/

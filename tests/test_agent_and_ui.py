@@ -30,7 +30,7 @@ def test_llm_auth_error_format_hides_provider_json_by_default():
     assert "bad key" not in message
 
 
-def test_llm_auth_error_format_includes_details_in_debug_mode():
+def test_llm_auth_error_format_redacts_details_even_in_debug_mode():
     provider_error = RuntimeError(
         'Error code: 401 - {"error":{"type":"invalid_api_key","message":"bad key"}}'
     )
@@ -38,8 +38,9 @@ def test_llm_auth_error_format_includes_details_in_debug_mode():
     message = agent.format_llm_error(provider_error, debug=True)
 
     assert agent.LLM_AUTH_ERROR_MESSAGE in message
-    assert "invalid_api_key" in message
-    assert "bad key" in message
+    assert "Error type: RuntimeError" in message
+    assert "invalid_api_key" not in message
+    assert "bad key" not in message
 
 
 def test_llm_token_budget_error_format_hides_provider_json_by_default():

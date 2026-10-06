@@ -27,7 +27,7 @@ def test_config_default_paths_and_values(monkeypatch):
     assert config.VECTORSTORE_DIR == config.BASE_DIR / "vectorstore"
     assert config.ASSETS_DIR == config.BASE_DIR / "assets"
     assert config.GROQ_MODEL == "openai/gpt-oss-120b"
-    assert config.GEMINI_MODEL == "gemini-2.0-flash"
+    assert config.GEMINI_MODEL == "gemini-3.8-flash"
     assert config.LLM_TEMPERATURE == 0.3
     assert config.LLM_MAX_TOKENS == 2048
     assert config.CHUNK_SIZE == 512

@@ -1,0 +1,198 @@
+{
+  "timestamp": "2026-10-05T22:22:21.942139+00:00",
+  "status": "completed_with_unavailable_or_blocked_models",
+  "source_trace": "E:\\Internal-RFP-Analyst-main\\Internal-RFP-Analyst-main\\evals\\results\\semantic-grader-diagnostic-20261006-rerun\\grading_trace.json",
+  "source_trace_sha256": "6e18a3f913cdaa1eca3b48283ba3e8131eba54d6febdb9ee31d77e22b15fd392",
+  "prompt_hash": "b7c357b90735f072cdc27a660f90a11b35d97afb7d1f413feb3a3a0650d6b8a1",
+  "evidence_hash": "abfe0f2e23cb9663c2edabb86bbb98062e56d3c8b4f1700d082be956f1bd534c",
+  "prompt": "You are an evidence grader for an Internal RFP Analyst.\n\nQuestion:\nSummarize the modernization priorities identified by the banking digital audit.\n\nPrivate KB evidence:\nSource: 01_Banking_Sector_Digital_Audit_2024.pdf\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nExecutive Summary\nThis project delivered a comprehensive digital audit for a leading multinational bank. The engagement\nfocused on evaluating the client's digital transformation maturity, identifying gaps in data governance, and\nrecommending a modernization roadmap. Our team of 12 consultants worked across three workstreams over\na 16-week engagement.\nObjectives\n\nSource: 01_Banking_Sector_Digital_Audit_2024.pdf\na 16-week engagement.\nObjectives\n1. Assess the current state of the client's core banking platform and digital channels.\n2. Evaluate data quality, lineage, and governance across 14 business units.\n3. Benchmark digital maturity against industry peers using proprietary frameworks.\n4. Deliver a prioritized transformation roadmap with ROI projections.\nTechnology Stack\n- Cloud Platform: Microsoft Azure (Azure Data Factory, Azure SQL Database)\n\nSource: 01_Banking_Sector_Digital_Audit_2024.pdf\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBudget Range\nEstimated project cost: $850,000 - $1,100,000 USD\nKey Outcomes\n- Identified 47 critical data governance gaps across the organization.\n- Achieved 23% improvement in data quality scores within the first quarter.\n- Delivered a 3-year digital transformation roadmap adopted by the board.\n- Reduced audit cycle time by 35% through automation of manual checks.\nPage 3/3 | Internal Use Only\n\nSource: 01_Banking_Sector_Digital_Audit_2024.pdf\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBanking Sector Digital Audit 2024\nDocument Type: Project Outline\nIndustry: Banking & Financial Services\nClassification: Internal / Confidential\nPage 1/3 | Internal Use Only\n\nReturn \"good\" only when the evidence is relevant, internally consistent, and sufficient\nto answer the question without unsupported assumptions. Return \"weak\" when the evidence\nis irrelevant, incomplete, contradictory, or insufficient.\n\nReturn valid JSON only, using exactly one of these forms:\n{\"grade\": \"good\"}\n{\"grade\": \"weak\"}\n",
+  "evidence": "Source: 01_Banking_Sector_Digital_Audit_2024.pdf\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nExecutive Summary\nThis project delivered a comprehensive digital audit for a leading multinational bank. The engagement\nfocused on evaluating the client's digital transformation maturity, identifying gaps in data governance, and\nrecommending a modernization roadmap. Our team of 12 consultants worked across three workstreams over\na 16-week engagement.\nObjectives\n\nSource: 01_Banking_Sector_Digital_Audit_2024.pdf\na 16-week engagement.\nObjectives\n1. Assess the current state of the client's core banking platform and digital channels.\n2. Evaluate data quality, lineage, and governance across 14 business units.\n3. Benchmark digital maturity against industry peers using proprietary frameworks.\n4. Deliver a prioritized transformation roadmap with ROI projections.\nTechnology Stack\n- Cloud Platform: Microsoft Azure (Azure Data Factory, Azure SQL Database)\n\nSource: 01_Banking_Sector_Digital_Audit_2024.pdf\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBudget Range\nEstimated project cost: $850,000 - $1,100,000 USD\nKey Outcomes\n- Identified 47 critical data governance gaps across the organization.\n- Achieved 23% improvement in data quality scores within the first quarter.\n- Delivered a 3-year digital transformation roadmap adopted by the board.\n- Reduced audit cycle time by 35% through automation of manual checks.\nPage 3/3 | Internal Use Only\n\nSource: 01_Banking_Sector_Digital_Audit_2024.pdf\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBanking Sector Digital Audit 2024\nDocument Type: Project Outline\nIndustry: Banking & Financial Services\nClassification: Internal / Confidential\nPage 1/3 | Internal Use Only",
+  "configured_gemini_model": "gemini-3.8-flash",
+  "contract": {
+    "method": "json_mode",
+    "schema": "EvidenceGrade",
+    "allowed_grades": [
+      "good",
+      "weak"
+    ],
+    "temperature": 0.0,
+    "max_output_tokens": 2048,
+    "automatic_retries": 0
+  },
+  "models": [
+    {
+      "model_id": "models/gemini-3.1-pro-preview",
+      "requested_model": "gemini-3.1-pro-preview",
+      "provider": "google_genai",
+      "prompt_hash": "b7c357b90735f072cdc27a660f90a11b35d97afb7d1f413feb3a3a0650d6b8a1",
+      "evidence_hash": "abfe0f2e23cb9663c2edabb86bbb98062e56d3c8b4f1700d082be956f1bd534c",
+      "raw_response": null,
+      "parsed_grade": null,
+      "http_status": 429,
+      "provider_status": "provider_error",
+      "latency_seconds": 0.601998,
+      "generation_requests": 1,
+      "classification": "unavailable/provider-error",
+      "availability": {
+        "name": "models/gemini-3.1-pro-preview",
+        "version": "3.1-pro-preview-01-2026",
+        "supported_actions": [
+          "generateContent",
+          "countTokens",
+          "createCachedContent",
+          "batchGenerateContent"
+        ]
+      },
+      "error_type": "GoogleRateLimitError",
+      "provider_code": "RESOURCE_EXHAUSTED",
+      "retry_delay_seconds": 5856.0,
+      "quota_violations": [
+        {
+          "quota_id": "GenerateContentInputTokensPerModelPerMinute-FreeTier",
+          "quota_metric": "generativelanguage.googleapis.com/generate_content_free_tier_input_token_count",
+          "model": "gemini-3.1-pro"
+        },
+        {
+          "quota_id": "GenerateRequestsPerMinutePerProjectPerModel-FreeTier",
+          "quota_metric": "generativelanguage.googleapis.com/generate_content_free_tier_requests",
+          "model": "gemini-3.1-pro"
+        },
+        {
+          "quota_id": "GenerateRequestsPerDayPerProjectPerModel-FreeTier",
+          "quota_metric": "generativelanguage.googleapis.com/generate_content_free_tier_requests",
+          "model": "gemini-3.1-pro"
+        },
+        {
+          "quota_id": "GenerateContentInputTokensPerModelPerDay-FreeTier",
+          "quota_metric": "generativelanguage.googleapis.com/generate_content_free_tier_input_token_count",
+          "model": "gemini-3.1-pro"
+        }
+      ],
+      "continuation_backoff_seconds": null
+    },
+    {
+      "model_id": "models/gemini-3.7-flash",
+      "requested_model": "gemini-3.7-flash",
+      "provider": "google_genai",
+      "prompt_hash": "b7c357b90735f072cdc27a660f90a11b35d97afb7d1f413feb3a3a0650d6b8a1",
+      "evidence_hash": "abfe0f2e23cb9663c2edabb86bbb98062e56d3c8b4f1700d082be956f1bd534c",
+      "raw_response": null,
+      "parsed_grade": null,
+      "http_status": null,
+      "provider_status": "not_called_quota_safety",
+      "latency_seconds": null,
+      "generation_requests": 0,
+      "classification": "unavailable/provider-error",
+      "availability": {
+        "name": "models/gemini-3.7-flash",
+        "version": "3.7-flash-08-2026",
+        "supported_actions": [
+          "generateContent",
+          "countTokens",
+          "createCachedContent",
+          "batchGenerateContent"
+        ]
+      },
+      "blocked_by_model": "gemini-3.1-pro-preview"
+    },
+    {
+      "model_id": "models/gemini-3.6-flash",
+      "requested_model": "gemini-3.6-flash",
+      "provider": "google_genai",
+      "prompt_hash": "b7c357b90735f072cdc27a660f90a11b35d97afb7d1f413feb3a3a0650d6b8a1",
+      "evidence_hash": "abfe0f2e23cb9663c2edabb86bbb98062e56d3c8b4f1700d082be956f1bd534c",
+      "raw_response": null,
+      "parsed_grade": null,
+      "http_status": null,
+      "provider_status": "not_called_quota_safety",
+      "latency_seconds": null,
+      "generation_requests": 0,
+      "classification": "unavailable/provider-error",
+      "availability": {
+        "name": "models/gemini-3.6-flash",
+        "version": "3.6-flash-07-2026",
+        "supported_actions": [
+          "generateContent",
+          "countTokens",
+          "createCachedContent",
+          "batchGenerateContent"
+        ]
+      },
+      "blocked_by_model": "gemini-3.1-pro-preview"
+    },
+    {
+      "model_id": "models/gemini-3.8-flash",
+      "requested_model": "gemini-3.8-flash",
+      "provider": "google_genai",
+      "prompt_hash": "b7c357b90735f072cdc27a660f90a11b35d97afb7d1f413feb3a3a0650d6b8a1",
+      "evidence_hash": "abfe0f2e23cb9663c2edabb86bbb98062e56d3c8b4f1700d082be956f1bd534c",
+      "raw_response": null,
+      "parsed_grade": null,
+      "http_status": null,
+      "provider_status": "not_called_quota_safety",
+      "latency_seconds": null,
+      "generation_requests": 0,
+      "classification": "unavailable/provider-error",
+      "availability": {
+        "name": "models/gemini-3.8-flash",
+        "version": "3.0",
+        "supported_actions": [
+          "generateContent",
+          "countTokens",
+          "createCachedContent",
+          "batchGenerateContent"
+        ]
+      },
+      "blocked_by_model": "gemini-3.1-pro-preview"
+    }
+  ],
+  "availability": {
+    "models/gemini-3.1-pro-preview": {
+      "name": "models/gemini-3.1-pro-preview",
+      "version": "3.1-pro-preview-01-2026",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ]
+    },
+    "models/gemini-3.7-flash": {
+      "name": "models/gemini-3.7-flash",
+      "version": "3.7-flash-08-2026",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ]
+    },
+    "models/gemini-3.6-flash": {
+      "name": "models/gemini-3.6-flash",
+      "version": "3.6-flash-07-2026",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ]
+    },
+    "models/gemini-3.8-flash": {
+      "name": "models/gemini-3.8-flash",
+      "version": "3.0",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ]
+    }
+  },
+  "benchmark_started": false,
+  "judge": "not_run",
+  "interpretation": "Single-input grader compatibility, not answer quality.",
+  "availability_checked_at": "2026-10-05T22:22:22.818796+00:00",
+  "source_trace_unchanged": true,
+  "protected_files_unchanged": true,
+  "identical_hashes_across_models": true
+}

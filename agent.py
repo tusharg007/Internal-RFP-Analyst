@@ -4,8 +4,8 @@ import os
 
 from config import GEMINI_MODEL, GROQ_MODEL, LLM_MAX_TOKENS, LLM_TEMPERATURE, get_api_keys
 from rfp_analyst.agent.graph import (
-    KB_NOT_READY_MESSAGE,
-    NO_SCOPE_DOCUMENTS_MESSAGE,
+    KB_NOT_READY_MESSAGE as KB_NOT_READY_MESSAGE,
+    NO_SCOPE_DOCUMENTS_MESSAGE as NO_SCOPE_DOCUMENTS_MESSAGE,
     prepare_query_payload,
     run_query,
     stream_query_response,
@@ -44,7 +44,7 @@ LLM_TOKEN_BUDGET_ERROR_MARKERS = (
 
 
 def is_debug_mode_enabled() -> bool:
-    """Return whether raw provider error details may be shown."""
+    """Return whether safe diagnostic categories may be shown (never raw errors)."""
     return os.getenv("RFP_ANALYST_DEBUG", "").lower() in {"1", "true", "yes", "on"}
 
 
@@ -66,10 +66,10 @@ def format_llm_error(error: Exception, debug: bool = False) -> str | None:
         if not is_llm_token_budget_error(error):
             return None
         if debug:
-            return f"{LLM_TOKEN_BUDGET_ERROR_MESSAGE}\n\nDebug details: {error}"
+            return f"{LLM_TOKEN_BUDGET_ERROR_MESSAGE}\n\nError type: {type(error).__name__}"
         return LLM_TOKEN_BUDGET_ERROR_MESSAGE
     if debug:
-        return f"{LLM_AUTH_ERROR_MESSAGE}\n\nDebug details: {error}"
+        return f"{LLM_AUTH_ERROR_MESSAGE}\n\nError type: {type(error).__name__}"
 
     return LLM_AUTH_ERROR_MESSAGE
 
@@ -176,6 +176,7 @@ def _payload_to_reasoning_trace(payload: dict) -> list[dict]:
                     "chunk_ids": [document.get("chunk_id", "")],
                     "document_origin": document.get("document_origin", "sample"),
                     "match_count": 1,
+                    "score_type": document.get("score_type", "vector_relevance"),
                 }
             for source_card in grouped_sources.values():
                 match_suffix = (
@@ -186,7 +187,12 @@ def _payload_to_reasoning_trace(payload: dict) -> list[dict]:
                 traces.append(
                     {
                         "tool_response": f"{source_card['source']} (Page {source_card['page']})",
-                        "snippet": f"retrieval score {source_card['score']}{match_suffix}",
+                        "snippet": (
+                            "graph-backed original evidence"
+                            if source_card["score_type"] == "graph_witness"
+                            else f"retrieval score {source_card['score']}"
+                        )
+                        + match_suffix,
                         "source": source_card["source"],
                         "page": source_card["page"],
                         "score": source_card["score"],
@@ -214,6 +220,9 @@ def prepare_query(
     retrieval_scope: str = "all",
     vectorstore_stats: dict | None = None,
     llm=None,
+    *,
+    retrieval_mode=None,
+    retrieval_provider=None,
 ):
     """Prepare the graph payload and convert traces for the existing UI."""
     payload = prepare_query_payload(
@@ -222,6 +231,8 @@ def prepare_query(
         retrieval_scope=retrieval_scope,
         vectorstore_stats=vectorstore_stats,
         llm=llm,
+        retrieval_mode=retrieval_mode,
+        retrieval_provider=retrieval_provider,
     )
     reasoning_trace = _payload_to_reasoning_trace(payload)
     payload["_ui_reasoning_trace"] = reasoning_trace
@@ -248,7 +259,16 @@ def query_agent_stream(llm, prompt_or_payload):
         raise
 
 
-def query_agent(llm, user_query: str, thread_id: str = "default", chat_history: list | None = None, retrieval_scope: str = "all"):
+def query_agent(
+    llm,
+    user_query: str,
+    thread_id: str = "default",
+    chat_history: list | None = None,
+    retrieval_scope: str = "all",
+    *,
+    retrieval_mode=None,
+    retrieval_provider=None,
+):
     """Non-streaming query retained for backward compatibility."""
     try:
         result = run_query(
@@ -257,6 +277,8 @@ def query_agent(llm, user_query: str, thread_id: str = "default", chat_history: 
             thread_id=thread_id,
             chat_history=chat_history,
             retrieval_scope=retrieval_scope,
+            retrieval_mode=retrieval_mode,
+            retrieval_provider=retrieval_provider,
         )
     except Exception as exc:
         safe_message = format_llm_error(exc, debug=is_debug_mode_enabled())

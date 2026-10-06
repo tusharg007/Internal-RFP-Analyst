@@ -1,0 +1,24 @@
+{
+  "factories": {
+    "generation": {
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b"
+    },
+    "routing": {
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b"
+    },
+    "grading": {
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b"
+    },
+    "rewriting": {
+      "class": "ChatGroq",
+      "model": "openai/gpt-oss-120b"
+    }
+  },
+  "groq_resolved": true,
+  "google_resolved": false,
+  "judge": "not_run:capture_only",
+  "pinning": "process-local; production Gemini fallback unchanged"
+}

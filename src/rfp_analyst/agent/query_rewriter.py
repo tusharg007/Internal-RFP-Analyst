@@ -49,8 +49,11 @@ def rewrite_query(state: "QueryState") -> dict:
     rewritten_query = original_query
     allow_llm_rewriting = state.get("allow_llm_rewriting", True)
     llm = state.get("rewriter_llm") if allow_llm_rewriting else None
-    if llm is None and allow_llm_rewriting:
-        llm = _create_rewriter_llm()
+    try:
+        if llm is None and allow_llm_rewriting:
+            llm = _create_rewriter_llm()
+    except Exception:
+        llm = None
 
     if llm is not None:
         try:

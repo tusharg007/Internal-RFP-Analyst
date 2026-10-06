@@ -96,20 +96,34 @@ def _run_case(case: dict, *, vectorstore_stats: dict, retrieval_fn, llm=None) ->
     retrieval_scope = case.get("retrieval_scope", "all")
     chat_history = case.get("chat_history", [])
     start = time.perf_counter()
-    payload = prepare_query_payload(
-        question,
-        chat_history=chat_history,
-        retrieval_scope=retrieval_scope,
-        vectorstore_stats=vectorstore_stats,
-        retrieval_fn=retrieval_fn,
-    )
+    result = None
+    if llm is None:
+        payload = prepare_query_payload(
+            question,
+            chat_history=chat_history,
+            retrieval_scope=retrieval_scope,
+            vectorstore_stats=vectorstore_stats,
+            retrieval_fn=retrieval_fn,
+            retrieval_mode="vector_only",
+            allow_web_search=False,
+            allow_llm_routing=False,
+            allow_llm_grading=False,
+            allow_llm_rewriting=False,
+        )
+    else:
+        result = run_query(
+            llm,
+            question,
+            chat_history=chat_history,
+            vectorstore_stats=vectorstore_stats,
+            retrieval_fn=retrieval_fn,
+            retrieval_scope=retrieval_scope,
+            retrieval_mode="vector_only",
+        )
+        payload = result["payload"]
     retrieval_latency = time.perf_counter() - start
 
     traces = payload.get("traces", [])
-    retrieval_trace = next(
-        (step for step in traces if step.get("tool") == "search_knowledge_base"),
-        {},
-    )
     retrieved_sources = list(dict.fromkeys(item.get("source") for item in payload.get("retrieved_documents", [])))
     retrieved_origins = sorted({item.get("document_origin") for item in payload.get("retrieved_documents", []) if item.get("document_origin")})
     expected_hits = [source for source in expected_sources if source in retrieved_sources]
@@ -121,19 +135,8 @@ def _run_case(case: dict, *, vectorstore_stats: dict, retrieval_fn, llm=None) ->
     answer_latency = None
     answer_mode = "retrieval_only"
     if llm is not None:
-        answer_start = time.perf_counter()
-        try:
-            result = run_query(
-                llm,
-                question,
-                chat_history=chat_history,
-                vectorstore_stats=vectorstore_stats,
-                retrieval_fn=retrieval_fn,
-                retrieval_scope=retrieval_scope,
-            )
-        except TypeError:
-            result = run_query(llm, question)
-        answer_latency = time.perf_counter() - answer_start
+        # Source/tool checks and the answer belong to this same graph execution.
+        answer_latency = retrieval_latency
         answer_text = result.get("answer", "")
         answer_mode = "llm_answer"
 
@@ -216,7 +219,7 @@ def run_real_kb_eval(
         "pass_rate": round(passed / len(case_results), 2),
         "latency": total_latency,
         "latency_unit": "seconds",
-        "notes": "Runs against generated sample PDFs, ingested Chroma data, and the actual retrieval layer. LLM answering is optional.",
+        "notes": "Runs against generated sample PDFs and the actual Chroma retrieval layer. Retrieval-only mode disables live router/grader/rewriter/web calls. Optional LLM-answer mode measures one full graph execution.",
         "cases": case_results,
     }
 

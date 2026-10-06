@@ -32,5 +32,69 @@ jobs:
       - name: Run pytest
         run: python -m pytest -q
 
+      - name: Lint
+        run: python -m ruff check .
+
       - name: Run offline smoke evaluation
         run: python -m evals.run_evals
+
+  evaluation-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install optional evaluation dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install -e ".[dev,evaluation]"
+          python -m pip check
+      - name: Evaluate adapter and metric contracts without live judges
+        run: python -m pytest tests/test_ragas_evaluation.py tests/test_retrieval_benchmark.py -q
+
+  evaluation-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install optional evaluation dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install -e ".[dev,evaluation]"
+          python -m pip check
+      - name: Evaluate adapter and metric contracts without live judges
+        run: python -m pytest tests/test_ragas_evaluation.py tests/test_retrieval_benchmark.py -q
+
+  neo4j-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install application and graph test dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install -e ".[dev,graph]"
+      - name: Start disposable graph
+        run: |
+          password="$(python -c 'import secrets; print(secrets.token_hex(24))')"
+          echo "::add-mask::$password"
+          echo "NEO4J_TEST_PASSWORD=$password" >> "$GITHUB_ENV"
+          NEO4J_TEST_PASSWORD="$password" docker compose -f compose.neo4j-test.yml up -d --wait --wait-timeout 180
+      - name: Execute real schema, transaction and retrieval tests
+        env:
+          RFP_ANALYST_NEO4J_INTEGRATION: '1'
+        run: python -m pytest tests/test_graph_store_integration.py -q
+      - name: Remove disposable service
+        if: always()
+        run: docker compose -f compose.neo4j-test.yml down --volumes

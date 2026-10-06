@@ -12,7 +12,7 @@ rewrite weak queries, execute deterministic RFP tools, and verify generated answ
 [![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-1C3C3C)](https://github.com/langchain-ai/langgraph)
 [![Groq](https://img.shields.io/badge/Groq-openai%2Fgpt--oss--120b-F55036)](https://groq.com/)
 [![Tavily](https://img.shields.io/badge/Web-Tavily-111827)](https://tavily.com/)
-[![Tests](https://img.shields.io/badge/tests-145%20passed-22C55E?logo=pytest&logoColor=white)](#testing-and-evaluation)
+[![Tests](https://img.shields.io/badge/tests-pytest-22C55E?logo=pytest&logoColor=white)](#testing-and-evaluation)
 [![Real KB Eval](https://img.shields.io/badge/real%20KB%20eval-9%2F9-22C55E)](#testing-and-evaluation)
 [![CI](https://github.com/tusharg007/Internal-RFP-Analyst/actions/workflows/ci.yml/badge.svg)](https://github.com/tusharg007/Internal-RFP-Analyst/actions/workflows/ci.yml)
 
@@ -43,6 +43,19 @@ retrieve-and-generate pipeline. A LangGraph workflow decides:
 
 The project is a reproducible single-user demonstration with extensive regression and
 evaluation coverage. It is not presented as a production multi-tenant platform.
+
+See the [production-readiness audit](docs/PRODUCTION_READINESS_AUDIT.md) for
+security fixes, actual verification results and remaining Neo4j/RAGAS release gates.
+
+Optional [hybrid GraphRAG](docs/GRAPH_RETRIEVAL.md) now complements Chroma with
+Neo4j-backed relationship retrieval and original-document evidence fusion.
+`RFP_RETRIEVAL_MODE=vector_only` retains the existing behavior; `auto` selects
+vector, graph or hybrid retrieval by query characteristics. See the linked guide
+for synchronization, reader credentials, fallback, limits and verification.
+RAGAS is an optional semantic evaluation layer using actual final answers and captured
+generation evidence. Existing deterministic evaluations remain unchanged. See
+[RAGAS evaluation and baseline calibration](docs/RAGAS_EVALUATION.md); live judge
+and graph-mode baselines require explicit configuration and a synchronized graph.
 
 ## Current capabilities
 
@@ -405,7 +418,7 @@ Internal-RFP-Analyst/
 │   ├── golden_questions.yaml      # KB/web/rewrite/catalog cases
 │   ├── run_evals.py
 │   └── run_kb_evals.py
-├── tests/                          # 145 tests
+├── tests/                          # Regression, graph ingestion/retrieval and opt-in Neo4j tests
 ├── docs/
 └── data/
     ├── documents/                  # Generated; Git-ignored
@@ -493,7 +506,12 @@ Important code defaults:
 python -m pytest -q
 ```
 
-Latest verified result: **145 passed**.
+Current verification results and explicit service blockers are recorded in the
+[production-readiness audit](docs/PRODUCTION_READINESS_AUDIT.md). Skipped Neo4j
+tests do not establish real-server correctness or read-only authorization.
+Docker was unavailable for live Neo4j verification. See
+[Graph retrieval verification](docs/GRAPH_RETRIEVAL.md#verification-results-2026-10-05)
+for the full commands, baseline comparisons and known limitations.
 
 Coverage includes configuration, ingestion, deduplication, scope isolation, graph paths,
 structured routing/grading, rewrite bounds, Tavily degradation, adaptive resume retrieval,
