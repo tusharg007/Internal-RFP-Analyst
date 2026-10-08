@@ -1,0 +1,212 @@
+{
+  "kind": "public_posthoc_ragas_smoke",
+  "comparison_valid": false,
+  "baseline_status": "not_established",
+  "status": "incomplete_due_to_judge_error",
+  "capture_sha256": "74441b9e2919270f443805e11d5cee4c4006df81d90dd0bde08a17905c8cb8d6",
+  "capture_versions": {
+    "git_revision": "a729b48f895f976bb20770187cf37567ad415c8a",
+    "packages": {
+      "ragas": "0.4.3",
+      "instructor": "1.17.0",
+      "langchain-core": "1.6.1",
+      "langchain-community": "0.3.31",
+      "langgraph": "1.2.11",
+      "fastembed": "0.8.0",
+      "chromadb": "1.5.9",
+      "neo4j": "6.3.1",
+      "groq": "0.37.1",
+      "google-genai": "2.21.0"
+    },
+    "source_tree_hash": "5290c5653258829834fa75281d964db7ac89bbff7802b75fa1faeb7a7fbc885c"
+  },
+  "judge_versions": {
+    "git_revision": "554ab28c21696a0967e55164deb2221471960f42",
+    "packages": {
+      "ragas": "0.4.3",
+      "instructor": "1.17.0",
+      "langchain-core": "1.6.1",
+      "langchain-community": "0.3.31",
+      "langgraph": "1.2.11",
+      "fastembed": "0.8.0",
+      "chromadb": "1.5.9",
+      "neo4j": "6.3.1",
+      "groq": "0.37.1",
+      "google-genai": "2.21.0"
+    },
+    "source_tree_hash": "da969c7895be64a4f8723689167967eec7596cc4e7133c1c84f87071dd4eaf95"
+  },
+  "judge": {
+    "provider": "google",
+    "model": "gemini-3.8-flash",
+    "timeout_seconds": 90.0,
+    "max_retries": 0,
+    "max_cases": 1,
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "max_tokens": 4096,
+    "min_call_interval_seconds": 20,
+    "temperature": 0,
+    "answer_relevancy_strictness": 3,
+    "answer_correctness_weights": [
+      0.75,
+      0.25
+    ],
+    "telemetry": "disabled"
+  },
+  "case_id": "semantic_modernization",
+  "retrieval_mode": "vector_only",
+  "corpus_hash": "641e9d4dad22e33140475ac40b0245dde1edb3ed6e2acc0c5fa8e75919d9d39f",
+  "generation": {
+    "class": "ChatGroq",
+    "model": "openai/gpt-oss-120b",
+    "temperature": 0.3,
+    "control_temperature": 0.0,
+    "retrieval_k": 6,
+    "min_relevance_score": 0.5,
+    "max_query_retries": 1,
+    "max_prompt_tokens": 6500,
+    "max_context_chars_per_chunk": 1000,
+    "embedding_model": "BAAI/bge-small-en-v1.5"
+  },
+  "sample": {
+    "user_input": "Summarize the modernization priorities identified by the banking digital audit.",
+    "retrieved_contexts": [
+      "[Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2]\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nExecutive Summary\nThis project delivered a comprehensive digital audit for a leading multinational bank. The engagement\nfocused on evaluating the client's digital transformation maturity, identifying gaps in data governance, and\nrecommending a modernization roadmap. Our team of 12 consultants worked across three workstreams over\na 16-week engagement.\nObjectives",
+      "[Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2]\na 16-week engagement.\nObjectives\n1. Assess the current state of the client's core banking platform and digital channels.\n2. Evaluate data quality, lineage, and governance across 14 business units.\n3. Benchmark digital maturity against industry peers using proprietary frameworks.\n4. Deliver a prioritized transformation roadmap with ROI projections.\nTechnology Stack\n- Cloud Platform: Microsoft Azure (Azure Data Factory, Azure SQL Database)",
+      "[Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 3]\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBudget Range\nEstimated project cost: $850,000 - $1,100,000 USD\nKey Outcomes\n- Identified 47 critical data governance gaps across the organization.\n- Achieved 23% improvement in data quality scores within the first quarter.\n- Delivered a 3-year digital transformation roadmap adopted by the board.\n- Reduced audit cycle time by 35% through automation of manual checks.\nPage 3/3 | Internal Use Only",
+      "[Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 1]\nCONFIDENTIAL | PROJECT OUTLINE | Banking & Financial Services\nBanking Sector Digital Audit 2024\nDocument Type: Project Outline\nIndustry: Banking & Financial Services\nClassification: Internal / Confidential\nPage 1/3 | Internal Use Only",
+      "[Source: 06_Government_Tax_Filing_Modernization.pdf, Page 2]\nCONFIDENTIAL | PROPOSAL | Government & Public Sector\nExecutive Summary\nProposal to modernize a national tax filing system from legacy mainframe to a cloud-native microservices\narchitecture. The solution will improve citizen experience, reduce processing time, and enable real-time tax\ncomputation.\nObjectives\n1. Migrate legacy COBOL-based tax engine to cloud-native microservices.\n2. Build a modern citizen-facing web portal with mobile responsiveness."
+    ],
+    "response": "## Modernization Priorities Identified by the Banking Digital Audit\n\n|------------------------|---------------------|\n| Modernize the client’s core banking platform and digital channels | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2] |\n| Strengthen data quality, lineage, and governance across 14 business units | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2] |\n| Benchmark and raise digital‑maturity levels against industry peers using proprietary frameworks | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2] |\n| Deliver a prioritized transformation roadmap with ROI projections for a 3‑year horizon | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2] |\n| Close the 47 critical data‑governance gaps identified across the organization | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 3] |\n| Improve data‑quality scores (23 % improvement reported in the first quarter) | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 3] |\n| Automate manual audit checks to reduce audit‑cycle time by 35 % | [Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 3] |\n\nThese priorities form the basis of the bank’s modernization roadmap, targeting core system upgrades, robust data governance, enhanced digital maturity, measurable ROI, and operational efficiencies through automation.",
+    "reference": "The banking audit assessed digital maturity and data governance, benchmarked peers, and recommended a prioritized modernization roadmap with ROI projections."
+  },
+  "provenance": {
+    "requested_retrieval_mode": "vector_only",
+    "retrieval_mode": "vector_only",
+    "generation_prompt_hash": "e6c9bd0661acd64a7ef2422ec77ff6c7370a9fb6b291279f060d5554d60c2711",
+    "generation_auxiliary_context_hash": "",
+    "generation_evidence": [
+      {
+        "chunk_id": "faf3e59aff0053e69acf08197fff3406236ff518d7e4e76b8aa8d981a23346cf",
+        "evidence_id": null,
+        "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+        "page": 1,
+        "document_origin": "sample"
+      },
+      {
+        "chunk_id": "c43db1e84652a64b0f448d6ff9edf32eb112a6d5251476827c1d27685f6111cc",
+        "evidence_id": null,
+        "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+        "page": 1,
+        "document_origin": "sample"
+      },
+      {
+        "chunk_id": "ddd884bc9dfad65a4512bc9bcd7aabe909a19109518f0d8adf0586c5b0b5a6d0",
+        "evidence_id": null,
+        "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+        "page": 2,
+        "document_origin": "sample"
+      },
+      {
+        "chunk_id": "03da78acb6bfba67be6cc73a8cd9e64704d55617a23932957f169f1f3365bf05",
+        "evidence_id": null,
+        "source": "01_Banking_Sector_Digital_Audit_2024.pdf",
+        "page": 0,
+        "document_origin": "sample"
+      },
+      {
+        "chunk_id": "53bee0aaca16a129483855cc5027682dc86816269c3dd25ea308047fd39c28c9",
+        "evidence_id": null,
+        "source": "06_Government_Tax_Filing_Modernization.pdf",
+        "page": 1,
+        "document_origin": "sample"
+      }
+    ],
+    "intent": "search",
+    "graph_version": "",
+    "graph_fallback_reason": "",
+    "graph_paths": [],
+    "retry_count": 1,
+    "executed_tools": [
+      "health_check",
+      "intent_classifier",
+      "tool_planner",
+      "search_knowledge_base",
+      "evidence_availability_check",
+      "web_search",
+      "web_evidence_grader",
+      "query_rewriter",
+      "tool_planner",
+      "search_knowledge_base",
+      "evidence_availability_check",
+      "prompt_synthesizer",
+      "prompt_budget",
+      "generation_prompt_budget",
+      "final_response",
+      "grounding_verifier",
+      "answer_repair",
+      "final_grounding_verifier"
+    ],
+    "retrieved_sources": [
+      "01_Banking_Sector_Digital_Audit_2024.pdf",
+      "06_Government_Tax_Filing_Modernization.pdf"
+    ],
+    "retrieved_origins": [
+      "sample"
+    ],
+    "retrieval_events": []
+  },
+  "deterministic": {
+    "source_coverage": null,
+    "tool_correctness": true,
+    "origin_correctness": true,
+    "route_correctness": true,
+    "retrieval_mode_correctness": true,
+    "no_answer_behavior": true,
+    "citation_identity_coverage": 1.0,
+    "grounding_passed": true,
+    "graph_path_provenance_correctness": null,
+    "answer_present": true
+  },
+  "scores": {
+    "faithfulness": {
+      "status": "error",
+      "score": null,
+      "variant": "faithfulness",
+      "error_type": "InstructorRetryException",
+      "http_status": 503,
+      "latency_seconds": 22.171351
+    },
+    "answer_relevancy": {
+      "status": "not_run",
+      "score": null,
+      "reason": "provider_error_stop",
+      "http_status": 503,
+      "latency_seconds": 0
+    },
+    "context_precision": {
+      "status": "not_run",
+      "score": null,
+      "reason": "provider_error_stop",
+      "http_status": 503,
+      "latency_seconds": 0
+    },
+    "context_recall": {
+      "status": "not_run",
+      "score": null,
+      "reason": "provider_error_stop",
+      "http_status": 503,
+      "latency_seconds": 0
+    },
+    "answer_correctness": {
+      "status": "not_run",
+      "score": null,
+      "reason": "provider_error_stop",
+      "http_status": 503,
+      "latency_seconds": 0
+    }
+  },
+  "policy": "exact saved contexts/answer/reference; no retrieval or generation; stop on provider error",
+  "model_availability": "confirmed_by_models_list",
+  "latency_seconds": 27.26877
+}

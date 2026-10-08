@@ -454,6 +454,36 @@ def test_optional_provider_adapters_construct_async_clients_without_network(prov
         client.close()
 
 
+def test_google_judge_builds_structured_request_before_transport_without_network():
+    pytest.importorskip("ragas")
+    pytest.importorskip("jsonref")
+    from unittest.mock import AsyncMock, patch
+    from pydantic import BaseModel
+    from evals.ragas_judge import build_judge_llm
+
+    class Output(BaseModel):
+        value: str
+
+    async def exercise():
+        client, llm = build_judge_llm(JudgeSettings(
+            "google", "test-not-a-model", "synthetic-not-a-key",
+            embedding_model="test", max_retries=0,
+        ))
+        transport = AsyncMock(side_effect=RuntimeError("synthetic transport boundary"))
+        try:
+            with patch("google.genai.models.AsyncModels.generate_content", new=transport):
+                with pytest.raises(Exception):
+                    await llm.agenerate("synthetic input", Output)
+            assert transport.await_count == 1
+            assert transport.call_args.kwargs["model"] == "test-not-a-model"
+            assert transport.call_args.kwargs["config"].tools
+        finally:
+            await client.aio.aclose()
+            client.close()
+
+    asyncio.run(exercise())
+
+
 def test_generation_capture_records_actual_invocation_and_repaired_answer(monkeypatch):
     from rfp_analyst.agent import graph
 
@@ -609,3 +639,86 @@ def test_negative_cosine_scores_are_preserved_not_reported_as_judge_failures():
     scores = asyncio.run(score_execution(adapt_execution(case(), payload(), "vector_only"), fake))
     assert scores["answer_relevancy"]["status"] == "scored"
     assert scores["answer_relevancy"]["score"] == -0.1
+
+
+def test_judge_provider_429_stops_later_metrics_without_inventing_scores():
+    class QuotaError(Exception):
+        status_code = 429
+
+    fake = registry(error=QuotaError("private prompt/key"))
+    scores = asyncio.run(score_execution(adapt_execution(case(), payload(), "vector_only"), fake))
+    assert scores["faithfulness"]["http_status"] == 429
+    assert all(scores[n]["status"] == "not_run" for n in METRICS[1:])
+    assert sum(len(m.calls) for m in fake.values()) == 1
+    assert "private" not in json.dumps(scores)
+
+
+def test_judge_quota_failure_is_latched_across_cases():
+    from evals.ragas_judge import RagasJudge
+
+    class QuotaError(Exception):
+        status_code = 429
+
+    judge = RagasJudge(JudgeSettings("google", "test", "synthetic", embedding_model="test"))
+    judge.registry = registry(error=QuotaError())
+    execution = adapt_execution(case(), payload(), "vector_only")
+    asyncio.run(judge.score(execution))
+    scores = asyncio.run(judge.score(execution))
+    assert all(s["status"] == "not_run" for s in scores.values())
+    assert sum(len(m.calls) for m in judge.registry.values()) == 1
+
+
+def test_runner_checkpoints_and_stops_before_next_case_after_judge_provider_error(tmp_path):
+    class QuotaError(Exception):
+        status_code = 429
+
+    from evals.ragas_judge import RagasJudge
+
+    judge = RagasJudge(JudgeSettings("google", "test", "synthetic", embedding_model="test"))
+    judge.registry = registry(error=QuotaError())
+
+    class Pipeline:
+        corpus_hash = "frozen"
+        generation_metadata = {}
+        calls = []
+
+        def execute(self, c, mode):
+            self.calls.append(c["id"])
+            return payload()
+
+    pipeline = Pipeline()
+    output = tmp_path / "checkpoint.json"
+    second = case() | {"id": "unexecuted"}
+    result = asyncio.run(evaluate_mode(pipeline, [case(), second], "vector_only",
+                                      judge=judge, output=output))
+    assert pipeline.calls == [case()["id"]]
+    assert result["status"] == "incomplete_due_to_judge_provider_error"
+    assert result["unexecuted_case_ids"] == ["unexecuted"]
+    assert json.loads(output.read_text())["judge_http_status"] == 429
+
+
+def test_comparison_does_not_generate_remaining_modes_after_judge_provider_error():
+    from evals.compare_retrieval_modes import compare_modes
+    from evals.ragas_judge import RagasJudge
+
+    class Unavailable(Exception):
+        status_code = 503
+
+    judge = RagasJudge(JudgeSettings("google", "test", "synthetic", embedding_model="test"))
+    judge.registry = registry(error=Unavailable())
+
+    class Pipeline:
+        corpus_hash = "frozen"
+        generation_metadata = {}
+        calls = []
+
+        def execute(self, c, mode):
+            self.calls.append(mode)
+            return payload()
+
+    pipeline = Pipeline()
+    result = asyncio.run(compare_modes(pipeline, [case()], judge=judge))
+    assert pipeline.calls == ['vector_only']
+    assert result['status'] == 'incomplete_due_to_judge_provider_error'
+    assert result['reports'][1]['unexecuted_case_ids'] == [case()['id']]
+    assert result['reports'][2]['aggregate']['total_cases'] == 0

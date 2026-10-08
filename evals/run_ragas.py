@@ -49,6 +49,14 @@ async def evaluate_mode(pipeline, cases, mode, *, judge=None, output: Path | Non
         judge=judge_metadata,
         generation=pipeline.generation_metadata,
     )
+    if judge and getattr(judge, "provider_failure", None):
+        report.update({"status": "incomplete_due_to_judge_provider_error",
+                       "unexecuted_case_ids": [c["id"] for c in cases],
+                       "judge_http_status": judge.provider_failure})
+        report["aggregate"] = aggregate_cases([])
+        if output:
+            write_report(output, report)
+        return report
     for case in cases:
         start = time.perf_counter()
         row = {
@@ -112,6 +120,8 @@ async def evaluate_mode(pipeline, cases, mode, *, judge=None, output: Path | Non
                             "stage": "judge",
                             "metric": name,
                             "error_type": result["error_type"],
+                            **({"http_status": result["http_status"]}
+                               if result.get("http_status") else {}),
                         }
                     )
         except Exception as exc:
@@ -135,8 +145,16 @@ async def evaluate_mode(pipeline, cases, mode, *, judge=None, output: Path | Non
             )
         report["cases"].append(row)
         report["aggregate"] = aggregate_cases(report["cases"])
+        provider_error = next((v.get("http_status") for v in row.get("scores", {}).values()
+                               if v.get("status") == "error" and v.get("http_status")), None)
+        if provider_error:
+            report.update({"status": "incomplete_due_to_judge_provider_error",
+                           "judge_http_status": provider_error,
+                           "unexecuted_case_ids": [c["id"] for c in cases[len(report["cases"]):]]})
         if output:
             write_report(output, report)  # Checkpoint completed cases before any costly next call.
+        if provider_error:
+            break
     return report
 
 

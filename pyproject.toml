@@ -19,7 +19,7 @@ graph = [
 ]
 evaluation = [
     "ragas==0.4.3",
-    "instructor>=1.11,<2",
+    "instructor[google-genai]>=1.11,<2",
     "langchain-openai>=1.1.9,<1.2",
     "langchain-community==0.3.31",
     "tiktoken>=0.7,<1",

@@ -4,6 +4,7 @@ import gc
 import time
 
 import streamlit as st
+import config
 
 from agent import (
     KB_NOT_READY_MESSAGE,
@@ -45,6 +46,7 @@ from rfp_analyst.exceptions import (
 )
 from rfp_analyst.health import get_app_health
 from rfp_analyst.ui import get_chat_avatar
+from rfp_analyst.ui.explainability import trace_card_html
 from rfp_analyst.uploads import is_uploaded_pdf_unchanged, persist_uploaded_pdf
 
 SCOPE_LABELS = {
@@ -231,30 +233,28 @@ def render_reasoning(reasoning_trace, show_reasoning: bool):
         return
 
     with st.expander("Sources Used", expanded=False):
+        st.caption("Operational trace, not hidden model reasoning. Graph paths select original source evidence; they do not prove each generated claim.")
         for step in reasoning_trace:
+            if step.get("explanation"):
+                explanation = step["explanation"]
+                st.markdown("#### Why this retrieval path?")
+                st.write(
+                    f"Requested: {explanation['requested_mode']} → Effective: {explanation['effective_mode']} · "
+                    f"Graph paths: {explanation['graph_path_count']} · Generation: {explanation['generation_kind']}"
+                )
+                st.json(explanation, expanded=False)
+                continue
             if "tool" in step:
                 tool_label = step.get("tool", "tool")
                 input_summary = step.get("input_summary") or step.get("input", {}).get("query", "")
                 output_summary = step.get("output_summary", "")
-                output_block = f"<br>{output_summary}" if output_summary else ""
                 st.markdown(
-                    (
-                        '<div class="reasoning-box">'
-                        f"<strong>{tool_label}</strong><br>"
-                        f"<em>{input_summary}</em>"
-                        f"{output_block}"
-                        "</div>"
-                    ),
+                    trace_card_html(tool_label, input_summary, output_summary),
                     unsafe_allow_html=True,
                 )
             elif "tool_response" in step:
                 st.markdown(
-                    (
-                        '<div class="reasoning-box">'
-                        f'<strong>{step["tool_response"]}</strong><br>'
-                        f'<em>{step["snippet"][:150]}...</em>'
-                        "</div>"
-                    ),
+                    trace_card_html(step["tool_response"], step["snippet"][:150]),
                     unsafe_allow_html=True,
                 )
 
@@ -442,6 +442,7 @@ UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 stats, health = build_health_snapshot()
 current_scope = resolve_scope(health)
 interaction_locked = st.session_state.ingestion_in_progress
+public_demo_read_only = getattr(config, "PUBLIC_DEMO_READ_ONLY", False)
 uploads_pending = st.session_state.pending_uploads or health.get("pending_upload_count", 0) > 0
 chat_disabled = interaction_locked or not (health["llm_provider_configured"] and health["vectorstore_ready"]) or uploads_pending
 scope_options = available_scope_options(health)
@@ -520,7 +521,7 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### Document Ingestion")
-    if st.button("Generate Sample PDFs", use_container_width=True, disabled=interaction_locked):
+    if st.button("Generate Sample PDFs", use_container_width=True, disabled=interaction_locked or public_demo_read_only):
         with st.spinner("Generating sample PDFs..."):
             generate_all_documents()
         st.session_state.setup_attempted = True
@@ -533,7 +534,7 @@ with st.sidebar:
         "Ingest Documents",
         use_container_width=True,
         type="primary",
-        disabled=interaction_locked,
+        disabled=interaction_locked or public_demo_read_only,
     ):
         if run_manual_ingestion():
             time.sleep(0.2)
@@ -546,9 +547,9 @@ with st.sidebar:
         type=["pdf"],
         accept_multiple_files=True,
         label_visibility="collapsed",
-        disabled=interaction_locked,
+        disabled=interaction_locked or public_demo_read_only,
     )
-    if uploaded_files and not interaction_locked:
+    if uploaded_files and not interaction_locked and not public_demo_read_only:
         handle_uploaded_files(uploaded_files)
 
     st.markdown("---")
@@ -572,6 +573,9 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+if public_demo_read_only:
+    st.info("Public walkthrough · frozen synthetic corpus · ingestion and uploads disabled. This is the real application, not pre-recorded answers.")
 
 if st.session_state.last_ingestion_error:
     st.warning(st.session_state.last_ingestion_error)

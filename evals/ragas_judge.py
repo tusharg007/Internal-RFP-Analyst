@@ -116,6 +116,7 @@ async def score_execution(
 ) -> dict:
     """Injectable metric registry: tests use fake scorers, never external providers."""
     scores = {}
+    provider_failure = None
     for name in METRICS:
         reason = applicability(execution.generation_kind, execution.sample, name)
         if reason:
@@ -124,6 +125,12 @@ async def score_execution(
                 "score": None,
                 "reason": reason,
                 "latency_seconds": 0,
+            }
+            continue
+        if provider_failure:
+            scores[name] = {
+                "status": "not_run", "score": None, "reason": "provider_error_stop",
+                "http_status": provider_failure, "latency_seconds": 0,
             }
             continue
         variant, arguments = metric_arguments(name, execution.sample)
@@ -136,6 +143,9 @@ async def score_execution(
                 raise ValueError("Nonfinite/out-of-range judge score")
             scores[name] = {"status": "scored", "score": value, "variant": variant}
         except Exception as exc:
+            from evals.provider_guard import provider_status_code
+
+            status = provider_status_code(exc)
             # SDK exceptions may contain prompts, URLs or credentials; persist types only.
             scores[name] = {
                 "status": "error",
@@ -143,6 +153,9 @@ async def score_execution(
                 "variant": variant,
                 "error_type": type(exc).__name__,
             }
+            if status is not None and status >= 400:
+                scores[name]["http_status"] = status
+                provider_failure = status
         scores[name]["latency_seconds"] = round(time.perf_counter() - start, 6)
     return scores
 
@@ -153,6 +166,7 @@ class RagasJudge:
         self.client = None
         self._logging_acquired = False
         self.registry = {}
+        self.provider_failure = None
 
     @classmethod
     async def create(cls, settings: JudgeSettings):
@@ -209,9 +223,20 @@ class RagasJudge:
         }
 
     async def score(self, execution):
-        return await score_execution(
+        if self.provider_failure:
+            return {
+                name: {"status": "not_run", "score": None, "reason": "provider_error_stop",
+                       "http_status": self.provider_failure, "latency_seconds": 0}
+                for name in METRICS
+            }
+        scores = await score_execution(
             execution, self.registry, timeout=self.settings.timeout_seconds
         )
+        self.provider_failure = next(
+            (value["http_status"] for value in scores.values()
+             if value.get("status") == "error" and value.get("http_status")), None
+        )
+        return scores
 
     async def close(self):
         try:

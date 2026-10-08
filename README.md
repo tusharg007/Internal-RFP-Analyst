@@ -12,14 +12,16 @@ the authoritative evidence supplied to answer generation and grounding.
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-1C3C3C)](https://github.com/langchain-ai/langgraph)
+[![Neo4j](https://img.shields.io/badge/Graph-Neo4j-018BFF?logo=neo4j&logoColor=white)](#neo4j-domain-schema)
+[![RAGAS](https://img.shields.io/badge/Evaluation-RAGAS-6B46C1)](#deterministic-evaluation-and-ragas)
 [![Groq](https://img.shields.io/badge/Groq-openai%2Fgpt--oss--120b-F55036)](https://groq.com/)
 [![Tavily](https://img.shields.io/badge/Web-Tavily-111827)](https://tavily.com/)
 [![Tests](https://img.shields.io/badge/tests-pytest-22C55E?logo=pytest&logoColor=white)](#evaluation)
-[![CI](https://github.com/tusharg007/Internal-RFP-Analyst/actions/workflows/ci.yml/badge.svg)](https://github.com/tusharg007/Internal-RFP-Analyst/actions/workflows/ci.yml)
+[![CI](https://github.com/tusharg007/Internal-RFP-Analyst/actions/workflows/ci.yml/badge.svg?branch=feature%2Fgraphrag-neo4j)](https://github.com/tusharg007/Internal-RFP-Analyst/actions/workflows/ci.yml?query=branch%3Afeature%2Fgraphrag-neo4j)
 
 **Current package version: `0.1.0`**
 
-[Overview](#overview) · [Architecture](#architecture) · [Graph schema](#neo4j-domain-schema) · [Setup](#quick-start) · [Evaluation](#evaluation) · [Structure](#project-structure)
+[Overview](#overview) · [Live walkthrough](#public-data-walkthrough) · [Architecture](#architecture) · [Graph schema](#neo4j-domain-schema) · [Setup](#quick-start) · [Evaluation](#evaluation) · [Structure](#project-structure)
 
 </div>
 
@@ -41,6 +43,59 @@ Graph support is optional. `vector_only` remains the default and works with Neo4
 disabled. Graph assertions help select relevant original evidence; they are not
 independent proof and do not replace document/page grounding. This project does not
 claim that graph or hybrid retrieval outperforms vector retrieval.
+
+### What is verified—and what is not
+
+| Evidence | Current result | What it establishes |
+| --- | --- | --- |
+| Local regression suite | **641 passed, 5 skipped, 0 failed** | Tested behavior, not production assurance. |
+| Offline deterministic evaluation | **3/3** | Mock-corpus smoke checks; not semantic accuracy. |
+| Real-KB retrieval evaluation | **9/9** | Public PDF/Chroma retrieval, tool and scope checks; no live judge. |
+| Frozen public corpus parity | **11 documents / 54 chunks**, exact before/after match | Vector and evaluation graph evidence identities match; protected live corpus unchanged. |
+| Actual public UI walkthrough | Answer generated; both grounding checks passed | Groq generation with original page evidence, **using transparent vector fallback**. |
+| Live RAGAS post-hoc probe | Gemini **HTTP 503**; checkpoint preserved | Adapter reached the provider; **no semantic score obtained**. |
+| Frozen three-mode benchmark | **Not completed** | No comparative winner or improvement is claimed. |
+
+Evidence and exact commands: [completion review](docs/COMPLETION_REVIEW.md),
+[public capture](docs/assets/walkthrough/capture.json),
+[machine-checkable corpus receipt](docs/assets/walkthrough/corpus-integrity.json), and
+[RAGAS provider result](docs/assets/walkthrough/ragas-smoke-after-dependency-fix.json).
+
+## Public-data walkthrough
+
+These screenshots were captured from the **running application**, with a clean browser
+and the verified synthetic public index. They are not mockups, replayed answers or
+private-upload screenshots. Ingestion/uploads are disabled in this dedicated walkthrough.
+
+**1 · Start with a known corpus.** The UI shows the configured application provider and
+the indexed public document/chunk counts. The synthetic target RFP is public even though
+its ingestion origin is `upload`.
+
+![Public application ready with the frozen synthetic corpus](docs/assets/walkthrough/01-public-ready.png)
+
+**2 · Ask a relationship question.** `Which projects used Microsoft Azure?` produced a
+source-cited answer using the actual Groq `openai/gpt-oss-120b` pipeline. Proposed work
+must be distinguished from reported delivery; a technology mention is not proof of success.
+
+![Actual Azure answer with original document/page citations](docs/assets/walkthrough/02-azure-answer.png)
+
+**3 · Explain the route honestly.** This execution requested `graph_only`, but cloud
+Neo4j did not complete within its existing bounded deadline. The application retained
+its existing fallback and used `vector_only`. The panel explicitly reports effective
+mode, fallback reason, captured generation evidence and grounding status. **This capture
+demonstrates safe degradation, not successful live graph retrieval.**
+
+![Operational explanation showing requested graph mode and effective vector fallback](docs/assets/walkthrough/03-retrieval-explanation.png)
+
+**4 · Inspect grounding.** Both deterministic checks reported five checked claims and
+zero unsupported claims for this answer. This is a heuristic verification result—not
+semantic entailment or a formal claim-to-chunk provenance graph.
+
+![Actual generation and final grounding-verification trace](docs/assets/walkthrough/04-grounding-check.png)
+
+The explanation exports recorded graph assertion/evidence IDs and relationship modality
+when available. It never invents missing claim links or exposes hidden model reasoning.
+See [the reproducible walkthrough](docs/PUBLIC_WALKTHROUGH.md) for commands and boundaries.
 
 ## Problem statement
 
@@ -102,7 +157,8 @@ flowchart TD
     Verify -->|grounded| Response["Final answer + source traces"]
     Verify -->|unsupported| Repair["One bounded repair"]
     Repair --> FinalVerify["Final grounding verification"]
-    FinalVerify --> Response
+    FinalVerify -->|grounded| Response
+    FinalVerify -->|still unsupported| Insufficient
     Direct --> Response
     WebAnswer --> Response
     Insufficient --> Response
@@ -382,21 +438,6 @@ The source trace distinguishes requested/effective retrieval modes and shows ope
 evidence metadata; it does not expose private chain-of-thought. Streamlit answer source
 labels remain `Private KB`, `Web Search`, and `Direct`.
 
-## Historical sample UI screenshots
-
-These existing captures show the original Agentic RAG interface with public synthetic
-documents. Provider labels reflect the version captured. They illustrate the UI and
-source traces; fresh GraphRAG screenshots have not been added from the configured private
-corpus.
-
-![Application overview](docs/assets/01-application-overview.png)
-
-![Cross-corpus analysis](docs/assets/02-cross-corpus-analysis.png)
-
-![Agent execution trace](docs/assets/03-agent-execution-trace.png)
-
-![Evaluation results](docs/assets/04-evaluation-results.png)
-
 ## Project structure
 
 ```text
@@ -420,6 +461,8 @@ Internal-RFP-Analyst/
 │   │                               # matched capture and quota-safe resume/merge
 │   └── retrieval_questions.yaml
 ├── tests/                          # Unit/regression and opt-in Neo4j integration tests
+├── tools/                          # Guarded public demo, actual screenshot capture,
+│                                   # post-hoc judge probe and integrity receipt
 └── docs/                           # Architecture, operations, evaluation and audits
 ```
 
@@ -534,7 +577,7 @@ python -m evals.run_evals
 python -m evals.run_kb_evals
 ```
 
-The latest recorded full suite for this checkout is **613 passed, 5 skipped, 0 failed**.
+The latest recorded full suite for this checkout is **641 passed, 5 skipped, 0 failed**.
 Skipped live Neo4j integration tests do not prove database-level RBAC or live-server
 behavior. Offline and deterministic evaluations check expected sources/tools/routes,
 retrieval mode, provenance coverage, no-answer behavior, and existing grounding controls;
@@ -579,9 +622,24 @@ correctness, expected sources, grounding, and no-answer behavior remain determin
 checks rather than LLM-judge claims.
 
 RAGAS requires its optional dependencies and an explicitly configured judge provider/model.
+The evaluation extra includes Instructor's Google structured-output dependencies; normal
+application installation does not require RAGAS. Judge HTTP errors stop further metrics
+and cases, preserve completed results, and mark later work unrun rather than zero-scored.
 The capture-only option does not run a judge; `--allow-judge` authorizes external judge
 calls and may send captured questions, answers, and evidence to that provider. No usable
 matched semantic baseline is currently established.
+
+A public **one-case post-hoc** judge check was attempted on the saved matched
+`semantic_modernization` output. The generation provider was Groq GPT-OSS; the judge was
+the separately configured Google `gemini-3.8-flash`. After fixing a missing optional
+structured-output dependency, Faithfulness reached Google but returned HTTP 503. The
+remaining four metrics were not run. This is an explicit provider failure, not a
+retrieval-quality result. It neither completes the 48-execution comparison nor establishes
+a semantic baseline. [Exact report](docs/assets/walkthrough/ragas-smoke-after-dependency-fix.json).
+
+Free-tier projects can be used subject to provider quota. This project cannot infer
+billing guarantees from an API key; enable judges only with an operator-approved account
+and budget. Normal pytest and CI do not make live judge calls.
 
 ```powershell
 $Index = "PATH_TO_EXISTING_FROZEN_CHROMA_INDEX"
@@ -656,6 +714,9 @@ authorization boundary remains an operator responsibility.
 - RAGAS is optional evaluation infrastructure. No complete matched semantic baseline
   is established; judge outputs are not factual proof and provider quota can interrupt
   runs.
+- The latest public walkthrough encountered the existing bounded cloud graph timeout.
+  Corpus parity passed, but live graph retrieval did not complete for that query. Its
+  fallback answer must not be advertised as proof of graph-only runtime success.
 - Generation quality depends on the configured provider; web fallback depends on Tavily
   and network availability.
 
@@ -687,6 +748,8 @@ Restart Streamlit and clear chat history; persisted session messages are not reg
 ## Additional documentation
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- [`docs/PUBLIC_WALKTHROUGH.md`](docs/PUBLIC_WALKTHROUGH.md)
+- [`docs/COMPLETION_REVIEW.md`](docs/COMPLETION_REVIEW.md)
 - [`docs/AGENTIC_RAG.md`](docs/AGENTIC_RAG.md)
 - [`docs/GRAPH_INGESTION.md`](docs/GRAPH_INGESTION.md)
 - [`docs/GRAPH_RETRIEVAL.md`](docs/GRAPH_RETRIEVAL.md)

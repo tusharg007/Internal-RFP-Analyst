@@ -11,6 +11,7 @@ from rfp_analyst.agent.graph import (
     stream_query_response,
 )
 from rfp_analyst.exceptions import LLMProviderNotConfiguredError
+from rfp_analyst.ui.explainability import query_explanation
 
 
 LLM_CONFIG_WARNING = (
@@ -129,6 +130,8 @@ def create_agent():
 
 def _payload_to_reasoning_trace(payload: dict) -> list[dict]:
     traces = []
+    if "requested_retrieval_mode" in payload:
+        traces.append({"tool": "execution_explanation", "explanation": query_explanation(payload)})
     source_label = {
         "private_kb": "Private KB",
         "kb": "Private KB",

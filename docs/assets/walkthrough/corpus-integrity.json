@@ -1,0 +1,54 @@
+{
+  "kind": "public_walkthrough_integrity_receipt",
+  "parity_before": true,
+  "parity_after": true,
+  "internal_rfp_unchanged": true,
+  "graph_publication": "none:reused_without_writes",
+  "document_count": 11,
+  "chunk_count": 54,
+  "document_names": [
+    "01_Banking_Sector_Digital_Audit_2024.pdf",
+    "02_Healthcare_Data_Migration_to_Azure_Cloud.pdf",
+    "03_Retail_Supply_Chain_Analytics_Platform.pdf",
+    "04_Insurance_Claims_Processing_Automation.pdf",
+    "05_Telecom_Network_Optimization_with_AI.pdf",
+    "06_Government_Tax_Filing_Modernization.pdf",
+    "07_Pharma_Clinical_Trial_Data_Platform.pdf",
+    "08_Energy_Sector_ESG_Reporting_Dashboard.pdf",
+    "09_Financial_Services_Anti-Fraud_Detection_System.pdf",
+    "10_Manufacturing_IoT_Predictive_Maintenance_Platform.pdf",
+    "eval_target_rfp.pdf"
+  ],
+  "indexed_digest": "641e9d4dad22e33140475ac40b0245dde1edb3ed6e2acc0c5fa8e75919d9d39f",
+  "graph_corpus_id": "rfp-eval-frozen-641e9d4dad22",
+  "graph_version": "d99fc9a7b295f7c9c14cae3de266e0fa97af8dc9dc806ce164fc5a5482d8ce55",
+  "record_comparisons": [
+    {
+      "parity": true,
+      "failures": [],
+      "graph_document_count": 11,
+      "graph_chunk_count": 54,
+      "expected_document_sha256": "8902b322be74133c00c36f41a76174536c72931d9f0fc78ae11fccea0ec0aabd",
+      "actual_document_sha256": "8902b322be74133c00c36f41a76174536c72931d9f0fc78ae11fccea0ec0aabd",
+      "expected_chunk_sha256": "de085fb8476ebc09fd0ff3a26e074ca07979310924c504e39255d32ebadca988",
+      "actual_chunk_sha256": "de085fb8476ebc09fd0ff3a26e074ca07979310924c504e39255d32ebadca988",
+      "compared_fields": "all persisted Document/Chunk properties; exact IN_DOCUMENT edges"
+    },
+    {
+      "parity": true,
+      "failures": [],
+      "graph_document_count": 11,
+      "graph_chunk_count": 54,
+      "expected_document_sha256": "8902b322be74133c00c36f41a76174536c72931d9f0fc78ae11fccea0ec0aabd",
+      "actual_document_sha256": "8902b322be74133c00c36f41a76174536c72931d9f0fc78ae11fccea0ec0aabd",
+      "expected_chunk_sha256": "de085fb8476ebc09fd0ff3a26e074ca07979310924c504e39255d32ebadca988",
+      "actual_chunk_sha256": "de085fb8476ebc09fd0ff3a26e074ca07979310924c504e39255d32ebadca988",
+      "compared_fields": "all persisted Document/Chunk properties; exact IN_DOCUMENT edges"
+    }
+  ],
+  "protected_namespace_fingerprints": {
+    "node_sha256": "e610c788846bc9aa625c133104cbf7948f34bbe14cb6499d1313a27fd3df781c",
+    "relationship_sha256": "eb39381b92932696a5eea8bbcffba022d9974d8dd503b3043c7870e16730d6d5"
+  },
+  "meaning": "manifest parity does not prove runtime graph retrieval or answer quality"
+}

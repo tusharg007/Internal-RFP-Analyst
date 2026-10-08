@@ -18,12 +18,22 @@ from evals.retrieval_benchmark import (
     benchmark_checks,
     comparison_cases,
     freeze,
+    frozen_text_hash,
     generation_records,
     markdown,
     summarize,
     validate_cases,
 )
 from evals.run_ragas import load_cases
+
+
+def test_frozen_text_hash_accepts_checkout_eol_only(tmp_path):
+    lf, crlf, changed = (tmp_path / name for name in ('lf.yaml', 'crlf.yaml', 'changed.yaml'))
+    lf.write_bytes(b'question: Which projects used Azure?\nreference: original\n')
+    crlf.write_bytes(lf.read_bytes().replace(b'\n', b'\r\n'))
+    changed.write_bytes(b'question: Which projects used AWS?\nreference: original\n')
+    assert frozen_text_hash(lf) == frozen_text_hash(crlf)
+    assert frozen_text_hash(lf) != frozen_text_hash(changed)
 
 
 def cases():

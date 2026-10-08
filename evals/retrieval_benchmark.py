@@ -47,6 +47,15 @@ def normalize(text):
     return " ".join(str(text).casefold().split())
 
 
+def frozen_text_hash(path):
+    """Match the original LF freeze despite Git's Windows CRLF checkout.
+
+    Only CRLF translation is normalized. Content, whitespace, BOMs and case
+    remain byte-sensitive; parsed case hashes and source witnesses are also checked.
+    """
+    return hashlib.sha256(Path(path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
 def validate_cases(cases):
     if len({c["id"] for c in cases}) != len(cases):
         raise ValueError("Duplicate case IDs")
@@ -91,11 +100,9 @@ def dataset_signature(questions, cases, snapshot):
                 anchors[anchor] = ids
             witnesses[case["id"]].append({**clause, "anchor_chunk_ids": anchors})
     return {
-        "question_file_sha256": hashlib.sha256(Path(questions).read_bytes()).hexdigest(),
+        "question_file_sha256": frozen_text_hash(questions),
         "question_set_hash": fingerprint(cases),
-        "legacy_golden_sha256": hashlib.sha256(
-            (ROOT / "evals/golden_questions.yaml").read_bytes()
-        ).hexdigest(),
+        "legacy_golden_sha256": frozen_text_hash(ROOT / "evals/golden_questions.yaml"),
         "corpus_hash": snapshot.fingerprint,
         "case_ids": [c["id"] for c in cases],
         "protocol": PROTOCOL,

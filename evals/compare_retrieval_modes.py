@@ -17,6 +17,11 @@ def summarize_comparison(reports):
         raise ValueError("Comparison inputs are not frozen/matched")
     return {
         "schema_version": "1.0",
+        "status": (
+            "incomplete_due_to_judge_provider_error"
+            if any(r.get("status") == "incomplete_due_to_judge_provider_error" for r in reports)
+            else "completed_with_failures" if any(r["failures"] for r in reports) else "completed"
+        ),
         "timestamp": reports[0]["timestamp"],
         "cohort": cohort(reports[0]),
         "reports": reports,

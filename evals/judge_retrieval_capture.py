@@ -65,6 +65,8 @@ async def judge_capture(captured, cases, lock, judge, *, output=None):
                             "stage": "judge",
                             "metric": metric,
                             "error_type": score["error_type"],
+                            **({"http_status": score["http_status"]}
+                               if score.get("http_status") else {}),
                         }
                     )
             for report in reports:
@@ -75,6 +77,16 @@ async def judge_capture(captured, cases, lock, judge, *, output=None):
                 )
                 checkpoint["judging"] = judging
                 write_report(output, checkpoint)
+            provider_error = next((s.get("http_status") for s in row["scores"].values()
+                                   if s.get("status") == "error" and s.get("http_status")), None)
+            if provider_error:
+                result = summarize(reports, cases, lock, captured["preflight"] | {"judge": "stopped"})
+                result["status"] = "incomplete_due_to_judge_provider_error"
+                result["judging"] = judging | {"http_status": provider_error,
+                                               "stopped_case_id": case["id"], "stopped_mode": mode}
+                if output:
+                    write_report(output, result)
+                return result
     result = summarize(reports, cases, lock, captured["preflight"] | {"judge": "attempted"})
     result["judging"] = judging | {"finished_at": datetime.now(timezone.utc).isoformat()}
     if output:

@@ -1,0 +1,18 @@
+{
+  "kind": "actual_streamlit_ui",
+  "mocked": false,
+  "judge_calls": 0,
+  "steps": [
+    {
+      "step": "startup",
+      "screenshot": "01-public-ready.png",
+      "status": "ready"
+    },
+    {
+      "step": "azure_relationship",
+      "question": "Which projects used Microsoft Azure?",
+      "public_ui_text": "\ud83e\udd16\n\nProjects that leveraged Microsoft\u202fAzure\n\nProject\tAzure usage reported in the proposal\nHealthcare Data Migration to Azure Cloud (regional hospital network)\tThe migration plan targets Microsoft Azure services such as Azure SQL Database, Azure Databricks, Azure Data Lake Storage Gen2, Azure Data Factory, Azure Synapse Analytics, and other Azure security tools\u3010Source: 02_Healthcare_Data_Migration_to_Azure_Cloud.pdf, Page 2\u3011\nEnergy Sector ESG Reporting Dashboard\tThe solution is deployed on Microsoft Azure (central deployment)\u3010Source: 08_Energy_Sector_ESG_Reporting_Dashboard.pdf, Page 2\u3011\nBanking Sector Digital Audit 2024\tThe technology stack lists Microsoft Azure (Azure Data Factory, Azure SQL Database) as the cloud platform\u3010Source: 01_Banking_Sector_Digital_Audit_2024.pdf, Page 2\u3011\nkeyboard_arrow_down\n\nSources Used\n\nOperational trace, not hidden model reasoning. Graph paths select original source evidence; they do not prove each generated claim.\n\nWhy this retrieval path?\n\nRequested: graph_only \u2192 Effective: vector_only \u00b7 Graph paths: 0 \u00b7 Generation: llm_kb\n\n{...}\nsource_used\nAnswer source\nPrivate KB\nintent_classifier\nWhich projects used Microsoft Azure?\ntool_planner\nWhich projects used Microsoft Azure?\nSelected 1 tool(s): search_knowledge_base\nsearch_knowledge_base\nSearch scope=all; k=6\nRetrieved 6 relevant chunk(s); filtered 0 below threshold 0.50\n02_Healthcare_Data_Migration_to_Azure_Cloud.pdf (Page 2)\nretrieval score 0.59 \u00b7 3 matching chunks\n08_Energy_Sector_ESG_Reporting_Dashboard.pdf (Page 2)\nretrieval score 0.57\n01_Banking_Sector_Digital_Audit_2024.pdf (Page 2)\nretrieval score 0.52 \u00b7 2 matching chunks\ngraph_retrieval\nBounded, parameterized relationship retrieval\nMode=vector_only; chunks=6; paths=0; graph fallback=unavailable\nevidence_availability_check\nPre-filtered Private KB evidence\nPrivate KB evidence graded good.\nprompt_synthesizer\nWhich projects used Microsoft Azure?\nBuilt grounded answer prompt from compact retrieved evidence and conversation context.\nprompt_budget\nWhich projects used Microsoft Azure?\ngeneration_prompt_budget\nWhich projects used Microsoft Azure?\nfinal_response\nWhich projects used Microsoft Azure?\nGenerated an answer inside the graph.\ngrounding_verifier\nComplete generated answer and retrieved source metadata\nVerified 5 claim(s); identified 0 unsupported claim(s).\nfinal_grounding_verifier\nFinal answer after optional bounded repair\nVerified 5 final claim(s); identified 0 unsupported claim(s)."
+    }
+  ],
+  "captured_at_unix": 1791414270.98262
+}

@@ -48,6 +48,24 @@ def test_app_smoke_has_no_unhandled_streamlit_exception():
     assert not at.exception
 
 
+def test_public_walkthrough_disables_document_mutations():
+    app_path = Path(__file__).resolve().parents[1] / "app.py"
+    with (
+        patch("config.PUBLIC_DEMO_READ_ONLY", True, create=True),
+        patch("config.get_api_keys", return_value=("", "")),
+        patch("rag_engine.get_vectorstore_stats", return_value=ready_stats()),
+        patch("rag_engine.ingest_documents") as ingest,
+        patch("document_generator.generate_all_documents") as generate,
+    ):
+        at = AppTest.from_file(str(app_path)).run(timeout=10)
+    assert not at.exception
+    for button in at.button:
+        if button.label in {"Generate Sample PDFs", "Ingest Documents"}:
+            assert button.disabled
+    assert not ingest.called and not generate.called
+    assert any("Public walkthrough" in str(item.value) for item in at.info)
+
+
 def test_app_does_not_auto_ingest_when_kb_is_missing():
     app_path = Path(__file__).resolve().parents[1] / "app.py"
 

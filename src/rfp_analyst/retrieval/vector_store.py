@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from chromadb.config import Settings
 from langchain_chroma import Chroma
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_core.documents import Document
@@ -61,6 +62,9 @@ class VectorStoreManager:
             collection_name=self.collection_name,
             embedding_function=self.embedding_function,
             persist_directory=str(self.persist_dir),
+            # Graph snapshot loading and vector queries share Chroma's process
+            # registry. Different settings for one directory reject the client.
+            client_settings=Settings(anonymized_telemetry=False),
         )
 
     def upsert_documents(self, documents: list[Document]) -> Chroma:
